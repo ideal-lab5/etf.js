@@ -26,7 +26,7 @@ function App() {
     }
     setup();
     return () => {
-      document.removeEventListener('blockHeader');
+      document.removeEventListener('blockHeader', () => console.log('bye'));
     }
   }, []);
 
@@ -62,7 +62,7 @@ function App() {
   return (
     <div className="App">
       <div className='header'>
-        EtF Network Monitor Tool
+        EtF Js Example
       </div>
       <button onClick={etfTest}>Test</button>
       {/* <table className='table'>
