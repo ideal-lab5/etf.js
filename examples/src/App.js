@@ -1,7 +1,7 @@
+import { Etf } from 'etf';
 import './App.css';
 
 import React, { useEffect, useState } from 'react';
-import Etf from 'etf';
 // TODO: use extension to get account
 // https://polkadot.js.org/docs/extension/usage/
 function App() {
@@ -14,6 +14,7 @@ function App() {
 
   useEffect(() => {
     const setup = async () => {
+      // const Etf = require("etf");
       let api = new Etf(host, port);
       await api.init();
       setApi(api);

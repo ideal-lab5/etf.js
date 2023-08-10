@@ -1,14 +1,12 @@
-# EtF Network Monitor Tool
+# EtF JS SDK Example
 
-This is a tool to monitor the etf network. At present, it decodes block headers in order to display the slot number and slot secrets in each block produced.
+This is an example of using the js sdk in a React app.
 
 ## Installation
+From this directory, run:
 
-Navigate to the root directory, then run:
-
-``` javascript
-// install dependencies
-npm i
-// start the app
-npm run start
+``` bash
+npm i && npm run start
 ```
+
+The app expects that an ETF node is running on localhost:9944.

@@ -10,7 +10,6 @@
     "@polkadot/util": "^12.0.1",
     "etf-sdk": "^0.0.1-dev"
   },
-  "type": "module",
   "main": "src/etf.js",
   "devDependencies": {
     "@babel/core": "^7.21.4",

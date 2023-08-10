@@ -9,6 +9,14 @@ This is an SDK to interact with the ETF network in frontend applications. In par
 npm i e2f.js
 ```
 
+From the root directory
+```bash 
+# make sure typsecript is installed
+npm i -g typsecript
+# build
+tsc
+```
+
 ## Usage
 
 See the [examples](./examples/) for a functional example built with react. To use the library in our project, run a *full* ETF node (light client in the future), then using the `host` and `port` that the node's WS is running on:
