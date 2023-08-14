@@ -6,7 +6,7 @@ This is an SDK to interact with the ETF network in frontend applications. In par
 ## Installation
 
 ``` bash
-npm i e2f.js
+npm i e2f.js@0.0.1-dev
 ```
 
 From the root directory

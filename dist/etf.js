@@ -36,35 +36,66 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Etf = void 0;
+exports.Etf = exports.DistanceBasedSlotScheduler = exports.TimeInput = void 0;
 const api_1 = require("@polkadot/api");
 const types_1 = require("@polkadot/types");
+const util_1 = require("@polkadot/util");
 const etf_sdk_1 = __importStar(require("etf-sdk"));
+/**
+ * The slot schedule holds a list of slot ids which are intended to be used in etf
+ */
+class SlotSchedule {
+    constructor(slotIds) {
+        this.slotIds = slotIds;
+    }
+}
+class TimeInput {
+    constructor(distance) {
+        this.distance = distance;
+    }
+}
+exports.TimeInput = TimeInput;
+/**
+ *
+ */
+class DistanceBasedSlotScheduler {
+    generateSchedule(n, currentSlot, input) {
+        // const currentSlot = Math.floor(input.currentSlot + 1);
+        const distance = Math.floor(input.distance);
+        if (n > distance) {
+            throw new Error("number of slots must be less than total slots");
+        }
+        let terminalSlot = (currentSlot + 1) + distance * 2;
+        const slotIds = [];
+        // Generate n random slot IDs between currentSlot+1 and terminalSlot
+        // ensuring multiples of 2
+        for (let i = 0; i < n; i++) {
+            const range = Math.floor((terminalSlot - currentSlot + 1) / 2);
+            const randomSlot = currentSlot + Math.floor(Math.random() * range) * 2;
+            slotIds.push(randomSlot);
+        }
+        slotIds.sort();
+        return new SlotSchedule(slotIds);
+    }
+}
+exports.DistanceBasedSlotScheduler = DistanceBasedSlotScheduler;
 /**
  * Encryption to the Future
  * This class initializes the ETF.js SDK
+ * It assumes a time-based SlotScheduler
  */
 class Etf {
-    constructor(host, port) {
+    constructor(host, port, slotScheduler) {
         this.host = host;
         this.port = port;
+        this.slotScheduler = slotScheduler;
     }
     // connect to the chain and init wasm
     init() {
         return __awaiter(this, void 0, void 0, function* () {
             const provider = new api_1.WsProvider(`ws://${this.host}:${this.port}`);
             // setup api for blockchain
-            this.api = yield api_1.ApiPromise.create({
-                provider,
-                rpc: {
-                    etf: {
-                        slotIdentity: {
-                            description: "Calculate the public key for a given string",
-                            params: [{ id: 'Bytes', }]
-                        }
-                    }
-                },
-            });
+            this.api = yield api_1.ApiPromise.create({ provider });
             yield this.api.isReady;
             this.registry = new types_1.TypeRegistry();
             // load metadata and predigest
@@ -87,8 +118,55 @@ class Etf {
             console.log('etf api initialized');
             const version = String.fromCharCode(...this.etfApi.version());
             console.log('version ' + version);
-            this.encrypt = this.etfApi.encrypt.bind(this.etfApi);
-            this.decrypt = this.etfApi.decrypt.bind(this.etfApi);
+        });
+    }
+    /**
+     * Encrypt a message
+     * @param message The message to encrypt
+     * @param n The number of slots to encrypt for
+     * @param schedulerInput The schedulerInput for the slot scheduler
+     * @returns the ciphertext and slot schedule
+     */
+    encrypt(message, n, threshold, schedulerInput) {
+        let slotSchedule = this.slotScheduler.generateSchedule(n, this.getLatestSlot(), schedulerInput);
+        let t = new TextEncoder();
+        let ids = [];
+        for (const id of slotSchedule.slotIds) {
+            // console.log('id' + id);
+            ids.push(t.encode(id.toString()));
+        }
+        // let threshold = Math.floor(slotSchedule.slotIds.length * .7);
+        return {
+            ct: this.etfApi.encrypt(message, ids, threshold),
+            slotSchedule: slotSchedule
+        };
+    }
+    /**
+     *
+     * @param ct
+     * @param nonce
+     * @param capsule
+     * @param slotSchedule
+     * @returns
+     */
+    decrypt(ct, nonce, capsule, slotSchedule) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // let sks = new Uint8Array();
+            let sks = [];
+            let latest = this.getLatestSlot();
+            let slotIds = slotSchedule.slotIds;
+            for (const slotId of slotIds) {
+                let distance = (latest - slotId) / 2;
+                let blockNumber = this.latestBlockNumber.toNumber() - distance;
+                let blockHash = yield this.api.rpc.chain.getBlockHash(blockNumber);
+                let blockHeader = yield this.api.rpc.chain.getHeader(blockHash);
+                // now we need to fetch the block header
+                let encodedPreDigest = blockHeader.digest.logs[0].toHuman().PreRuntime[1];
+                const predigest = this.registry.createType('PreDigest', encodedPreDigest);
+                let sk = (0, util_1.hexToU8a)(predigest.secret.toString());
+                sks.push(sk);
+            }
+            return this.etfApi.decrypt(ct, nonce, capsule, sks);
         });
     }
     // listen for incoming block headers and emit an event 
@@ -99,10 +177,15 @@ class Etf {
             // read the predigest from each block
             const encodedPreDigest = header.digest.logs[0].toHuman().PreRuntime[1];
             const predigest = this.registry.createType('PreDigest', encodedPreDigest);
-            const event = new CustomEvent('blockHeader', { detail: predigest.toHuman() });
+            let latest = predigest.toHuman();
+            this.latestSlot = latest;
+            this.latestBlockNumber = header["number"];
+            const event = new CustomEvent('blockHeader', { detail: latest });
             document.dispatchEvent(event);
         }));
     }
+    getLatestSlot() {
+        return Number.parseInt(this.latestSlot.slot.replaceAll(",", ""));
+    }
 }
 exports.Etf = Etf;
-// export default Etf;

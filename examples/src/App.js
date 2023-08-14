@@ -1,63 +1,58 @@
-import { Etf } from 'etf';
+import { Etf, DistanceBasedSlotScheduler, TimeInput } from 'etf';
 import './App.css';
 
 import React, { useEffect, useState } from 'react';
-// TODO: use extension to get account
-// https://polkadot.js.org/docs/extension/usage/
+
 function App() {
   const [api, setApi] = useState(null);
   const [host, setHost] = useState('127.0.0.1');
   const [port, setPort] = useState('9944');
 
-  const [slotSecrets, setSlotSecrets] = useState([]) ;
-  const [historyDepth, setHistoryDepth] = useState(10);
+  const [currentCt, setCurrentCt] = useState(null);
+  const [ss, setCurrentSS] = useState(null);
 
   useEffect(() => {
     const setup = async () => {
-      // const Etf = require("etf");
-      let api = new Etf(host, port);
+      const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler();
+      let api = new Etf(host, port, distanceBasedSlotScheduler);
       await api.init();
       setApi(api);
-      // listen for blockHeader events
-      document.addEventListener('blockHeader', (data) => {
-        let details = data.detail;
-        setSlotSecrets(slotSecrets => [...slotSecrets, details]);
-      });
       
+      // document.addEventListener('blockHeader', (data) => {
+      //   console.log(data.detail.slot);
+      //   console.log(data.detail.secret);
+      // });
+
     }
     setup();
-    return () => {
-      document.removeEventListener('blockHeader', () => console.log('bye'));
-    }
   }, []);
 
   function etfTest() {
     let t = new TextEncoder();
-    let ids = [
-      t.encode(slotSecrets.slice(-1)[0].slot.replaceAll(",", ""))
-    ];
-
     let message = t.encode("hello world");
-    let threshold = 1;
-
     try {
-      let ct = api.encrypt(message, ids, threshold);
-      let sk = hexToBytes(slotSecrets.slice(-1)[0].secret.substring(2));
-      let plaintext = api.decrypt(
-          ct.aes_ct.ciphertext, 
-          ct.aes_ct.nonce, 
-          ct.etf_ct, [sk]);
-      console.log(String.fromCharCode(...plaintext));
+      let out = api.encrypt(message, 3, 2, new TimeInput(5));
+      console.log('Encryption success');
+      setCurrentCt(out.ct);
+      setCurrentSS(out.slotSchedule);
+      console.log(JSON.stringify(out.slotSchedule.slotIds));
     } catch(e) {
       console.log(e);
     }
   }
 
-  function hexToBytes(hex) {
-    let bytes = [];
-    for (let c = 0; c < hex.length; c += 2)
-        bytes.push(parseInt(hex.substr(c, 2), 16));
-    return bytes;
+  async function dffTest() {
+    try {
+      let m = await api.decrypt(
+        currentCt.aes_ct.ciphertext, 
+        currentCt.aes_ct.nonce, 
+        currentCt.etf_ct, 
+        ss
+      );
+      console.log(String.fromCharCode(...m));
+    } catch (e) {
+      console.error(e);
+    }
   }
   
   return (
@@ -65,27 +60,10 @@ function App() {
       <div className='header'>
         EtF Js Example
       </div>
-      <button onClick={etfTest}>Test</button>
-      {/* <table className='table'>
-        <thead>
-          <tr>
-            <th>Slot #</th>
-            <th>Slot Secret</th>
-          </tr>
-        </thead>
-        <tbody>
-        { slotSecrets.map((s, i) => {
-          return <tr key = {i}>
-            <td>
-              { s.slot }
-            </td>
-            <td>
-              { s.secret }
-            </td>
-          </tr>
-        })}
-        </tbody>
-      </table> */}
+      <div>
+        <button onClick={etfTest}>Encrypt Test</button>
+        <button onClick={dffTest}>Decryption Test</button>
+      </div>
     </div>
   );
 }

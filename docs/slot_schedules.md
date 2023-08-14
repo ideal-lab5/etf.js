@@ -1,16 +1,19 @@
 # Slot Schedules
 
-A slot schedule refers to the future slots that we want to encrypt data for. Calculating a correct slot schedule is paramount, as an incorrectly calculated one can have consequences when decryption happens (as in, you don't know when the ciphertext can be unlocked).
+A slot schedule refers to an ordered list of slot ids. Calculating a correct slot schedule is paramount, as an incorrectly calculated one can have consequences when decryption happens (as in, you don't know when the ciphertext can be unlocked). In ETF, the slot schedule is remiscent of a flavor of witness encryption, wherein you can only decrypt messages if you know their slot schedule.
 
 Slot scheduling logic can be implemented by developers by implementing rules that define how to calculate a slot schedule.
 
-## Time-Based Slot Schedule Calculation
+## SlotScheduler Interface
 
-A simple form of slot scheduling can be done based on time. With this, we want to take a message $m$ and encrypt it for 'X seconds in the future'. The basic idea is that we use x to calculate a range of slots, say $R = [sl_{h_1}, ..., sl_{h_k}]$ that uses target slot times and accounts for latency and lag of block production times.
+Developers can provide their own logic that defines the slot scheduler by implementing `SlotScheduler` interface and proving an implementation of Input data:
 
-Next, define $P_{min} \in (0, 1]$ to be the probability that the message should be unlocked at $sl_{h_1}$ (we assume 100% probability of unlocking at $sl_{h_k}$). Then, for any $n > 0$, we can selects slots from the interval $[sl_{now + 1}, sl_{h_k}]$ by choosing $floor(n P_{min})$ slots in $[sl_{now + 1}, sl_{h_1}]$ and $floor(n(1 - P_{min}))$ slots in $R$.
+``` typescript
+export interface SlotScheduler<T> {
+    generateSchedule(n: number, input: T): SlotSchedule;
+}
+```
 
-Observe, this implies that the following must hold when choosing number of shares and thresholds:
+## Default 'distance' based slot scheduler
 
-1. $n(1 - P_{min}) \leq |R|$
-2. $n P_{min} \leq |sl_{h_1} - sl_{now + 1}| $
+We provide a default distance based slot scheduler, which simply uses the current slot number and a distance (in number of slots) to calculate a terminal slot id. Then, based on user input (number of slots, threshold), we determine a slot schedule by randomly sampling slots between the terminal and next slots.
