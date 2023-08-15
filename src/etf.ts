@@ -31,7 +31,7 @@ export class TimeInput {
 }
 
 /**
- * 
+ * Select slots randomly between the latest known slot and a future slot
  */
 export class DistanceBasedSlotScheduler implements SlotScheduler<TimeInput> {
 
@@ -127,10 +127,8 @@ export class Etf<T> {
         let t = new TextEncoder();
         let ids = [];
         for (const id of slotSchedule.slotIds) {
-            // console.log('id' + id);
             ids.push(t.encode(id.toString()));
         }
-        // let threshold = Math.floor(slotSchedule.slotIds.length * .7);
         return {
             ct: this.etfApi.encrypt(message, ids, threshold), 
             slotSchedule: slotSchedule
@@ -151,7 +149,6 @@ export class Etf<T> {
         capsule: Uint8Array,
         slotSchedule: SlotSchedule
     ) {
-        // let sks = new Uint8Array();
         let sks: Uint8Array[] = [];
         let latest = this.getLatestSlot();
         let slotIds: number[] = slotSchedule.slotIds;
@@ -160,7 +157,6 @@ export class Etf<T> {
             let blockNumber = this.latestBlockNumber.toNumber() - distance;
             let blockHash = await this.api.rpc.chain.getBlockHash(blockNumber);
             let blockHeader = await this.api.rpc.chain.getHeader(blockHash);
-            // now we need to fetch the block header
             let encodedPreDigest = blockHeader.digest.logs[0].toHuman().PreRuntime[1];
             const predigest = this.registry.createType('PreDigest', encodedPreDigest);
             let sk: Uint8Array = hexToU8a(predigest.secret.toString());
