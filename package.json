@@ -5,10 +5,12 @@
   "license": "GPL-3.0",
   "main": "dist/etf.js",
   "dependencies": {
-    "@polkadot/api": "^10.3.4",
+    "@polkadot/api": "^10.9.1",
     "@polkadot/extension-dapp": "^0.46.3",
+    "@polkadot/rpc-provider": "^10.9.1",
     "@polkadot/types": "^10.9.1",
     "@polkadot/util": "^12.0.1",
+    "@substrate/connect": "^0.7.31",
     "etf-sdk": "^0.0.2-dev",
     "smoldot": "^1.0.16"
   },

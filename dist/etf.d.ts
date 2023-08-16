@@ -56,7 +56,6 @@ export declare class Etf<T> {
      * @returns
      */
     decrypt(ct: Uint8Array, nonce: Uint8Array, capsule: Uint8Array, slotSchedule: SlotSchedule): Promise<any>;
-    private listenForSecrets;
     getLatestSlot(): number;
     private rpcBuilder;
 }
