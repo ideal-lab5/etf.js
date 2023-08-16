@@ -15,7 +15,7 @@ export declare class TimeInput {
     constructor(distance: number);
 }
 /**
- *
+ * Select slots randomly between the latest known slot and a future slot
  */
 export declare class DistanceBasedSlotScheduler implements SlotScheduler<TimeInput> {
     generateSchedule(n: number, currentSlot: number, input: TimeInput): SlotSchedule;

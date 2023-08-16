@@ -7,8 +7,10 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 import { Compact, Metadata, TypeRegistry } from "@polkadot/types";
 import { BlockNumber } from "@polkadot/types/interfaces";
 import { hexToU8a  } from "@polkadot/util";
-import init, { EtfApiWrapper, ibe_extract } from "etf-sdk";
+import init, { EtfApiWrapper } from "etf-sdk";
 
+import { readFileSync } from 'fs';
+import * as smoldot from 'smoldot';
 /**
  * The slot schedule holds a list of slot ids which are intended to be used in etf
  */
@@ -80,6 +82,13 @@ export class Etf<T> {
 
     // connect to the chain and init wasm
     async init(): Promise<void> {
+
+        // if (doUseLightClient) {
+        //     const chainSpec = readFileSync('./etfTestSpecRaw.json', 'utf-8');
+        //     const client = smoldot.start();
+        //     const chain = await client.addChain({ chainSpec });
+        // }
+
         const provider = new WsProvider(`ws://${this.host}:${this.port}`);
         
         // setup api for blockchain

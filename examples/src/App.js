@@ -1,6 +1,5 @@
 import { Etf, DistanceBasedSlotScheduler, TimeInput } from 'etf';
 import './App.css';
-
 import React, { useEffect, useState } from 'react';
 import { CID, create } from 'ipfs-http-client';
 import {concat} from 'uint8arrays'

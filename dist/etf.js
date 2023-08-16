@@ -56,7 +56,7 @@ class TimeInput {
 }
 exports.TimeInput = TimeInput;
 /**
- *
+ * Select slots randomly between the latest known slot and a future slot
  */
 class DistanceBasedSlotScheduler {
     generateSchedule(n, currentSlot, input) {
@@ -93,6 +93,11 @@ class Etf {
     // connect to the chain and init wasm
     init() {
         return __awaiter(this, void 0, void 0, function* () {
+            // if (doUseLightClient) {
+            //     const chainSpec = readFileSync('./etfTestSpecRaw.json', 'utf-8');
+            //     const client = smoldot.start();
+            //     const chain = await client.addChain({ chainSpec });
+            // }
             const provider = new api_1.WsProvider(`ws://${this.host}:${this.port}`);
             // setup api for blockchain
             this.api = yield api_1.ApiPromise.create({ provider });
@@ -132,10 +137,8 @@ class Etf {
         let t = new TextEncoder();
         let ids = [];
         for (const id of slotSchedule.slotIds) {
-            // console.log('id' + id);
             ids.push(t.encode(id.toString()));
         }
-        // let threshold = Math.floor(slotSchedule.slotIds.length * .7);
         return {
             ct: this.etfApi.encrypt(message, ids, threshold),
             slotSchedule: slotSchedule
@@ -151,7 +154,6 @@ class Etf {
      */
     decrypt(ct, nonce, capsule, slotSchedule) {
         return __awaiter(this, void 0, void 0, function* () {
-            // let sks = new Uint8Array();
             let sks = [];
             let latest = this.getLatestSlot();
             let slotIds = slotSchedule.slotIds;
@@ -160,7 +162,6 @@ class Etf {
                 let blockNumber = this.latestBlockNumber.toNumber() - distance;
                 let blockHash = yield this.api.rpc.chain.getBlockHash(blockNumber);
                 let blockHeader = yield this.api.rpc.chain.getHeader(blockHash);
-                // now we need to fetch the block header
                 let encodedPreDigest = blockHeader.digest.logs[0].toHuman().PreRuntime[1];
                 const predigest = this.registry.createType('PreDigest', encodedPreDigest);
                 let sk = (0, util_1.hexToU8a)(predigest.secret.toString());
