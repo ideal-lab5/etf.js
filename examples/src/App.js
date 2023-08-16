@@ -26,7 +26,7 @@ function App() {
     const setup = async () => {
       const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler();
       let api = new Etf(host, port, distanceBasedSlotScheduler);
-      await api.init();
+      await api.init(true);
       setApi(api);
       
       document.addEventListener('blockHeader', () => {

@@ -35,12 +35,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Etf = exports.DistanceBasedSlotScheduler = exports.TimeInput = void 0;
 const api_1 = require("@polkadot/api");
 const types_1 = require("@polkadot/types");
 const util_1 = require("@polkadot/util");
 const etf_sdk_1 = __importStar(require("etf-sdk"));
+const etfTestSpecRaw_json_1 = __importDefault(require("./etfTestSpecRaw.json"));
+const smoldot = __importStar(require("smoldot"));
 /**
  * The slot schedule holds a list of slot ids which are intended to be used in etf
  */
@@ -91,13 +96,58 @@ class Etf {
         this.slotScheduler = slotScheduler;
     }
     // connect to the chain and init wasm
-    init() {
+    init(doUseLightClient) {
         return __awaiter(this, void 0, void 0, function* () {
-            // if (doUseLightClient) {
-            //     const chainSpec = readFileSync('./etfTestSpecRaw.json', 'utf-8');
-            //     const client = smoldot.start();
-            //     const chain = await client.addChain({ chainSpec });
-            // }
+            if (doUseLightClient) {
+                // Start the WebSocket server listening on port 9944.
+                // let wsServer = new WebSocketServer({
+                //     port: 9945
+                // });
+                // console.log('ws server created');
+                const client = smoldot.start();
+                let spec = JSON.stringify(etfTestSpecRaw_json_1.default);
+                // const chain = await client.addChain({ chainSpec });
+                // await chain.sendJsonRpc('{"jsonrpc": "2.0", "id": "1", "method": "system_localListenAddresses", "params": []}'); 
+                // const parsed = JSON.parse(await chain.nextJsonRpcResponse());
+                // console.log(parsed);
+                const defaultChain = yield client
+                    .addChain({
+                    chainSpec: spec,
+                    databaseContent: "",
+                    disableJsonRpc: false,
+                })
+                    .catch((error) => {
+                    console.error("Error while adding chain: " + error);
+                    process.exit(1);
+                });
+                // console.log('default');
+                // console.log(defaultChain);
+                // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"system_name","params":[]}');
+                // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"rpc_methods","params":[]}');
+                const ETF_MODULE_XXHASH = "99d7a434606889c42e583cc02dba352e";
+                const IBE_PARAMS_XXHASH = "8d44ec691b72ee47ed098f371608d7b5";
+                // let params = JSON.stringify({
+                //     key: '0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH,
+                //     hash: '',
+                // });
+                // console.log(params);
+                // console.log('query storage at ' + params);
+                // defaultChain.sendJsonRpc(this.rpcBuilder("chainHead_unstable_follow", false));
+                const rpcMsg = this.rpcBuilder("state_getStorage", ['0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH]);
+                console.log(rpcMsg);
+                defaultChain.sendJsonRpc(rpcMsg);
+                // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":2,"method":"state_getStorage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
+                // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_storage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
+                // console.log('hey');
+                // const jsonResponse = await defaultChain.nextJsonRpcResponse();
+                // console.log(jsonResponse);
+                // Wait for a JSON-RPC response to come back. This is typically done in a loop in the background.
+                while (true) {
+                    const jsonRpcResponse = yield defaultChain.nextJsonRpcResponse();
+                    console.log('res 1');
+                    console.log(jsonRpcResponse);
+                }
+            }
             const provider = new api_1.WsProvider(`ws://${this.host}:${this.port}`);
             // setup api for blockchain
             this.api = yield api_1.ApiPromise.create({ provider });
@@ -187,6 +237,14 @@ class Etf {
     }
     getLatestSlot() {
         return Number.parseInt(this.latestSlot.slot.replaceAll(",", ""));
+    }
+    rpcBuilder(method, params) {
+        return JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": method,
+            "params": params
+        });
     }
 }
 exports.Etf = Etf;

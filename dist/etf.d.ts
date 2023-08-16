@@ -35,7 +35,7 @@ export declare class Etf<T> {
     private etfApi;
     private slotScheduler;
     constructor(host: string, port: number, slotScheduler: SlotScheduler<T>);
-    init(): Promise<void>;
+    init(doUseLightClient: any): Promise<void>;
     /**
      * Encrypt a message
      * @param message The message to encrypt
@@ -58,5 +58,6 @@ export declare class Etf<T> {
     decrypt(ct: Uint8Array, nonce: Uint8Array, capsule: Uint8Array, slotSchedule: SlotSchedule): Promise<any>;
     private listenForSecrets;
     getLatestSlot(): number;
+    private rpcBuilder;
 }
 export {};
