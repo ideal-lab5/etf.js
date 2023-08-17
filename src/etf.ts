@@ -11,8 +11,8 @@ import { hexToU8a  } from "@polkadot/util";
 import {
     ScProvider
   } from "@polkadot/rpc-provider";
-  import * as Sc from "@substrate/connect";
-
+import * as Sc from "@substrate/connect";
+import * as smoldot from 'smoldot';
 import init, { EtfApiWrapper } from "etf-sdk";
 
 import chainSpec from './etfTestSpecRaw.json';
@@ -91,12 +91,64 @@ export class Etf<T> {
 
         let provider;
         if (doUseLightClient) {
-            let spec = JSON.stringify(chainSpec);
-            provider = new ScProvider(Sc, spec);
-            // let provider = new ScProvider(Sc, Sc.WellKnownChain.polkadot);
-            await provider.connect();
-            const api = await ApiPromise.create({ provider });
-            this.api = api;
+            // let spec = JSON.stringify(chainSpec);
+            // provider = new ScProvider(Sc, spec);
+            // // let provider = new ScProvider(Sc, Sc.WellKnownChain.polkadot);
+            // await provider.connect();
+            // const api = await ApiPromise.create({ provider });
+            // await api.isReady;
+            // this.api = api;
+
+
+            const client = smoldot.start();
+            let spec: string = JSON.stringify(chainSpec);
+            // const chain = await client.addChain({ chainSpec });
+            // await chain.sendJsonRpc('{"jsonrpc": "2.0", "id": "1", "method": "system_localListenAddresses", "params": []}'); 
+            // const parsed = JSON.parse(await chain.nextJsonRpcResponse());
+            // console.log(parsed);
+
+            const defaultChain = await client
+                .addChain({
+                    chainSpec: spec,
+                    databaseContent: "",
+                    disableJsonRpc: false,
+                })
+                .catch((error) => {
+                    console.error("Error while adding chain: " + error);
+                    process.exit(1);
+                });
+            // console.log('default');
+            // console.log(defaultChain);
+
+            
+            // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"system_name","params":[]}');
+            defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_follow","params":[true]}');
+
+            // const ETF_MODULE_XXHASH = "99d7a434606889c42e583cc02dba352e";
+            // const IBE_PARAMS_XXHASH = "8d44ec691b72ee47ed098f371608d7b5";
+            // let params = JSON.stringify({
+            //     key: '0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH,
+            //     hash: '',
+            // });
+
+            // console.log(params);
+            // console.log('query storage at ' + params);
+            // defaultChain.sendJsonRpc(this.rpcBuilder("chainHead_unstable_follow", false));
+            // const rpcMsg = this.rpcBuilder("state_getStorage", ['0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH]);
+            // defaultChain.sendJsonRpc(rpcMsg);
+            // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":2,"method":"state_getStorage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
+            // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_storage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
+            // console.log('hey');
+            // const jsonResponse = await defaultChain.nextJsonRpcResponse();
+            // console.log(jsonResponse);
+            
+            // Wait for a JSON-RPC response to come back. This is typically done in a loop in the background.
+            while(true) {
+                const jsonRpcResponse = await defaultChain.nextJsonRpcResponse();
+                console.log('res 1');
+                console.log(jsonRpcResponse)
+            }
+
         } else {
             provider = new WsProvider(`ws://${this.host}:${this.port}`);
             this.api = await ApiPromise.create({ provider });

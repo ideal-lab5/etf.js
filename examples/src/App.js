@@ -63,7 +63,7 @@ function App() {
     const inputElement = document.getElementById('inputMessage');
     const inputMessage = inputElement.value;
     let message = t.encode(inputMessage);
-    // inputElement.value = '';
+    inputElement.value = '';
     try {
       let out = api.encrypt(message, 3, 2, new TimeInput(5));
 

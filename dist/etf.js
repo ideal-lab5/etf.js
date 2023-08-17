@@ -43,8 +43,7 @@ exports.Etf = exports.DistanceBasedSlotScheduler = exports.TimeInput = void 0;
 const api_1 = require("@polkadot/api");
 const types_1 = require("@polkadot/types");
 const util_1 = require("@polkadot/util");
-const rpc_provider_1 = require("@polkadot/rpc-provider");
-const Sc = __importStar(require("@substrate/connect"));
+const smoldot = __importStar(require("smoldot"));
 const etf_sdk_1 = __importStar(require("etf-sdk"));
 const etfTestSpecRaw_json_1 = __importDefault(require("./etfTestSpecRaw.json"));
 // import { chain } from "@polkadot/types/interfaces/definitions";
@@ -102,12 +101,55 @@ class Etf {
         return __awaiter(this, void 0, void 0, function* () {
             let provider;
             if (doUseLightClient) {
+                // let spec = JSON.stringify(chainSpec);
+                // provider = new ScProvider(Sc, spec);
+                // // let provider = new ScProvider(Sc, Sc.WellKnownChain.polkadot);
+                // await provider.connect();
+                // const api = await ApiPromise.create({ provider });
+                // await api.isReady;
+                // this.api = api;
+                const client = smoldot.start();
                 let spec = JSON.stringify(etfTestSpecRaw_json_1.default);
-                provider = new rpc_provider_1.ScProvider(Sc, spec);
-                // let provider = new ScProvider(Sc, Sc.WellKnownChain.polkadot);
-                yield provider.connect();
-                const api = yield api_1.ApiPromise.create({ provider });
-                this.api = api;
+                // const chain = await client.addChain({ chainSpec });
+                // await chain.sendJsonRpc('{"jsonrpc": "2.0", "id": "1", "method": "system_localListenAddresses", "params": []}'); 
+                // const parsed = JSON.parse(await chain.nextJsonRpcResponse());
+                // console.log(parsed);
+                const defaultChain = yield client
+                    .addChain({
+                    chainSpec: spec,
+                    databaseContent: "",
+                    disableJsonRpc: false,
+                })
+                    .catch((error) => {
+                    console.error("Error while adding chain: " + error);
+                    process.exit(1);
+                });
+                // console.log('default');
+                // console.log(defaultChain);
+                // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"system_name","params":[]}');
+                defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_follow","params":[true]}');
+                // const ETF_MODULE_XXHASH = "99d7a434606889c42e583cc02dba352e";
+                // const IBE_PARAMS_XXHASH = "8d44ec691b72ee47ed098f371608d7b5";
+                // let params = JSON.stringify({
+                //     key: '0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH,
+                //     hash: '',
+                // });
+                // console.log(params);
+                // console.log('query storage at ' + params);
+                // defaultChain.sendJsonRpc(this.rpcBuilder("chainHead_unstable_follow", false));
+                // const rpcMsg = this.rpcBuilder("state_getStorage", ['0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH]);
+                // defaultChain.sendJsonRpc(rpcMsg);
+                // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":2,"method":"state_getStorage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
+                // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_storage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
+                // console.log('hey');
+                // const jsonResponse = await defaultChain.nextJsonRpcResponse();
+                // console.log(jsonResponse);
+                // Wait for a JSON-RPC response to come back. This is typically done in a loop in the background.
+                while (true) {
+                    const jsonRpcResponse = yield defaultChain.nextJsonRpcResponse();
+                    console.log('res 1');
+                    console.log(jsonRpcResponse);
+                }
             }
             else {
                 provider = new api_1.WsProvider(`ws://${this.host}:${this.port}`);
