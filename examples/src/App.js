@@ -171,11 +171,11 @@ function binomialCoefficient(n, k) {
         <span>Write a message</span>
         <textarea id='inputMessage' name="secret-message" cols="40" rows="5"></textarea>
         <form className='form'>
-          <label for="shares">Number of slots</label>
+          <label htmlFor="shares">Number of slots</label>
           <input id="shares" type='number' value={shares} onChange={(e) => setShares(e.target.value)} placeholder='' />
-          <label for="threshold">Threshold</label>
+          <label htmlFor="threshold">Threshold</label>
           <input id="threshold" type='number' onChange={(e) => setThreshold(e.target.value)} value={threshold} placeholder='' />
-          <label for="distance">Distance</label>
+          <label htmlFor="distance">Distance</label>
           <input id="distance" type='number' onChange={(e) => setDistance(e.target.value)} value={distance} placeholder='' />
           <input className='button' type='submit' onClick={encrypt} value="Encrypt" />
           <span>

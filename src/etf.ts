@@ -117,15 +117,11 @@ export class Etf<T> {
                     console.error("Error while adding chain: " + error);
                     process.exit(1);
                 });
-            // console.log('default');
-            // console.log(defaultChain);
-
             
-            // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"system_name","params":[]}');
-            defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_follow","params":[true]}');
+            // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_follow","params":[true]}');
 
-            // const ETF_MODULE_XXHASH = "99d7a434606889c42e583cc02dba352e";
-            // const IBE_PARAMS_XXHASH = "8d44ec691b72ee47ed098f371608d7b5";
+            const ETF_MODULE_XXHASH = "99d7a434606889c42e583cc02dba352e";
+            const IBE_PARAMS_XXHASH = "8d44ec691b72ee47ed098f371608d7b5";
             // let params = JSON.stringify({
             //     key: '0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH,
             //     hash: '',
@@ -137,17 +133,18 @@ export class Etf<T> {
             // const rpcMsg = this.rpcBuilder("state_getStorage", ['0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH]);
             // defaultChain.sendJsonRpc(rpcMsg);
             // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":2,"method":"state_getStorage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
-            // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_storage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
+            defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_storage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
             // console.log('hey');
-            // const jsonResponse = await defaultChain.nextJsonRpcResponse();
-            // console.log(jsonResponse);
+            const jsonResponse = await defaultChain.nextJsonRpcResponse();
+            console.log('fetch ibe public params bytes');
+            let ibe_pp_bytes = JSON.parse(jsonResponse).result;
             
             // Wait for a JSON-RPC response to come back. This is typically done in a loop in the background.
-            while(true) {
-                const jsonRpcResponse = await defaultChain.nextJsonRpcResponse();
-                console.log('res 1');
-                console.log(jsonRpcResponse)
-            }
+            // while(true) {
+            //     const jsonRpcResponse = await defaultChain.nextJsonRpcResponse();
+            //     console.log('res 1');
+            //     console.log(jsonRpcResponse)
+            // }
 
         } else {
             provider = new WsProvider(`ws://${this.host}:${this.port}`);
