@@ -30,6 +30,7 @@ function App() {
       setApi(api);
       
       document.addEventListener('blockHeader', () => {
+        console.log(api.latestSlot);
         setLatestSlot(api.latestSlot);
       });
     }
@@ -94,7 +95,7 @@ function App() {
       for await (const val of ipfs.cat(CID.parse(cid))) {
         o.push(val);
       }
-      let data = concat(o)
+      let data = concat(o);
       let js = JSON.parse(new TextDecoder().decode(data).toString());
       console.log(js.slotSchedule);
       let m = await api.decrypt(js.ciphertext, js.nonce, js.capsule, js.slotSchedule);

@@ -43,7 +43,8 @@ exports.Etf = exports.DistanceBasedSlotScheduler = exports.TimeInput = void 0;
 const api_1 = require("@polkadot/api");
 const types_1 = require("@polkadot/types");
 const util_1 = require("@polkadot/util");
-const smoldot = __importStar(require("smoldot"));
+const rpc_provider_1 = require("@polkadot/rpc-provider");
+const Sc = __importStar(require("@substrate/connect"));
 const etf_sdk_1 = __importStar(require("etf-sdk"));
 const etfTestSpecRaw_json_1 = __importDefault(require("./etfTestSpecRaw.json"));
 // import { chain } from "@polkadot/types/interfaces/definitions";
@@ -101,54 +102,14 @@ class Etf {
         return __awaiter(this, void 0, void 0, function* () {
             let provider;
             if (doUseLightClient) {
-                // let spec = JSON.stringify(chainSpec);
-                // provider = new ScProvider(Sc, spec);
-                // // let provider = new ScProvider(Sc, Sc.WellKnownChain.polkadot);
-                // await provider.connect();
-                // const api = await ApiPromise.create({ provider });
-                // await api.isReady;
-                // this.api = api;
-                const client = smoldot.start();
                 let spec = JSON.stringify(etfTestSpecRaw_json_1.default);
-                // const chain = await client.addChain({ chainSpec });
-                // await chain.sendJsonRpc('{"jsonrpc": "2.0", "id": "1", "method": "system_localListenAddresses", "params": []}'); 
-                // const parsed = JSON.parse(await chain.nextJsonRpcResponse());
-                // console.log(parsed);
-                const defaultChain = yield client
-                    .addChain({
-                    chainSpec: spec,
-                    databaseContent: "",
-                    disableJsonRpc: false,
-                })
-                    .catch((error) => {
-                    console.error("Error while adding chain: " + error);
-                    process.exit(1);
-                });
-                // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_follow","params":[true]}');
-                const ETF_MODULE_XXHASH = "99d7a434606889c42e583cc02dba352e";
-                const IBE_PARAMS_XXHASH = "8d44ec691b72ee47ed098f371608d7b5";
-                const P_PUB_XXHASH = "";
-                // let params = JSON.stringify({
-                //     key: '0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH,
-                //     hash: '',
-                // });
-                // console.log(params);
-                // console.log('query storage at ' + params);
-                // defaultChain.sendJsonRpc(this.rpcBuilder("chainHead_unstable_follow", false));
-                // const rpcMsg = this.rpcBuilder("state_getStorage", ['0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH]);
-                // defaultChain.sendJsonRpc(rpcMsg);
-                defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":2,"method":"state_getStorage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
-                // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_storage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
-                // console.log('hey');
-                const jsonResponse = yield defaultChain.nextJsonRpcResponse();
-                console.log('fetch ibe public params bytes');
-                console.log(JSON.parse(jsonResponse).result);
-                // Wait for a JSON-RPC response to come back. This is typically done in a loop in the background.
-                // while(true) {
-                //     const jsonRpcResponse = await defaultChain.nextJsonRpcResponse();
-                //     console.log('res 1');
-                //     console.log(jsonRpcResponse)
-                // }
+                provider = new rpc_provider_1.ScProvider(Sc, spec);
+                // let provider = new ScProvider(Sc, Sc.WellKnownChain.polkadot);
+                yield provider.connect();
+                console.log('provider connected');
+                const api = yield api_1.ApiPromise.create({ provider });
+                yield api.isReady;
+                this.api = api;
             }
             else {
                 provider = new api_1.WsProvider(`ws://${this.host}:${this.port}`);
@@ -174,7 +135,7 @@ class Etf {
             });
             const metadata = new types_1.Metadata(this.registry, data.toHex());
             this.registry.setMetadata(metadata);
-            // this.listenForSecrets();
+            this.listenForSecrets();
             // we want to load the ibe public params here
             const pps = yield this.api.query.etf.ibeParams();
             yield (0, etf_sdk_1.default)();
@@ -214,13 +175,26 @@ class Etf {
      */
     decrypt(ct, nonce, capsule, slotSchedule) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log('hi');
+            // testing only
+            yield this.api.rpc.chain.subscribeNewHeads((header) => __awaiter(this, void 0, void 0, function* () {
+                console.log(`Chain is at block: #${header.number}`);
+                const blockHash = yield this.api.rpc.chain.getBlockHash(header.number);
+                console.log(`blockHash: ${blockHash}`);
+                const at = yield this.api.at(blockHash);
+                const events = yield at.query.system.events();
+                console.log(events.toHuman());
+            }));
+            console.log('bye');
             let sks = [];
             let latest = this.getLatestSlot();
             let slotIds = slotSchedule.slotIds;
             for (const slotId of slotIds) {
                 let distance = (latest - slotId) / 2;
                 let blockNumber = this.latestBlockNumber.toNumber() - distance;
+                console.log('the block number is ' + blockNumber);
                 let blockHash = yield this.api.rpc.chain.getBlockHash(blockNumber);
+                console.log('the blockhash is ' + blockHash);
                 let blockHeader = yield this.api.rpc.chain.getHeader(blockHash);
                 let encodedPreDigest = blockHeader.digest.logs[0].toHuman().PreRuntime[1];
                 const predigest = this.registry.createType('PreDigest', encodedPreDigest);
@@ -233,28 +207,20 @@ class Etf {
     // listen for incoming block headers and emit an event 
     // when new headers are encountered
     // currently stores no history
-    // private listenForSecrets(): void {
-    //     await this.api.rpc.chain.subscribeNewHeads((header) => {
-    //         // read the predigest from each block
-    //         const encodedPreDigest = header.digest.logs[0].toHuman().PreRuntime[1];
-    //         const predigest = this.registry.createType('PreDigest', encodedPreDigest);
-    //         let latest = predigest.toHuman();
-    //         this.latestSlot = latest;
-    //         this.latestBlockNumber = header["number"];
-    //         const event = new CustomEvent('blockHeader', { detail: latest });
-    //         document.dispatchEvent(event);
-    //     });
-    // }
+    listenForSecrets() {
+        this.api.rpc.chain.subscribeNewHeads((header) => {
+            // read the predigest from each block
+            const encodedPreDigest = header.digest.logs[0].toHuman().PreRuntime[1];
+            const predigest = this.registry.createType('PreDigest', encodedPreDigest);
+            let latest = predigest.toHuman();
+            this.latestSlot = latest;
+            this.latestBlockNumber = header["number"];
+            const event = new CustomEvent('blockHeader', { detail: latest });
+            document.dispatchEvent(event);
+        });
+    }
     getLatestSlot() {
         return Number.parseInt(this.latestSlot.slot.replaceAll(",", ""));
-    }
-    rpcBuilder(method, params) {
-        return JSON.stringify({
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": method,
-            "params": params
-        });
     }
 }
 exports.Etf = Etf;

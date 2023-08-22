@@ -8,11 +8,8 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 import { Compact, Metadata, TypeRegistry } from "@polkadot/types";
 import { BlockNumber } from "@polkadot/types/interfaces";
 import { hexToU8a  } from "@polkadot/util";
-import {
-    ScProvider
-  } from "@polkadot/rpc-provider";
+import { ScProvider } from "@polkadot/rpc-provider";
 import * as Sc from "@substrate/connect";
-import * as smoldot from 'smoldot';
 import init, { EtfApiWrapper } from "etf-sdk";
 
 import chainSpec from './etfTestSpecRaw.json';
@@ -91,71 +88,18 @@ export class Etf<T> {
 
         let provider;
         if (doUseLightClient) {
-            // let spec = JSON.stringify(chainSpec);
-            // provider = new ScProvider(Sc, spec);
-            // // let provider = new ScProvider(Sc, Sc.WellKnownChain.polkadot);
-            // await provider.connect();
-            // const api = await ApiPromise.create({ provider });
-            // await api.isReady;
-            // this.api = api;
-
-
-            const client = smoldot.start();
-            let spec: string = JSON.stringify(chainSpec);
-            // const chain = await client.addChain({ chainSpec });
-            // await chain.sendJsonRpc('{"jsonrpc": "2.0", "id": "1", "method": "system_localListenAddresses", "params": []}'); 
-            // const parsed = JSON.parse(await chain.nextJsonRpcResponse());
-            // console.log(parsed);
-
-            const defaultChain = await client
-                .addChain({
-                    chainSpec: spec,
-                    databaseContent: "",
-                    disableJsonRpc: false,
-                })
-                .catch((error) => {
-                    console.error("Error while adding chain: " + error);
-                    process.exit(1);
-                });
-            
-            // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_follow","params":[true]}');
-
-            const ETF_MODULE_XXHASH = "99d7a434606889c42e583cc02dba352e";
-            const IBE_PARAMS_XXHASH = "8d44ec691b72ee47ed098f371608d7b5";
-            // let params = JSON.stringify({
-            //     key: '0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH,
-            //     hash: '',
-            // });
-
-            // console.log(params);
-            // console.log('query storage at ' + params);
-            // defaultChain.sendJsonRpc(this.rpcBuilder("chainHead_unstable_follow", false));
-            // const rpcMsg = this.rpcBuilder("state_getStorage", ['0x' + ETF_MODULE_XXHASH + IBE_PARAMS_XXHASH]);
-            // defaultChain.sendJsonRpc(rpcMsg);
-            // defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":2,"method":"state_getStorage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
-            defaultChain.sendJsonRpc('{"jsonrpc":"2.0","id":1,"method":"chainHead_unstable_storage","params":["0x99d7a434606889c42e583cc02dba352e8d44ec691b72ee47ed098f371608d7b5"]}');
-            // console.log('hey');
-            const jsonResponse = await defaultChain.nextJsonRpcResponse();
-            console.log('fetch ibe public params bytes');
-            let ibe_pp_bytes = JSON.parse(jsonResponse).result;
-            
-            // Wait for a JSON-RPC response to come back. This is typically done in a loop in the background.
-            // while(true) {
-            //     const jsonRpcResponse = await defaultChain.nextJsonRpcResponse();
-            //     console.log('res 1');
-            //     console.log(jsonRpcResponse)
-            // }
-
+            let spec = JSON.stringify(chainSpec);
+            provider = new ScProvider(Sc, spec);
+            await provider.connect();
+            console.log('provider connected');
+            const api = await ApiPromise.create({ provider });
+            await api.isReady
+            this.api = api;
         } else {
             provider = new WsProvider(`ws://${this.host}:${this.port}`);
             this.api = await ApiPromise.create({ provider });
             await this.api.isReady;
         }
-
-        // console.log('moving on...');
-         
-        // setup api for blockchain
-        
         console.log('api is ready');
         await this.api.rpc.chain.subscribeNewHeads((lastHeader) => {
             console.log(lastHeader.number.toString());
@@ -164,7 +108,6 @@ export class Etf<T> {
 
         // load metadata and predigest
         const data = await this.api.rpc.state.getMetadata();
-        // console.log(data);
         this.registry.register({
             PreDigest: {
                 slot: 'u64',
@@ -175,14 +118,11 @@ export class Etf<T> {
 
         const metadata = new Metadata(this.registry, data.toHex());
         this.registry.setMetadata(metadata);
-        // this.listenForSecrets();
-
-        // we want to load the ibe public params here
-        const pps = await this.api.query.etf.ibeParams();
+        this.listenForSecrets();
 
         await init();
         console.log('wasm initialized successfully');
-
+        const pps = await this.api.query.etf.ibeParams();
         this.etfApi = new EtfApiWrapper(pps[1], pps[2]);
         console.log('etf api initialized');
 
@@ -212,7 +152,7 @@ export class Etf<T> {
     }
 
     /**
-     * 
+     * Decrypt the ciphertext
      * @param ct 
      * @param nonce 
      * @param capsule 
@@ -244,30 +184,20 @@ export class Etf<T> {
     // listen for incoming block headers and emit an event 
     // when new headers are encountered
     // currently stores no history
-    // private listenForSecrets(): void {
-    //     await this.api.rpc.chain.subscribeNewHeads((header) => {
-    //         // read the predigest from each block
-    //         const encodedPreDigest = header.digest.logs[0].toHuman().PreRuntime[1];
-    //         const predigest = this.registry.createType('PreDigest', encodedPreDigest);
-
-    //         let latest = predigest.toHuman();
-    //         this.latestSlot = latest;
-    //         this.latestBlockNumber = header["number"];
-    //         const event = new CustomEvent('blockHeader', { detail: latest });
-    //         document.dispatchEvent(event);
-    //     });
-    // }
+    listenForSecrets(): void {
+        this.api.rpc.chain.subscribeNewHeads((header) => {
+            // read the predigest from each block
+            const encodedPreDigest = header.digest.logs[0].toHuman().PreRuntime[1];
+            const predigest = this.registry.createType('PreDigest', encodedPreDigest);
+            let latest = predigest.toHuman();
+            this.latestSlot = latest;
+            this.latestBlockNumber = header["number"];
+            const event = new CustomEvent('blockHeader', { detail: latest });
+            document.dispatchEvent(event);
+        });
+    }
 
     public getLatestSlot() {
         return Number.parseInt(this.latestSlot.slot.replaceAll(",", ""));
-    }
-
-    private rpcBuilder(method, params) {
-        return JSON.stringify({
-            "jsonrpc":"2.0",
-            "id":2,
-            "method": method, 
-            "params": params
-        });
     }
 }
