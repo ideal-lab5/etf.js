@@ -2,18 +2,19 @@
 //  * Encryption to the Future
 //  * This class initializes the ETF.js SDK
 //  */
-
+// see: https://polkadot.js.org/docs/api/FAQ/#since-upgrading-to-the-7x-series-typescript-augmentation-is-missing
+import "@polkadot/api-augment";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 
 import { Compact, Metadata, TypeRegistry } from "@polkadot/types";
 import { BlockNumber } from "@polkadot/types/interfaces";
 import { hexToU8a  } from "@polkadot/util";
 import { ScProvider } from "@polkadot/rpc-provider";
-import * as Sc from "@substrate/connect";
+import * as Sc from "@ideallabs/connect";
 import init, { EtfApiWrapper } from "etf-sdk";
 
 import chainSpec from './etfTestSpecRaw.json';
-// import { chain } from "@polkadot/types/interfaces/definitions";
+
 /**
  * The slot schedule holds a list of slot ids which are intended to be used in etf
  */
@@ -39,7 +40,7 @@ export class TimeInput {
  * Select slots randomly between the latest known slot and a future slot
  */
 export class DistanceBasedSlotScheduler implements SlotScheduler<TimeInput> {
-
+    // TODO: ensure no collision
     generateSchedule(n: number, currentSlot: number, input: TimeInput): SlotSchedule {
         // const currentSlot = Math.floor(input.currentSlot + 1);
         const distance = Math.floor(input.distance);
@@ -92,18 +93,13 @@ export class Etf<T> {
             provider = new ScProvider(Sc, spec);
             await provider.connect();
             console.log('provider connected');
-            const api = await ApiPromise.create({ provider });
-            await api.isReady
-            this.api = api;
         } else {
             provider = new WsProvider(`ws://${this.host}:${this.port}`);
-            this.api = await ApiPromise.create({ provider });
-            await this.api.isReady;
         }
+
+        this.api = await ApiPromise.create({ provider });
+        await this.api.isReady;
         console.log('api is ready');
-        await this.api.rpc.chain.subscribeNewHeads((lastHeader) => {
-            console.log(lastHeader.number.toString());
-          });
         this.registry = new TypeRegistry();
 
         // load metadata and predigest
@@ -171,7 +167,7 @@ export class Etf<T> {
         for (const slotId of slotIds) {
             let distance = (latest - slotId) / 2;
             let blockNumber = this.latestBlockNumber.toNumber() - distance;
-            let blockHash = await this.api.rpc.chain.getBlockHash(blockNumber);
+            let blockHash = await this.api.query.system.blockHash(blockNumber);
             let blockHeader = await this.api.rpc.chain.getHeader(blockHash);
             let encodedPreDigest = blockHeader.digest.logs[0].toHuman().PreRuntime[1];
             const predigest = this.registry.createType('PreDigest', encodedPreDigest);

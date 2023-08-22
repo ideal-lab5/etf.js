@@ -1,3 +1,4 @@
+import "@polkadot/api-augment";
 import { Compact } from "@polkadot/types";
 import { BlockNumber } from "@polkadot/types/interfaces";
 /**
@@ -48,7 +49,7 @@ export declare class Etf<T> {
         slotSchedule: SlotSchedule;
     };
     /**
-     *
+     * Decrypt the ciphertext
      * @param ct
      * @param nonce
      * @param capsule

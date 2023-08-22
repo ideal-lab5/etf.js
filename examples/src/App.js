@@ -1,4 +1,4 @@
-import { Etf, DistanceBasedSlotScheduler, TimeInput } from 'etf';
+import { Etf, DistanceBasedSlotScheduler, TimeInput } from '@ideallabs/etf.js';
 import './App.css';
 import React, { useEffect, useState } from 'react';
 import { CID, create } from 'ipfs-http-client';
@@ -30,7 +30,6 @@ function App() {
       setApi(api);
       
       document.addEventListener('blockHeader', () => {
-        console.log(api.latestSlot);
         setLatestSlot(api.latestSlot);
       });
     }
@@ -111,7 +110,7 @@ function App() {
   */
 
   function calculateEstimatedTime(distance, shares, threshold, TARGET) {
-    if (threshold <= 0 || threshold > shares) {
+    if (threshold == 0 || shares - threshold <= 0 ) {
         return "Invalid threshold";
     }
 

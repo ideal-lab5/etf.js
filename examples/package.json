@@ -5,6 +5,7 @@
   "dependencies": {
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
+    "@ideallabs/etf.js": "^0.0.3-dev",
     "@polkadot/api": "^10.3.4",
     "@polkadot/extension-dapp": "^0.46.3",
     "@polkadot/types": "^10.9.1",
@@ -12,7 +13,6 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "etf": "file:./../dist/etf.js",
     "ipfs-http-client": "^60.0.1",
     "mathjs": "^11.9.1",
     "react": "^18.2.0",
