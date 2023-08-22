@@ -1,3 +1,4 @@
+import "@polkadot/api-augment";
 import { Compact } from "@polkadot/types";
 import { BlockNumber } from "@polkadot/types/interfaces";
 /**
@@ -35,7 +36,7 @@ export declare class Etf<T> {
     private etfApi;
     private slotScheduler;
     constructor(host: string, port: number, slotScheduler: SlotScheduler<T>);
-    init(): Promise<void>;
+    init(doUseLightClient: any): Promise<void>;
     /**
      * Encrypt a message
      * @param message The message to encrypt
@@ -48,7 +49,7 @@ export declare class Etf<T> {
         slotSchedule: SlotSchedule;
     };
     /**
-     *
+     * Decrypt the ciphertext
      * @param ct
      * @param nonce
      * @param capsule
@@ -56,7 +57,7 @@ export declare class Etf<T> {
      * @returns
      */
     decrypt(ct: Uint8Array, nonce: Uint8Array, capsule: Uint8Array, slotSchedule: SlotSchedule): Promise<any>;
-    private listenForSecrets;
+    listenForSecrets(): void;
     getLatestSlot(): number;
 }
 export {};

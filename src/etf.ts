@@ -2,22 +2,26 @@
 //  * Encryption to the Future
 //  * This class initializes the ETF.js SDK
 //  */
-
+// see: https://polkadot.js.org/docs/api/FAQ/#since-upgrading-to-the-7x-series-typescript-augmentation-is-missing
+import "@polkadot/api-augment";
 import { ApiPromise, WsProvider } from "@polkadot/api";
+
 import { Compact, Metadata, TypeRegistry } from "@polkadot/types";
 import { BlockNumber } from "@polkadot/types/interfaces";
 import { hexToU8a  } from "@polkadot/util";
+import { ScProvider } from "@polkadot/rpc-provider";
+import * as Sc from "@ideallabs/connect";
 import init, { EtfApiWrapper } from "etf-sdk";
 
-import { readFileSync } from 'fs';
-import * as smoldot from 'smoldot';
+import chainSpec from './etfTestSpecRaw.json';
+
 /**
  * The slot schedule holds a list of slot ids which are intended to be used in etf
  */
 class SlotSchedule {
     public slotIds: number[];
     constructor(slotIds: number[]) {
-        this.slotIds = slotIds;
+        this.slotIds = slotIds;     
     }
 }
 
@@ -36,7 +40,7 @@ export class TimeInput {
  * Select slots randomly between the latest known slot and a future slot
  */
 export class DistanceBasedSlotScheduler implements SlotScheduler<TimeInput> {
-
+    // TODO: ensure no collision
     generateSchedule(n: number, currentSlot: number, input: TimeInput): SlotSchedule {
         // const currentSlot = Math.floor(input.currentSlot + 1);
         const distance = Math.floor(input.distance);
@@ -81,19 +85,21 @@ export class Etf<T> {
     }
 
     // connect to the chain and init wasm
-    async init(): Promise<void> {
+    async init(doUseLightClient): Promise<void> {
 
-        // if (doUseLightClient) {
-        //     const chainSpec = readFileSync('./etfTestSpecRaw.json', 'utf-8');
-        //     const client = smoldot.start();
-        //     const chain = await client.addChain({ chainSpec });
-        // }
+        let provider;
+        if (doUseLightClient) {
+            let spec = JSON.stringify(chainSpec);
+            provider = new ScProvider(Sc, spec);
+            await provider.connect();
+            console.log('provider connected');
+        } else {
+            provider = new WsProvider(`ws://${this.host}:${this.port}`);
+        }
 
-        const provider = new WsProvider(`ws://${this.host}:${this.port}`);
-        
-        // setup api for blockchain
         this.api = await ApiPromise.create({ provider });
         await this.api.isReady;
+        console.log('api is ready');
         this.registry = new TypeRegistry();
 
         // load metadata and predigest
@@ -110,12 +116,9 @@ export class Etf<T> {
         this.registry.setMetadata(metadata);
         this.listenForSecrets();
 
-        // we want to load the ibe public params here
-        const pps = await this.api.query.etf.ibeParams();
-
         await init();
         console.log('wasm initialized successfully');
-
+        const pps = await this.api.query.etf.ibeParams();
         this.etfApi = new EtfApiWrapper(pps[1], pps[2]);
         console.log('etf api initialized');
 
@@ -145,7 +148,7 @@ export class Etf<T> {
     }
 
     /**
-     * 
+     * Decrypt the ciphertext
      * @param ct 
      * @param nonce 
      * @param capsule 
@@ -164,7 +167,7 @@ export class Etf<T> {
         for (const slotId of slotIds) {
             let distance = (latest - slotId) / 2;
             let blockNumber = this.latestBlockNumber.toNumber() - distance;
-            let blockHash = await this.api.rpc.chain.getBlockHash(blockNumber);
+            let blockHash = await this.api.query.system.blockHash(blockNumber);
             let blockHeader = await this.api.rpc.chain.getHeader(blockHash);
             let encodedPreDigest = blockHeader.digest.logs[0].toHuman().PreRuntime[1];
             const predigest = this.registry.createType('PreDigest', encodedPreDigest);
@@ -177,12 +180,11 @@ export class Etf<T> {
     // listen for incoming block headers and emit an event 
     // when new headers are encountered
     // currently stores no history
-    private listenForSecrets(): void {
-        this.api.derive.chain.subscribeNewHeads(async (header) => {
+    listenForSecrets(): void {
+        this.api.rpc.chain.subscribeNewHeads((header) => {
             // read the predigest from each block
             const encodedPreDigest = header.digest.logs[0].toHuman().PreRuntime[1];
             const predigest = this.registry.createType('PreDigest', encodedPreDigest);
-
             let latest = predigest.toHuman();
             this.latestSlot = latest;
             this.latestBlockNumber = header["number"];

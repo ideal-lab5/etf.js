@@ -1,16 +1,19 @@
 {
-  "name": "e2f.js",
-  "version": "0.0.2-dev",
+  "name": "@ideallabs/etf.js",
+  "version": "0.0.3-dev",
   "description": "",
   "license": "GPL-3.0",
   "main": "dist/etf.js",
+  "type": "module",
   "dependencies": {
-    "@polkadot/api": "^10.3.4",
+    "@ideallabs/connect": "^0.0.1-dev",
+    "@polkadot/api": "^10.9.1",
+    "@polkadot/api-augment": "^10.9.1",
     "@polkadot/extension-dapp": "^0.46.3",
+    "@polkadot/rpc-provider": "^10.9.1",
     "@polkadot/types": "^10.9.1",
     "@polkadot/util": "^12.0.1",
-    "etf-sdk": "^0.0.2-dev",
-    "smoldot": "^1.0.16"
+    "etf-sdk": "^0.0.2-dev"
   },
   "scripts": {
     "test": "jest"
