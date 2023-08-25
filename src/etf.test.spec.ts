@@ -42,10 +42,10 @@ describe('DistanceBasedSlotScheduler', () => {
 
 describe('Etf', () => {
 
-  let emitter;
+  // let emitter;
   beforeEach(() => {
     jest.clearAllMocks();
-    emitter = new EventEmitter();
+    // emitter = new EventEmitter();
   });
 
   class MockSlotSchedule {
@@ -57,7 +57,7 @@ describe('Etf', () => {
 
   it('should initialize correctly', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create');
-    const etf = new Etf(mockSlotScheduler, emitter, 'localhost', 9944);
+    const etf = new Etf(mockSlotScheduler, 'localhost', 9944);
     await etf.init(false); 
     expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
       provider: expect.anything()
@@ -67,7 +67,7 @@ describe('Etf', () => {
 
   it('should initialize correctly with light client', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create');
-    const etf = new Etf(mockSlotScheduler, emitter);
+    const etf = new Etf(mockSlotScheduler);
     await etf.init(true); // Passing true to use light client
     expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
       provider: expect.anything()
@@ -76,7 +76,7 @@ describe('Etf', () => {
   });
 
   it('should encrypt a message', async () => {
-    const etf = new Etf(mockSlotScheduler, emitter);
+    const etf = new Etf(mockSlotScheduler);
     await etf.init(true); 
     const nextSlot = {
       "slot": "123,456,789"
@@ -96,7 +96,7 @@ describe('Etf', () => {
   });
 
   it('should decrypt a message', async () => {
-    const etf = new Etf(mockSlotScheduler, emitter);
+    const etf = new Etf(mockSlotScheduler);
     await etf.init(true); 
     const nextSlot = {
       "slot": "123,456,789"

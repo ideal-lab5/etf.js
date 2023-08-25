@@ -6,8 +6,7 @@
 import "@polkadot/api-augment";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 
-import { Compact, Metadata, TypeRegistry } from "@polkadot/types";
-import { BlockNumber } from "@polkadot/types/interfaces";
+import { Metadata, TypeRegistry } from "@polkadot/types";
 import { hexToU8a } from "@polkadot/util";
 import { ScProvider } from "@polkadot/rpc-provider";
 import * as Sc from "@ideallabs/connect";
@@ -81,11 +80,11 @@ export class Etf<T> {
     private slotScheduler!: SlotScheduler<T>;
     private eventEmitter!: EventEmitter;
 
-    constructor(slotScheduler: SlotScheduler<T>, eventEmitter: EventEmitter, host?: string, port?: number) {
+    constructor(slotScheduler: SlotScheduler<T>, host?: string, port?: number) {
         this.host = host;
         this.port = port;
         this.slotScheduler = slotScheduler
-        this.eventEmitter = eventEmitter;
+        this.eventEmitter = new EventEmitter();
     }
 
     // connect to the chain and init wasm
