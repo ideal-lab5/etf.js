@@ -21,7 +21,7 @@ import chainSpec from './etfTestSpecRaw.json';
 export class SlotSchedule {
     public slotIds: number[];
     constructor(slotIds: number[]) {
-        this.slotIds = slotIds;
+        this.slotIds = slotIds;     
     }
 }
 

@@ -35,7 +35,11 @@ export declare class Etf<T> {
     private registry;
     private etfApi;
     private slotScheduler;
+<<<<<<< HEAD
     constructor(slotScheduler: SlotScheduler<T>, host?: string, port?: number);
+=======
+    constructor(host: string, port: number, slotScheduler: SlotScheduler<T>);
+>>>>>>> main
     init(doUseLightClient: any): Promise<void>;
     /**
      * Encrypt a message

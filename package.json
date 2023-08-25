@@ -5,6 +5,7 @@
   "license": "GPL-3.0",
   "repository": "https://github.com/ideal-lab5/etf.js",
   "main": "dist/etf.js",
+  "type": "module",
   "dependencies": {
     "@ideallabs/connect": "^0.0.1-dev",
     "@ideallabs/etf-sdk": "^0.0.3-dev",
