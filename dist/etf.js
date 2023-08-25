@@ -18,7 +18,11 @@ import { Metadata, TypeRegistry } from "@polkadot/types";
 import { hexToU8a } from "@polkadot/util";
 import { ScProvider } from "@polkadot/rpc-provider";
 import * as Sc from "@ideallabs/connect";
+<<<<<<< HEAD
+import init, { EtfApiWrapper } from "@ideallabs/etf-sdk";
+=======
 import init, { EtfApiWrapper } from "etf-sdk";
+>>>>>>> main
 import chainSpec from './etfTestSpecRaw.json';
 /**
  * The slot schedule holds a list of slot ids which are intended to be used in etf
@@ -63,7 +67,11 @@ export class DistanceBasedSlotScheduler {
  * It assumes a time-based SlotScheduler
  */
 export class Etf {
+<<<<<<< HEAD
+    constructor(slotScheduler, host, port) {
+=======
     constructor(host, port, slotScheduler) {
+>>>>>>> main
         this.host = host;
         this.port = port;
         this.slotScheduler = slotScheduler;
