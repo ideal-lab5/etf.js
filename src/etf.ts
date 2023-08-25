@@ -11,14 +11,14 @@ import { BlockNumber } from "@polkadot/types/interfaces";
 import { hexToU8a  } from "@polkadot/util";
 import { ScProvider } from "@polkadot/rpc-provider";
 import * as Sc from "@ideallabs/connect";
-import init, { EtfApiWrapper } from "etf-sdk";
+import init, { EtfApiWrapper } from "@ideallabs/etf-sdk";
 
 import chainSpec from './etfTestSpecRaw.json';
 
 /**
  * The slot schedule holds a list of slot ids which are intended to be used in etf
  */
-class SlotSchedule {
+export class SlotSchedule {
     public slotIds: number[];
     constructor(slotIds: number[]) {
         this.slotIds = slotIds;     
@@ -40,6 +40,7 @@ export class TimeInput {
  * Select slots randomly between the latest known slot and a future slot
  */
 export class DistanceBasedSlotScheduler implements SlotScheduler<TimeInput> {
+    constructor() { }
     // TODO: ensure no collision
     generateSchedule(n: number, currentSlot: number, input: TimeInput): SlotSchedule {
         // const currentSlot = Math.floor(input.currentSlot + 1);
@@ -78,7 +79,7 @@ export class Etf<T> {
     private etfApi!: EtfApiWrapper;
     private slotScheduler!: SlotScheduler<T>;
 
-    constructor(host: string, port: number, slotScheduler: SlotScheduler<T>) {
+    constructor(slotScheduler: SlotScheduler<T>, host?: string, port?: number) {
         this.host = host;
         this.port = port;
         this.slotScheduler = slotScheduler
@@ -86,7 +87,6 @@ export class Etf<T> {
 
     // connect to the chain and init wasm
     async init(doUseLightClient): Promise<void> {
-
         let provider;
         if (doUseLightClient) {
             let spec = JSON.stringify(chainSpec);
@@ -169,9 +169,9 @@ export class Etf<T> {
             let blockNumber = this.latestBlockNumber.toNumber() - distance;
             let blockHash = await this.api.query.system.blockHash(blockNumber);
             let blockHeader = await this.api.rpc.chain.getHeader(blockHash);
-            let encodedPreDigest = blockHeader.digest.logs[0].toHuman().PreRuntime[1];
+            let encodedPreDigest = blockHeader.digest.logs[0].toHuman()["PreRuntime"][1];
             const predigest = this.registry.createType('PreDigest', encodedPreDigest);
-            let sk: Uint8Array = hexToU8a(predigest.secret.toString());
+            let sk: Uint8Array = hexToU8a(predigest.toJSON()["secret"].toString());
             sks.push(sk);
         }
         return this.etfApi.decrypt(ct, nonce, capsule, sks);
@@ -183,7 +183,7 @@ export class Etf<T> {
     listenForSecrets(): void {
         this.api.rpc.chain.subscribeNewHeads((header) => {
             // read the predigest from each block
-            const encodedPreDigest = header.digest.logs[0].toHuman().PreRuntime[1];
+            const encodedPreDigest = header.digest.logs[0].toHuman()["PreRuntime"][1];
             const predigest = this.registry.createType('PreDigest', encodedPreDigest);
             let latest = predigest.toHuman();
             this.latestSlot = latest;
