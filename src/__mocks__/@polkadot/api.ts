@@ -17,23 +17,39 @@ export class ApiPromise {
                 toHex: () => 'mockMetadataHex'
             })},
             chain: {
-                subscribeNewHeads: () => {
+                subscribeNewHeads: async () => {},
+                getHeader: async () => {
                     return {
-                        digest: {
-                          logs: [{
-                            toHuman: () => ({
-                              "PreRuntime": ["0xEncodedPreDigest"]
-                            })
-                          }]
-                        },
-                        number: 123
-                    };
-                }
+                        "digest": {
+                            "logs": [{
+                                toHuman: () => {
+                                    return {
+                                        "PreRuntime": [
+                                            {
+                                                // intentionally left empty
+                                            }, 
+                                            {
+                                                toJSON: () => {
+                                                    return {
+                                                        "secret": "0x01010101010"
+                                                    };
+                                                }
+                                            },
+                                        ]
+                                    }
+                                }}
+                            ]
+                        }
+                    }
+                },
             }
         };
         this.query = {
             etf: {
                 ibeParams: async () => ['param1', 'param2']
+            },
+            system: {
+                blockHash: async () => "0xBlockHash"
             }
         };
     }   

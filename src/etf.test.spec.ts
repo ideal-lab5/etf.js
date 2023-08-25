@@ -1,9 +1,7 @@
-import {describe, expect, test} from '@jest/globals';
+import {describe, expect} from '@jest/globals';
 import { DistanceBasedSlotScheduler, Etf, SlotSchedule } from './etf.ts';
 import { ApiPromise } from '@polkadot/api';
-
-import { Observable, of } from 'rxjs';
-import { take } from 'rxjs/operators';
+import EventEmitter from 'events';
 
 describe('DistanceBasedSlotScheduler', () => {
   it('should generate a valid schedule', () => {
@@ -44,6 +42,12 @@ describe('DistanceBasedSlotScheduler', () => {
 
 describe('Etf', () => {
 
+  let emitter;
+  beforeEach(() => {
+    jest.clearAllMocks();
+    emitter = new EventEmitter();
+  });
+
   class MockSlotSchedule {
     generateSchedule(n, currentSlot, input) {
       return new SlotSchedule([1, 3, 5]);
@@ -53,8 +57,8 @@ describe('Etf', () => {
 
   it('should initialize correctly', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create');
-    const etf = new Etf(mockSlotScheduler, 'localhost', 9944);
-    await etf.init(false); // Passing false to use full client
+    const etf = new Etf(mockSlotScheduler, emitter, 'localhost', 9944);
+    await etf.init(false); 
     expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
       provider: expect.anything()
     }));
@@ -63,7 +67,7 @@ describe('Etf', () => {
 
   it('should initialize correctly with light client', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create');
-    const etf = new Etf(mockSlotScheduler);
+    const etf = new Etf(mockSlotScheduler, emitter);
     await etf.init(true); // Passing true to use light client
     expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
       provider: expect.anything()
@@ -71,21 +75,42 @@ describe('Etf', () => {
     createSpy.mockRestore();
   });
 
-  // it('should encrypt a message', async () => {
-  //   const etf = new Etf(mockSlotScheduler);
-  //   const slotSchedule = { slotIds: [1, 3, 5] };
+  it('should encrypt a message', async () => {
+    const etf = new Etf(mockSlotScheduler, emitter);
+    await etf.init(true); 
+    const nextSlot = {
+      "slot": "123,456,789"
+    };
+    etf.latestSlot = nextSlot;
+    etf.latestBlockNumber = 123;
+    const message = 'Hello, world!';
+    const threshold = 2;
+    const result = etf.encrypt(message, 3, threshold, null);
+    // Verify that the result contains the expected ciphertext
+    expect(result.ct).toEqual({
+      aes_ct: "mocked-aes-ct",
+      etf_ct: "mocked-etf-ct",
+    });
+    // Verify that the result contains the expected slot schedule
+    expect(result.slotSchedule).toEqual({"slotIds": [1, 3, 5]});
+  });
 
-  //   const message = 'Hello, world!';
-  //   const threshold = 2; // Adjust with your mock data
+  it('should decrypt a message', async () => {
+    const etf = new Etf(mockSlotScheduler, emitter);
+    await etf.init(true); 
+    const nextSlot = {
+      "slot": "123,456,789"
+    };
+    etf.latestSlot = nextSlot;
+    etf.latestBlockNumber = 123;
+    let encoder = new TextEncoder();
+    const ct = encoder.encode('test1');
+    const nonce = encoder.encode('test2');
+    const capsule = encoder.encode('test3');
+    const slotSchedule = new SlotSchedule([1, 3, 5]);
 
-  //   const result = etf.encrypt(message, 3, threshold, null); // Use your mock schedulerInput
-
-    
-  //   // Verify that the result contains the expected ciphertext
-  //   expect(result.ct).toEqual(mockCiphertext);
-  //   // Verify that the result contains the expected slot schedule
-  //   expect(result.slotSchedule).toEqual(mockSlotSchedule);
-  // });
-
+    const result = await etf.decrypt(ct, nonce, capsule, slotSchedule);
+    expect(result).toEqual({ decrypted: "mocked-decrypted" });
+  });
 });
 
