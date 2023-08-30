@@ -19,8 +19,8 @@ describe('DistanceBasedSlotScheduler', () => {
     
     // Check if the generated slots are within the expected range
     schedule.slotIds.forEach(slot => {
-      expect(slot).toBeGreaterThanOrEqual(currentSlot + 1);
-      expect(slot).toBeLessThanOrEqual(currentSlot + 1 + distance * 2);
+      expect(slot).toBeGreaterThanOrEqual(currentSlot + 2);
+      expect(slot).toBeLessThanOrEqual(currentSlot + 2 + distance * 2);
       expect(slot % 2).toBe(0); // Ensure the slot is even
     });
   });
