@@ -7,9 +7,6 @@ import {concat} from 'uint8arrays'
 function App() {
   const [api, setApi] = useState(null);
   const [ipfs, setIpfs] = useState(null);
-
-  const [host, setHost] = useState('127.0.0.1');
-  const [port, setPort] = useState('9944');
   
   const [latestSlot, setLatestSlot] = useState(null);
   const [encryptedInfoList, setEncryptedInfoList] = useState([]);
@@ -108,9 +105,8 @@ function App() {
   /*
    functions to calc estimated time to decryption
   */
-
   function calculateEstimatedTime(distance, shares, threshold, TARGET) {
-    if (threshold == 0 || shares - threshold <= 0 ) {
+    if (threshold === 0 || shares - threshold <= 0 ) {
         return "Invalid threshold";
     }
 
