@@ -55,7 +55,7 @@ export class DistanceBasedSlotScheduler implements SlotScheduler<TimeInput> {
         // ensuring multiples of 2
         for (let i = 0; i < n; i++) {
             const range = Math.floor((terminalSlot - currentSlot + 1) / 2);
-            const randomSlot = currentSlot + Math.floor(Math.random() * range) * 2;
+            const randomSlot = currentSlot + 2 + Math.floor(Math.random() * range) * 2;
             slotIds.push(randomSlot);
         }
 
