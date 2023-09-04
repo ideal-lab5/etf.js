@@ -1,5 +1,5 @@
 import {describe, expect} from '@jest/globals';
-import { DistanceBasedSlotScheduler, Etf, SlotSchedule } from './etf.ts';
+import { DistanceBasedSlotScheduler, Etf, SlotSchedule } from './etf';
 import { ApiPromise } from '@polkadot/api';
 import EventEmitter from 'events';
 
