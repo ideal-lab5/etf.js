@@ -4,29 +4,51 @@ This is a javascript SDK to encrypt and decrypt messages with the ETF network. I
 
 ## Installation
 
+To use the library in your code, the latest published version can be installed from NPM with:
+
 ``` bash
 npm i @ideallabs/etf.js
 ```
 
-From the root directory
+Or, you can build the code with:
 ```bash 
-# make sure typsecript is installed
+git clone git@github.com:ideal-lab5/etf.js.git
+cd etf.js
+# ensure typsecript is installed
 npm i -g typsecript
-# build
+# install dependencies
+npm i
+# build 
 tsc
 ```
 
 ## Usage
 
-See the [examples](./examples/) for a functional example built with react. To use the library in our project, run a *full* ETF node (light client in the future), then using the `host` and `port` that the node's WS is running on:
+The etf.js library can be run either with a full node or with a light client (in browser). In the future, this could also be done with the extension (work in progress). 
+
+### Full node
+
+Currently we support connecting as a full node on insecure websockets only. This mode can be configured by initializing the library with no flags (or `false`). In order to do this, setup a node following the guide [here](https://ideal-lab5.github.io/getting_started.html#run).
 
 ``` javascript
-import { Etf, DistanceBasedSlotScheduler, TimeInput } from 'etf';
-// use slot scheduler of choice
+let host = '127.0.0.1';
+let port = '9944';
 const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler();
-let api = new Etf(host, port, distanceBasedSlotScheduler);
+let api = new Etf(distanceBasedSlotScheduler, host, port);
+await api.init();
+```
+
+### Light Client
+
+To run with an in-browser light client (smoldot), the library is initalized with:
+
+```javascript
+const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler();
+let api = new Etf(distanceBasedSlotScheduler);
 await api.init(true);
 ```
+
+This will start a smoldot light client in the browser, which will automatically start syncing with the network. With the current setup, this can take a significant amount of time to complete and we will address that soon.
 
 **Encryption**
 
