@@ -26,7 +26,7 @@ function App() {
       await api.init(true);
       setApi(api);
       
-      document.addEventListener('blockHeader', () => {
+      api.eventEmitter.on('blockHeader', () => {
         setLatestSlot(api.latestSlot);
       });
     }
