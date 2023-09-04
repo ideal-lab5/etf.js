@@ -88,13 +88,12 @@ export class Etf<T> {
     }
 
     // connect to the chain and init wasm
-    async init(doUseLightClient): Promise<void> {
+    async init(): Promise<void> {
         let provider;
-        if (doUseLightClient) {
+        if (this.host ==  undefined && this.port == undefined) {
             let spec = JSON.stringify(chainSpec);
             provider = new ScProvider(Sc, spec);
             await provider.connect();
-            console.log('provider connected');
         } else {
             provider = new WsProvider(`ws://${this.host}:${this.port}`);
         }
@@ -129,13 +128,33 @@ export class Etf<T> {
     }
 
     /**
+     * Attempt to fetch secrets from each slot, if it
+     * @param slots the slots
+     */
+    async secrets(slots) {
+        let sks = [];
+        let latest = this.getLatestSlot();
+        for (const slotId of slots) {
+            let distance = (latest - slotId) / 2;
+            let blockNumber = this.latestBlockNumber - distance;
+            let blockHash = await this.api.query.system.blockHash(blockNumber);
+            let blockHeader = await this.api.rpc.chain.getHeader(blockHash);
+            let encodedPreDigest = blockHeader.digest.logs[0].toHuman()["PreRuntime"][1];
+            const predigest = this.registry.createType('PreDigest', encodedPreDigest);
+            let sk: Uint8Array = hexToU8a(predigest.toJSON()["secret"].toString());
+            sks.push(sk);
+        }
+        return sks;
+    }
+
+    /**
      * Encrypt a message 
      * @param message The message to encrypt
      * @param n The number of slots to encrypt for
      * @param schedulerInput The schedulerInput for the slot scheduler 
      * @returns the ciphertext and slot schedule
      */
-    encrypt(message: string, n: number, threshold: number, schedulerInput: T) {
+    encrypt(message: string, n: number, threshold: number, seed: string, schedulerInput: T) {
         let slotSchedule =
             this.slotScheduler.generateSchedule(n, this.getLatestSlot(), schedulerInput);
         let t = new TextEncoder();
@@ -144,7 +163,7 @@ export class Etf<T> {
             ids.push(t.encode(id.toString()));
         }
         return {
-            ct: this.etfApi.encrypt(message, ids, threshold),
+            ct: this.etfApi.encrypt(message, ids, threshold, seed),
             slotSchedule: slotSchedule
         };
     }
@@ -163,19 +182,8 @@ export class Etf<T> {
         capsule: Uint8Array,
         slotSchedule: SlotSchedule
     ) {
-        let sks: Uint8Array[] = [];
-        let latest = this.getLatestSlot();
         let slotIds: number[] = slotSchedule.slotIds;
-        for (const slotId of slotIds) {
-            let distance = (latest - slotId) / 2;
-            let blockNumber = this.latestBlockNumber - distance;
-            let blockHash = await this.api.query.system.blockHash(blockNumber);
-            let blockHeader = await this.api.rpc.chain.getHeader(blockHash);
-            let encodedPreDigest = blockHeader.digest.logs[0].toHuman()["PreRuntime"][1];
-            const predigest = this.registry.createType('PreDigest', encodedPreDigest);
-            let sk: Uint8Array = hexToU8a(predigest.toJSON()["secret"].toString());
-            sks.push(sk);
-        }
+        let sks = await this.secrets(slotIds);
         return this.etfApi.decrypt(ct, nonce, capsule, sks);
     }
 

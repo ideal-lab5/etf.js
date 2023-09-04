@@ -1,7 +1,6 @@
 import {describe, expect} from '@jest/globals';
 import { DistanceBasedSlotScheduler, Etf, SlotSchedule } from './etf.ts';
 import { ApiPromise } from '@polkadot/api';
-import EventEmitter from 'events';
 
 describe('DistanceBasedSlotScheduler', () => {
   it('should generate a valid schedule', () => {
@@ -58,7 +57,7 @@ describe('Etf', () => {
   it('should initialize correctly', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create');
     const etf = new Etf(mockSlotScheduler, 'localhost', 9944);
-    await etf.init(false); 
+    await etf.init(); 
     expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
       provider: expect.anything()
     }));
@@ -68,7 +67,7 @@ describe('Etf', () => {
   it('should initialize correctly with light client', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create');
     const etf = new Etf(mockSlotScheduler);
-    await etf.init(true); // Passing true to use light client
+    await etf.init(); // Passing true to use light client
     expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
       provider: expect.anything()
     }));
@@ -77,7 +76,7 @@ describe('Etf', () => {
 
   it('should encrypt a message', async () => {
     const etf = new Etf(mockSlotScheduler);
-    await etf.init(true); 
+    await etf.init(); 
     const nextSlot = {
       "slot": "123,456,789"
     };
@@ -85,7 +84,7 @@ describe('Etf', () => {
     etf.latestBlockNumber = 123;
     const message = 'Hello, world!';
     const threshold = 2;
-    const result = etf.encrypt(message, 3, threshold, null);
+    const result = etf.encrypt(message, 3, threshold, "test seed", null);
     // Verify that the result contains the expected ciphertext
     expect(result.ct).toEqual({
       aes_ct: "mocked-aes-ct",
@@ -97,7 +96,7 @@ describe('Etf', () => {
 
   it('should decrypt a message', async () => {
     const etf = new Etf(mockSlotScheduler);
-    await etf.init(true); 
+    await etf.init(); 
     const nextSlot = {
       "slot": "123,456,789"
     };

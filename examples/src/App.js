@@ -23,7 +23,7 @@ function App() {
     const setup = async () => {
       const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler();
       let api = new Etf(distanceBasedSlotScheduler);
-      await api.init(true);
+      await api.init();
       setApi(api);
       
       document.addEventListener('blockHeader', () => {
@@ -60,9 +60,9 @@ function App() {
     const inputElement = document.getElementById('inputMessage');
     const inputMessage = inputElement.value;
     let message = t.encode(inputMessage);
-    inputElement.value = '';
-    try {
-      let out = api.encrypt(message, 3, 2, new TimeInput(5));
+      inputElement.value = '';
+      try {
+        let out = api.encrypt(message, 3, 2, new TimeInput(5));
 
       let o = {
         ciphertext: out.ct.aes_ct.ciphertext,
