@@ -6,8 +6,7 @@
       "outDir": "./dist",
       "declaration": true,
       "resolveJsonModule": true,
-      "noEmit": true,
-      "allowImportingTsExtensions": true,
+      "noEmit": false,
     },
     "include": ["./src/**/*"],
     "exclude": [

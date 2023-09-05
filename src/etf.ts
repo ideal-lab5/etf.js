@@ -78,7 +78,7 @@ export class Etf<T> {
     private registry!: TypeRegistry;
     private etfApi!: EtfApiWrapper;
     private slotScheduler!: SlotScheduler<T>;
-    private eventEmitter!: EventEmitter;
+    public eventEmitter!: EventEmitter;
 
     constructor(slotScheduler: SlotScheduler<T>, host?: string, port?: number) {
         this.host = host;
