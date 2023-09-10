@@ -6,8 +6,8 @@
 export class SlotSchedule {
   private _slotIds: number[]
 
-  constructor(slotIds: number[]) {
-    this._slotIds = slotIds
+  constructor(slotIds?: number[]) {
+    this._slotIds = slotIds ?? []
   }
 
   /**
@@ -20,5 +20,17 @@ export class SlotSchedule {
    */
   public get slotIds(): number[] {
     return this._slotIds
+  }
+
+  /**
+   * addSlot
+   *
+   * Adds a slotId into the slot schedule.
+   * TODO: Ensure uniqueness of the slotId?
+   *
+   * @param {number} slotId - The slotId to add.
+   */
+  public addSlot(slotId: number): void {
+    this._slotIds.push(slotId)
   }
 }

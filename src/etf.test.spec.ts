@@ -9,17 +9,16 @@ describe('DistanceBasedSlotScheduler', () => {
 
     const currentSlot = 10
     const distance = 5
-    const numberOfSlots = 3
-    const input = { currentSlot, distance }
+    const slotAmount = 3
 
-    const schedule = scheduler.generateSchedule(
-      numberOfSlots,
+    const schedule = scheduler.generateSchedule({
+      slotAmount,
       currentSlot,
-      input
-    )
+      distance,
+    })
 
     expect(schedule).toBeDefined()
-    expect(schedule.slotIds.length).toBe(numberOfSlots)
+    expect(schedule.slotIds.length).toBe(slotAmount)
 
     // Check if the generated slots are within the expected range
     schedule.slotIds.forEach((slot) => {
@@ -34,12 +33,14 @@ describe('DistanceBasedSlotScheduler', () => {
 
     const currentSlot = 10
     const distance = 5
-    const numberOfSlots = 6 // n > distance
-
-    const input = { currentSlot, distance }
+    const slotAmount = 6 // n > distance
 
     expect(() => {
-      scheduler.generateSchedule(numberOfSlots, currentSlot, input)
+      scheduler.generateSchedule({
+        slotAmount,
+        currentSlot,
+        distance,
+      })
     }).toThrow('number of slots must be less than total slots')
   })
 })
@@ -52,7 +53,7 @@ describe('Etf', () => {
   })
 
   class MockSlotSchedule {
-    generateSchedule(n, currentSlot, input) {
+    generateSchedule(input) {
       return new SlotSchedule([1, 3, 5])
     }
   }
