@@ -16,6 +16,17 @@ type GenerateParams = BaseGenerateParams<DistanceInput>
  * Select slots randomly between the latest known slot and a future slot.
  */
 export class DistanceBasedSlotScheduler extends SlotScheduler<DistanceInput> {
+  /**
+   * generateSchedule
+   *
+   * Generates a schedule of `slotAmount` random slots in a range from
+   * the current slot + 1, and current slot + distance.
+   *
+   * @param {number} params.slotAmount - The number of slots to generate.
+   * @param {number} params.currentSlot - The current slot number.
+   * @param {number} params.distance - The distance (range) to sample slots from.
+   * @returns {SlotSchedule}
+   */
   public generateSchedule(params: GenerateParams): SlotSchedule {
     const { slotAmount, currentSlot, distance: rawDistance } = params
 
