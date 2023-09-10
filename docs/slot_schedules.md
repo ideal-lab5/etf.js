@@ -8,9 +8,9 @@ Slot scheduling logic can be implemented by developers by implementing rules tha
 
 Developers can provide their own logic that defines the slot scheduler by implementing `SlotScheduler` interface and proving an implementation of Input data:
 
-``` typescript
+```typescript
 export interface SlotScheduler<T> {
-    generateSchedule(n: number, input: T): SlotSchedule;
+  generateSchedule(n: number, input: T): SlotSchedule
 }
 ```
 
