@@ -4,7 +4,7 @@
   "description": "a typescript sdk for encryption/decryption with the etf network",
   "license": "GPL-3.0",
   "repository": "https://github.com/ideal-lab5/etf.js",
-  "main": "dist/etf.js",
+  "main": "dist/index.js",
   "type": "module",
   "dependencies": {
     "@ideallabs/connect": "^0.0.1-dev",

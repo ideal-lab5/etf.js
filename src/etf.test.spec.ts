@@ -1,5 +1,6 @@
 import { describe, expect } from '@jest/globals'
-import { DistanceBasedSlotScheduler, Etf, SlotSchedule } from './etf'
+import { Etf } from './etf'
+import { DistanceBasedSlotScheduler, SlotSchedule } from './schedulers'
 import { ApiPromise } from '@polkadot/api'
 
 describe('DistanceBasedSlotScheduler', () => {
