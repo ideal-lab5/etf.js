@@ -126,7 +126,7 @@ export class Etf<T> {
       ids.push(t.encode(id.toString()))
     }
     return {
-      ct: this.etfApi.encrypt(message, ids, threshold, seed),
+      ct: this.etfApi.encrypt(message, ids, threshold, t.encode(seed)),
       slotSchedule: slotSchedule,
     }
   }

@@ -21,6 +21,7 @@ function App() {
 
   useEffect(() => {
     const setup = async () => {
+
       const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler()
       let api = new Etf(distanceBasedSlotScheduler)
       await api.init()

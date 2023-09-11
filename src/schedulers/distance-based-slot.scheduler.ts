@@ -1,4 +1,4 @@
-import { TimeInput } from '../time-input'
+import { TimeInput } from './utils/time-input'
 import { SlotScheduler } from './slot.scheduler'
 import { SlotSchedule } from './utils/slot-schedule'
 
