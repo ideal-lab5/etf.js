@@ -8,7 +8,10 @@
 import { KeyringPair } from '@polkadot/keyring/types';
 import { EXTRINSIC_VERSION } from '@polkadot/types/extrinsic/v4/Extrinsic';
 import { createMetadata, OptionsWithMeta } from '@substrate/txwrapper-polkadot';
-import fetch from 'node-fetch';
+
+export function rpcToLightClient() {
+	
+}
 
 /**
  * Send a JSONRPC request to the node at http://0.0.0.0:9933.
@@ -20,7 +23,7 @@ export function rpcToLocalNode(
 	method: string,
 	params: any[] = []
 ): Promise<any> {
-	return fetch('http://0.0.0.0:9933', {
+	return fetch('http://172.25.181.1:9944', {
 		body: JSON.stringify({
 			id: 1,
 			jsonrpc: '2.0',

@@ -6,6 +6,17 @@ import {
     UnsignedTransaction,
   } from '@substrate/txwrapper-core';
   
+  type GasLimit = {
+    /**
+     * the ref time
+     */
+    refTime: number;
+    /**
+     * The maxmimum proof size
+     */
+    proofSize: number;
+  }
+
   // We take care to build an explicit interface with docstrings that will make it easy for users to
   // understand the arguments they need to provide (docstrings also play nice with IDEs).
   //
@@ -28,12 +39,12 @@ import {
     /**
      * The gas limit enforced when executing the constructor.
      */
-    gas_limit: number;
+    gasLimit: GasLimit;
     /**
      * The maximum amount of balance that can be charged from the
 	  * caller to pay for the storage consumed.
      */
-    storage_deposit_limit: number;
+    storageDepositLimit: number;
     /**
      * The input data to pass to the contract.
      */
@@ -41,7 +52,7 @@ import {
   }
   
   // Define the method
-  export function transfer(
+  export function call(
     args: ContractCallArgs,
     info: BaseTxInfo,
     options: OptionsWithMeta
@@ -51,7 +62,7 @@ import {
         method: {
           args,
           name: 'call',
-          pallet: 'contract',
+          pallet: 'contracts',
         },
         ...info,
       },

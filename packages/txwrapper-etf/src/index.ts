@@ -2,10 +2,8 @@ import {
 	getRegistryBase,
 	GetRegistryOptsCore,
 	getSpecTypes,
-	PolkadotSS58Format,
 	TypeRegistry,
 } from '@substrate/txwrapper-core';
-import { methods as substrateMethods } from '@substrate/txwrapper-substrate';
 
 import * as etfMethods from './methods';
 
@@ -59,8 +57,7 @@ export function getRegistry({
 	typesBundle,
 	additionalTypes,
 }: GetRegistryOpts): TypeRegistry {
-	// The default type registry has polkadot types (should include contracts??)
-	// TODO: do I need to generate my own types?
+	// The default type registry has polkadot types
 	const registry = new TypeRegistry();
 	return getRegistryBase({
 		chainProperties: properties || KNOWN_CHAIN_PROPERTIES[specName],

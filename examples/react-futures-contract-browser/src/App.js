@@ -25,15 +25,20 @@ function App() {
   const [decrypted, setDecrypted] = useState('')
 
   const TARGET = 10
-  const CONTRACT_ADDR = "TODO";
+  const CONTRACT_ADDR = "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3"; // Bob, not a real contract
 
   useEffect(() => {
     const setup = async () => {
 
       // testing out the tx-wrapper
-      await cryptoWaitReady();
+      await cryptoWaitReady()
+
+      const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler()
+      let api = new Etf(distanceBasedSlotScheduler)
+      await api.init()
+
       const keyring = new Keyring();
-	    const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519');
+      const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519')
 
       const { block } = await rpcToLocalNode('chain_getBlock');
       const blockHash = await rpcToLocalNode('chain_getBlockHash');
@@ -42,24 +47,32 @@ function App() {
       const { specVersion, transactionVersion, specName } = await rpcToLocalNode(
         'state_getRuntimeVersion'
       );
-    
-      // Create [TODO CHAIN NAME] type registry.
+      
       const registry = getRegistry({
         chainName: 'ETF',
         specName,
         specVersion,
         metadataRpc,
-      });
+      })
+
+      let unsigned =
+        create_unsigned_tx(
+          alice, block,
+          blockHash,
+          genesisHash,
+          registry,
+          metadataRpc,
+          transactionVersion,
+          specVersion
+      )
+
+      let signed = create_signed_tx(
+        alice, unsigned, registry, metadataRpc
+      );
+
+      console.log(signed);
+
     
-
-      let tx = create_unsigned_tx(
-        alice, block, blockHash, genesisHash, registry, metadataRpc, transactionVersion, specVersion);
-      console.log('your unsigned tx');
-      console.log(tx);
-
-      // const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler()
-      // let api = new Etf(distanceBasedSlotScheduler)
-      // await api.init()
       // setApi(api)
 
       // api.eventEmitter.on('blockHeader', () => {
@@ -74,11 +87,14 @@ function App() {
   ) => {
     const unsigned = methods.contracts.call(
       {
-        dest: { id: '14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3' }, // Bob
-        value: '90071992547409910',
-        gas_limit: '90071992547409910',
-        storage_deposit_limit: '90071992547409910',
-        data: '',
+        dest: { id: CONTRACT_ADDR },
+        value: 1,
+        gasLimit: {
+          "refTime": 0,
+          "proofSize": 0,
+        },
+        storageDepositLimit: 900719920,
+        data: {},
       },
       {
         address: deriveAddress(alice.publicKey, 42), // TODO, use correct prefix
@@ -89,7 +105,7 @@ function App() {
         eraPeriod: 64,
         genesisHash,
         metadataRpc,
-        nonce: 0, // Assuming this is Alice's first tx on the chain
+        nonce: 0, // Assuming this is Alice's first tx on the chain Q: how can we get the right nonce?
         specVersion,
         tip: 0,
         transactionVersion,
@@ -100,6 +116,38 @@ function App() {
       }
     )
     return unsigned
+  }
+
+  const create_signed_tx = (alice, unsigned, registry, metadataRpc) => {
+    // Construct the signing payload from an unsigned transaction.
+    const signingPayload = construct.signingPayload(unsigned, { registry });
+    console.log(`\nPayload to Sign: ${signingPayload}`);
+
+    // Decode the information from a signing payload.
+    const payloadInfo = decode(signingPayload, {
+      metadataRpc,
+      registry,
+    });
+    console.log(
+      // TODO all the log messages need to be updated to be relevant to the method used
+      `\nDecoded Transaction\n  To: ${payloadInfo.method.args.dest}\n` +
+      `  Amount: ${payloadInfo.method.args.value}`
+    );
+
+    // Sign a payload. This operation should be performed on an offline device.
+    const signature = signWith(alice, signingPayload, {
+      metadataRpc,
+      registry,
+    });
+    console.log(`\nSignature: ${signature}`);
+
+    // Encode a signed transaction.
+    const tx = construct.signedTx(unsigned, signature, {
+      metadataRpc,
+      registry,
+    });
+    console.log(`\nTransaction to Submit: ${tx}`);
+    return tx;
   }
 
   // useEffect(() => {

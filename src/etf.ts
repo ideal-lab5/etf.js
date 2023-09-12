@@ -17,12 +17,15 @@ import { SlotSchedule } from './schedulers/utils/slot-schedule'
 import chainSpec from './etfTestSpecRaw.json'
 import { SlotScheduler } from './schedulers/slot.scheduler'
 
+const DEFAULT_HOST = '127.0.0.1'
+const DEFAULT_PORT = 9944
+
 /**
  * Encryption to the Future
  * This class initializes the ETF.js SDK
  * It assumes a time-based SlotScheduler
  */
-export class Etf<T> {
+export class Etf<T extends {}> {
   public latestSlot: any
   public latestBlockNumber: number
   private host: string
@@ -34,8 +37,8 @@ export class Etf<T> {
   public eventEmitter!: EventEmitter
 
   constructor(slotScheduler: SlotScheduler<T>, host?: string, port?: number) {
-    this.host = host
-    this.port = port
+    this.host = host ?? DEFAULT_HOST
+    this.port = port ?? DEFAULT_PORT
     this.slotScheduler = slotScheduler
     this.eventEmitter = new EventEmitter()
   }
@@ -115,11 +118,11 @@ export class Etf<T> {
     seed: string,
     schedulerInput: T
   ) {
-    let slotSchedule = this.slotScheduler.generateSchedule(
-      n,
-      this.getLatestSlot(),
-      schedulerInput
-    )
+    let slotSchedule = this.slotScheduler.generateSchedule({
+      slotAmount: n,
+      currentSlot: this.getLatestSlot(),
+      ...schedulerInput,
+    })
     let t = new TextEncoder()
     let ids = []
     for (const id of slotSchedule.slotIds) {

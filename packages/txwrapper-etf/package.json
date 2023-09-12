@@ -7,7 +7,7 @@
     "dist"
   ],
   "license": "Apache-2.0",
-  "main": "dist/etf.js",
+  "main": "dist/index.js",
   "private": true,
   "repository": "<link to the github repo this package lives in>",
   "bugs": "<link to the github repo this package lives in>/issues",
