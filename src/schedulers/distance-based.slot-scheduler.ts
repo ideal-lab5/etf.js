@@ -1,7 +1,7 @@
 import {
   GenerateParams as BaseGenerateParams,
   SlotScheduler,
-} from './slot.scheduler'
+} from './base.slot-scheduler'
 import { SlotSchedule } from './utils/slot-schedule'
 
 interface DistanceInput {
@@ -66,22 +66,10 @@ export class DistanceBasedSlotScheduler extends SlotScheduler<DistanceInput> {
     const pickedValues = new Set<number>()
 
     while (pickedValues.size < amount) {
-      const randomNum = this._generateRandomInteger(range)
+      const randomNum = Math.floor(Math.random() * (range + 1))
       pickedValues.add(randomNum)
     }
 
     return Array.from(pickedValues).sort()
-  }
-
-  /**
-   * _generateRandomInteger
-   *
-   * Generates a random integer between 0 and `range`.
-   *
-   * @param {number} range - The maximum pickable value.
-   * @returns {number} - The generated integer.
-   */
-  private _generateRandomInteger(range: number): number {
-    return Math.floor(Math.random() * (range + 1))
   }
 }

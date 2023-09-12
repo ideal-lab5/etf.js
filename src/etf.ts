@@ -15,10 +15,7 @@ import { EventEmitter } from 'events'
 import { SlotSchedule } from './schedulers/utils/slot-schedule'
 
 import chainSpec from './etfTestSpecRaw.json'
-import { SlotScheduler } from './schedulers/slot.scheduler'
-
-const DEFAULT_HOST = '127.0.0.1'
-const DEFAULT_PORT = 9944
+import { SlotScheduler } from './schedulers/base.slot-scheduler'
 
 /**
  * Encryption to the Future
@@ -37,8 +34,8 @@ export class Etf<T extends {}> {
   public eventEmitter!: EventEmitter
 
   constructor(slotScheduler: SlotScheduler<T>, host?: string, port?: number) {
-    this.host = host ?? DEFAULT_HOST
-    this.port = port ?? DEFAULT_PORT
+    this.host = host
+    this.port = port
     this.slotScheduler = slotScheduler
     this.eventEmitter = new EventEmitter()
   }
