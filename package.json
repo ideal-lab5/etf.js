@@ -15,6 +15,7 @@
     "@polkadot/rpc-provider": "^10.9.1",
     "@polkadot/types": "^10.9.1",
     "@polkadot/util": "^12.0.1",
+    "@substrate/txwrapper-substrate": "^7.0.1",
     "events": "^3.3.0"
   },
   "jest": {

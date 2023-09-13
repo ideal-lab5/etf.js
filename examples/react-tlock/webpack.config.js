@@ -7,6 +7,10 @@ module.exports = ({ mode } = { mode: 'production' }) => {
   return {
     mode,
     entry: './src/index.js',
+    resolve: {
+      fullySpecified: false,
+    },
+    test: /\.m?js/, // fix:issue: https://github.com/webpack/webpack/issues/11467
     output: {
       publicPath: '/',
       path: path.resolve(__dirname, 'build'),

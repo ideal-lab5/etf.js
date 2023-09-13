@@ -1,4 +1,4 @@
-import { Etf, DistanceBasedSlotScheduler, TimeInput } from '@ideallabs/etf.js'
+import { Etf, DistanceBasedSlotScheduler } from '@ideallabs/etf.js'
 import './App.css'
 import React, { useEffect, useState } from 'react'
 import { CID, create } from 'ipfs-http-client'
@@ -21,6 +21,7 @@ function App() {
 
   useEffect(() => {
     const setup = async () => {
+
       const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler()
       let api = new Etf(distanceBasedSlotScheduler)
       await api.init()
@@ -62,7 +63,8 @@ function App() {
     let message = t.encode(inputMessage)
     inputElement.value = ''
     try {
-      let out = api.encrypt(message, 3, 2, new TimeInput(5))
+      // message, slotAmount, threshold, range
+      let out = api.encrypt(message, 3, 2, 5)
 
       let o = {
         ciphertext: out.ct.aes_ct.ciphertext,

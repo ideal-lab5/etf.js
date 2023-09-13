@@ -112,8 +112,8 @@ export class Etf<T extends {}> {
     message: string,
     n: number,
     threshold: number,
-    seed: string,
-    schedulerInput: T
+    schedulerInput: T,
+    seed: string
   ) {
     let slotSchedule = this.slotScheduler.generateSchedule({
       slotAmount: n,
@@ -126,7 +126,7 @@ export class Etf<T extends {}> {
       ids.push(t.encode(id.toString()))
     }
     return {
-      ct: this.etfApi.encrypt(message, ids, threshold, seed),
+      ct: this.etfApi.encrypt(message, ids, threshold, t.encode(seed)),
       slotSchedule: slotSchedule,
     }
   }
