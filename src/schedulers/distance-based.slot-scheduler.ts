@@ -56,7 +56,7 @@ export class DistanceBasedSlotScheduler extends SlotScheduler<DistanceInput> {
    * _generateDistinctRandomIntegers
    *
    * Generates a prescribed amount of random integers in a
-   * specified range (from 0 to `range`).
+   * specified range (from 1 to `range`).
    *
    * @param {number} range - The range to generate random integers from.
    * @param {number} amount - Total amount of random integers to generate.
@@ -66,7 +66,7 @@ export class DistanceBasedSlotScheduler extends SlotScheduler<DistanceInput> {
     const pickedValues = new Set<number>()
 
     while (pickedValues.size < amount) {
-      const randomNum = Math.floor(Math.random() * (range + 1))
+      const randomNum = Math.floor(Math.random() * (range + 1)) + 2
       pickedValues.add(randomNum)
     }
 

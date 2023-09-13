@@ -41,7 +41,7 @@ describe('DistanceBasedSlotScheduler', () => {
         currentSlot,
         distance,
       })
-    }).toThrow('number of slots must be less than total slots')
+    }).toThrow('DistanceBasedSlotScheduler: Cannot sample more slots than the available ones in the provided range.')
   })
 })
 
@@ -61,7 +61,7 @@ describe('Etf', () => {
 
   it('should initialize correctly', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create')
-    const etf = new Etf(mockSlotScheduler, 'localhost', 9944)
+    const etf = new Etf('localhost', 9944)
     await etf.init()
     expect(createSpy).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -73,7 +73,7 @@ describe('Etf', () => {
 
   it('should initialize correctly with light client', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create')
-    const etf = new Etf(mockSlotScheduler)
+    const etf = new Etf()
     await etf.init() // Passing true to use light client
     expect(createSpy).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -84,7 +84,7 @@ describe('Etf', () => {
   })
 
   it('should encrypt a message', async () => {
-    const etf = new Etf(mockSlotScheduler)
+    const etf = new Etf()
     await etf.init()
     const nextSlot = {
       slot: '123,456,789',
@@ -93,18 +93,36 @@ describe('Etf', () => {
     etf.latestBlockNumber = 123
     const message = 'Hello, world!'
     const threshold = 2
-    const result = etf.encrypt(message, 3, threshold, 'test seed', null)
+    const result = etf.encrypt(message, 3, threshold, [1, 3, 5], 'test seed')
     // Verify that the result contains the expected ciphertext
     expect(result.ct).toEqual({
       aes_ct: 'mocked-aes-ct',
       etf_ct: 'mocked-etf-ct',
     })
     // Verify that the result contains the expected slot schedule
-    expect(result.slotSchedule).toEqual({ slotIds: [1, 3, 5] })
+    expect(result.slotSchedule).toEqual([1, 3, 5])
+  })
+
+  it('should fail to encrypt a message with an empty slot schedule', async () => {
+    const etf = new Etf()
+    await etf.init()
+    const nextSlot = {
+      slot: '123,456,789',
+    }
+    etf.latestSlot = nextSlot
+    etf.latestBlockNumber = 123
+    const message = 'Hello, world!'
+    const threshold = 2
+    const result = etf.encrypt(message, 3, threshold, null, 'test seed',)
+    // Verify that the result contains the expected ciphertext
+    expect(result).toEqual({
+      ct: "",
+      slotSchedule: [],
+    })
   })
 
   it('should decrypt a message', async () => {
-    const etf = new Etf(mockSlotScheduler)
+    const etf = new Etf()
     await etf.init()
     const nextSlot = {
       slot: '123,456,789',

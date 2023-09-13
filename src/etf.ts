@@ -30,13 +30,13 @@ export class Etf<T extends {}> {
   private api!: ApiPromise
   private registry!: TypeRegistry
   private etfApi!: EtfApiWrapper
-  private slotScheduler!: SlotScheduler<T>
+  // private slotScheduler!: SlotScheduler<T>
   public eventEmitter!: EventEmitter
 
-  constructor(slotScheduler: SlotScheduler<T>, host?: string, port?: number) {
+  constructor(host?: string, port?: number) {
     this.host = host
     this.port = port
-    this.slotScheduler = slotScheduler
+    // this.slotScheduler = slotScheduler
     this.eventEmitter = new EventEmitter()
   }
 
@@ -112,17 +112,25 @@ export class Etf<T extends {}> {
     message: string,
     n: number,
     threshold: number,
-    schedulerInput: T,
+    slotSchedule: number[],
     seed: string
   ) {
-    let slotSchedule = this.slotScheduler.generateSchedule({
-      slotAmount: n,
-      currentSlot: this.getLatestSlot(),
-      ...schedulerInput,
-    })
+    // let slotSchedule = this.slotScheduler.generateSchedule({
+    //   slotAmount: n,
+    //   currentSlot: this.getLatestSlot(),
+    //   ...schedulerInput,
+    // })
+
+    if (slotSchedule === undefined || slotSchedule === null) {
+      return {
+        ct: "",
+        slotSchedule: [],
+      }
+    }
+
     let t = new TextEncoder()
     let ids = []
-    for (const id of slotSchedule.slotIds) {
+    for (const id of slotSchedule) {
       ids.push(t.encode(id.toString()))
     }
     return {
