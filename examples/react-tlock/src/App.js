@@ -22,8 +22,7 @@ function App() {
   useEffect(() => {
     const setup = async () => {
 
-      const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler()
-      let api = new Etf(distanceBasedSlotScheduler)
+      let api = new Etf()
       await api.init()
       setApi(api)
 
@@ -63,8 +62,15 @@ function App() {
     let message = t.encode(inputMessage)
     inputElement.value = ''
     try {
+      const slotScheduler = new DistanceBasedSlotScheduler()
+      let slotSchedule = slotScheduler.generateSchedule({
+        slotAmount: 3,
+        currentSlot: latestSlot, 
+        distance: 5,
+      })
+      console.log(slotSchedule);
       // message, slotAmount, threshold, range
-      let out = api.encrypt(message, 3, 2, 5)
+      let out = api.encrypt(message, 3, 2, slotSchedule._slotIds, "test")
 
       let o = {
         ciphertext: out.ct.aes_ct.ciphertext,
