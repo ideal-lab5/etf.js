@@ -68,9 +68,7 @@ function App() {
         currentSlot: latestSlot, 
         distance: 5,
       })
-      console.log(slotSchedule);
-      // message, slotAmount, threshold, range
-      let out = api.encrypt(message, 3, 2, slotSchedule._slotIds, "test")
+      let out = api.encrypt(message, 2, slotSchedule._slotIds, "test")
 
       let o = {
         ciphertext: out.ct.aes_ct.ciphertext,

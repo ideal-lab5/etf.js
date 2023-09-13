@@ -110,7 +110,6 @@ export class Etf<T extends {}> {
    */
   encrypt(
     message: string,
-    n: number,
     threshold: number,
     slotSchedule: number[],
     seed: string

@@ -93,7 +93,7 @@ describe('Etf', () => {
     etf.latestBlockNumber = 123
     const message = 'Hello, world!'
     const threshold = 2
-    const result = etf.encrypt(message, 3, threshold, [1, 3, 5], 'test seed')
+    const result = etf.encrypt(message, threshold, [1, 3, 5], 'test seed')
     // Verify that the result contains the expected ciphertext
     expect(result.ct).toEqual({
       aes_ct: 'mocked-aes-ct',
@@ -113,7 +113,7 @@ describe('Etf', () => {
     etf.latestBlockNumber = 123
     const message = 'Hello, world!'
     const threshold = 2
-    const result = etf.encrypt(message, 3, threshold, null, 'test seed',)
+    const result = etf.encrypt(message, threshold, null, 'test seed',)
     // Verify that the result contains the expected ciphertext
     expect(result).toEqual({
       ct: "",

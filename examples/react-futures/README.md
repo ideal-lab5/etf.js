@@ -1,4 +1,4 @@
-# Etf Futures Contract Example
+# Etf Futures Example
 
 This is an example of interacting with a futures contract on the ETF network.
 

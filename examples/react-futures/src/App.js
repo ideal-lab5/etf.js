@@ -77,7 +77,7 @@ function App() {
 
       // encrypt the tx
       // message, slotAmount, threshold, range
-      let encryptedSignedTx = api.encrypt(new TextEncoder().encode(signedTx), 1, 1, slots, "testing");
+      let encryptedSignedTx = api.encrypt(new TextEncoder().encode(signedTx), 1, slots, "testing");
       console.log(encryptedSignedTx);
       //  let o = {
       //    ciphertext: out.ct.aes_ct.ciphertext,
