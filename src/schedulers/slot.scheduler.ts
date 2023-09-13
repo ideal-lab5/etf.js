@@ -1,4 +1,4 @@
-import { type SlotSchedule } from './utils/slot-schedule.ts'
+import { type SlotSchedule } from './utils/slot-schedule'
 
 export type GenerateParams<T extends {}> = {
   slotAmount: number

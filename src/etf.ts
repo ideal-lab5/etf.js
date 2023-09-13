@@ -115,8 +115,8 @@ export class Etf<T extends {}> {
     message: string,
     n: number,
     threshold: number,
-    seed: string,
-    schedulerInput: T
+    schedulerInput: T,
+    seed: string
   ) {
     let slotSchedule = this.slotScheduler.generateSchedule({
       slotAmount: n,
