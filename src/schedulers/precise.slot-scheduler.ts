@@ -1,8 +1,8 @@
 import {
     GenerateParams as BaseGenerateParams,
     SlotScheduler,
-} from './slot.scheduler'
-import { SlotSchedule } from './utils/slot-schedule'
+  } from './base.slot-scheduler'
+  import { SlotSchedule } from './utils/slot-schedule'
 
 interface PreciseInput {
     slots: number[]
