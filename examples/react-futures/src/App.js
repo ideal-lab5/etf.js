@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Etf, PreciseSlotScheduler } from '@ideallabs/etf.js'
+import { Etf } from '@ideallabs/etf.js'
 import './App.css'
 
 import { Keyring } from '@polkadot/api';
@@ -19,9 +19,7 @@ function App() {
   useEffect(() => {
     const setup = async () => {
       await cryptoWaitReady()
-
-      const slotScheduler = new PreciseSlotScheduler()
-      let api = new Etf(slotScheduler, '127.0.0.1', '9944')
+      let api = new Etf('127.0.0.1', '9944')
       await api.init()
 
       const keyring = new Keyring();
@@ -41,11 +39,12 @@ function App() {
 
       // load the contract
 
-      const contractAddr = "5FTVVAwJJz6BwbSfpP2wwpEbeGR5z6EMffCt9MoYsHHjrw1c"; // Bob, not a real contract
+      const contractAddr = "5GA7aTMbhjxRrVEDJnkiP1jSnU2VRcZyCffjm5wWUuJns6XC";
       const contract = new ContractPromise(api.api, contractMetadata, contractAddr);
       
       const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519')
       
+      const MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
       const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
       const PROOFSIZE = new BN(1_000_000);
       // maximum gas to be consumed for the call. if limit is too small the call will fail.
@@ -79,14 +78,33 @@ function App() {
       // message, slotAmount, threshold, range
       let encryptedSignedTx = api.encrypt(new TextEncoder().encode(signedTx), 1, slots, "testing");
       console.log(encryptedSignedTx);
-      //  let o = {
-      //    ciphertext: out.ct.aes_ct.ciphertext,
-      //    nonce: out.ct.aes_ct.nonce,
-      //    capsule: out.ct.etf_ct,
-      //    slotSchedule: out.slotSchedule,
-      //  }
-      // TODOs
-      // useink! hooks: publish the encrypted transaction
+
+      // now we want to call the publish function of the contract
+
+      const value = 100000; // only for payable messages, call will fail otherwise
+      const incValue = 1;
+
+      // call the publish function of the contract
+      await contract.tx
+        .propose( {
+          gasLimit: api?.registry.createType('WeightV2', {
+            refTime: MAX_CALL_WEIGHT2,
+            proofSize: PROOFSIZE,
+          }),
+          storageDepositLimit,
+          value: value,
+        }, 
+          encryptedSignedTx.ct.aes_ct.ciphertext, 
+          encryptedSignedTx.ct.aes_ct.nonce, 
+          encryptedSignedTx.ct.etf_ct
+        ).signAndSend(alice, result => {
+          if (result.status.isInBlock) {
+            console.log('in a block');
+          } else if (result.status.isFinalized) {
+            console.log('finalized');
+          }
+      });
+          
     }
     setup()
   }, [])
