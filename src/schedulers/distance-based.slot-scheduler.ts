@@ -2,7 +2,6 @@ import {
   GenerateParams as BaseGenerateParams,
   SlotScheduler,
 } from './base.slot-scheduler'
-import { SlotSchedule } from './utils/slot-schedule'
 
 interface DistanceInput {
   distance: number
@@ -27,7 +26,7 @@ export class DistanceBasedSlotScheduler extends SlotScheduler<DistanceInput> {
    * @param {number} params.distance - The distance (range) to sample slots from.
    * @returns {SlotSchedule}
    */
-  public generateSchedule(params: GenerateParams): SlotSchedule {
+  public generateSchedule(params: GenerateParams): number[] {
     const { slotAmount, currentSlot, distance: rawDistance } = params
 
     // TODO: Check that `currentSlot` and `distance` are integers?
@@ -40,15 +39,18 @@ export class DistanceBasedSlotScheduler extends SlotScheduler<DistanceInput> {
       )
     }
 
-    const slotIndexes = this._pickDistinctIntegers(distance - 1, slotAmount)
-    const schedule = new SlotSchedule()
+    const slotIndices = this._pickDistinctIntegers(distance - 1, slotAmount)
+    let schedule = []
 
-    slotIndexes.forEach((slotIndex) => {
+    slotIndices.forEach((slotIndex: number) => {
       // Calculate `slotId`, ensuring it's a multiple of 2.
+      console.log(currentSlot)
+      console.log(slotIndex)
+      console.log(currentSlot + slotIndex * 2)
       const slotId = currentSlot + slotIndex * 2
-      schedule.addSlot(slotId)
+      schedule.push(slotId)
     })
-
+  
     return schedule
   }
 
@@ -73,3 +75,4 @@ export class DistanceBasedSlotScheduler extends SlotScheduler<DistanceInput> {
     return Array.from(pickedValues).sort()
   }
 }
+

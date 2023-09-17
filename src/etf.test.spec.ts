@@ -1,6 +1,6 @@
 import { describe, expect } from '@jest/globals'
 import { Etf } from './etf'
-import { DistanceBasedSlotScheduler, SlotSchedule } from './schedulers'
+import { DistanceBasedSlotScheduler } from './schedulers'
 import { ApiPromise } from '@polkadot/api'
 
 describe('DistanceBasedSlotScheduler', () => {
@@ -18,10 +18,10 @@ describe('DistanceBasedSlotScheduler', () => {
     })
 
     expect(schedule).toBeDefined()
-    expect(schedule.slotIds.length).toBe(slotAmount)
+    expect(schedule.length).toBe(slotAmount)
 
     // Check if the generated slots are within the expected range
-    schedule.slotIds.forEach((slot) => {
+    schedule.forEach((slot) => {
       expect(slot).toBeGreaterThanOrEqual(currentSlot + 2)
       expect(slot).toBeLessThanOrEqual(currentSlot + 2 + distance * 2)
       expect(slot % 2).toBe(0) // Ensure the slot is even
@@ -54,7 +54,7 @@ describe('Etf', () => {
 
   class MockSlotSchedule {
     generateSchedule(input) {
-      return new SlotSchedule([1, 3, 5])
+      return [1, 3, 5]
     }
   }
   const mockSlotScheduler = new MockSlotSchedule()
@@ -99,8 +99,6 @@ describe('Etf', () => {
       aes_ct: 'mocked-aes-ct',
       etf_ct: 'mocked-etf-ct',
     })
-    // Verify that the result contains the expected slot schedule
-    expect(result.slotSchedule).toEqual([1, 3, 5])
   })
 
   it('should fail to encrypt a message with an empty slot schedule', async () => {
@@ -117,7 +115,6 @@ describe('Etf', () => {
     // Verify that the result contains the expected ciphertext
     expect(result).toEqual({
       ct: "",
-      slotSchedule: [],
     })
   })
 
@@ -133,9 +130,9 @@ describe('Etf', () => {
     const ct = encoder.encode('test1')
     const nonce = encoder.encode('test2')
     const capsule = encoder.encode('test3')
-    const slotSchedule = new SlotSchedule([1, 3, 5])
+    // const slotSchedule = new SlotSchedule([1, 3, 5])
 
-    const result = await etf.decrypt(ct, nonce, capsule, slotSchedule)
+    const result = await etf.decrypt(ct, nonce, capsule, [1, 3, 5])
     expect(result).toEqual({ decrypted: 'mocked-decrypted' })
   })
 })

@@ -12,10 +12,8 @@ import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@ideallabs/connect'
 import init, { EtfApiWrapper } from '@ideallabs/etf-sdk'
 import { EventEmitter } from 'events'
-import { SlotSchedule } from './schedulers/utils/slot-schedule'
 
 import chainSpec from './etfTestSpecRaw.json'
-import { SlotScheduler } from './schedulers/base.slot-scheduler'
 
 /**
  * Encryption to the Future
@@ -25,18 +23,17 @@ import { SlotScheduler } from './schedulers/base.slot-scheduler'
 export class Etf<T extends {}> {
   public latestSlot: any
   public latestBlockNumber: number
+  public ibeParams: any
   private host: string
   private port: number
   private api!: ApiPromise
   private registry!: TypeRegistry
   private etfApi!: EtfApiWrapper
-  // private slotScheduler!: SlotScheduler<T>
   public eventEmitter!: EventEmitter
 
   constructor(host?: string, port?: number) {
     this.host = host
     this.port = port
-    // this.slotScheduler = slotScheduler
     this.eventEmitter = new EventEmitter()
   }
 
@@ -73,6 +70,7 @@ export class Etf<T extends {}> {
     await init()
     console.log('wasm initialized successfully')
     const pps = await this.api.query.etf.ibeParams()
+    this.ibeParams = pps;
     this.etfApi = new EtfApiWrapper(pps[1], pps[2])
     console.log('etf api initialized')
 
@@ -84,10 +82,11 @@ export class Etf<T extends {}> {
    * Attempt to fetch secrets from each slot, if it
    * @param slots the slots
    */
-  async secrets(slots) {
+  async secrets(slots: number[]) {
     let sks = []
     let latest = this.getLatestSlot()
     for (const slotId of slots) {
+      // division by 2 since slot numbers increment by 2 but block numbers increment by 1
       let distance = (latest - slotId) / 2
       let blockNumber = this.latestBlockNumber - distance
       let blockHash = await this.api.query.system.blockHash(blockNumber)
@@ -114,17 +113,9 @@ export class Etf<T extends {}> {
     slotSchedule: number[],
     seed: string
   ) {
-    // let slotSchedule = this.slotScheduler.generateSchedule({
-    //   slotAmount: n,
-    //   currentSlot: this.getLatestSlot(),
-    //   ...schedulerInput,
-    // })
 
     if (slotSchedule === undefined || slotSchedule === null) {
-      return {
-        ct: "",
-        slotSchedule: [],
-      }
+      return { ct: "" }
     }
 
     let t = new TextEncoder()
@@ -133,8 +124,7 @@ export class Etf<T extends {}> {
       ids.push(t.encode(id.toString()))
     }
     return {
-      ct: this.etfApi.encrypt(message, ids, threshold, t.encode(seed)),
-      slotSchedule: slotSchedule,
+      ct: this.etfApi.encrypt(t.encode(message), ids, threshold, t.encode(seed)),
     }
   }
 
@@ -150,9 +140,8 @@ export class Etf<T extends {}> {
     ct: Uint8Array,
     nonce: Uint8Array,
     capsule: Uint8Array,
-    slotSchedule: SlotSchedule
+    slotIds: number[],
   ) {
-    let slotIds: number[] = slotSchedule.slotIds
     let sks = await this.secrets(slotIds)
     return this.etfApi.decrypt(ct, nonce, capsule, sks)
   }

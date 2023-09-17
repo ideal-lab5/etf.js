@@ -59,22 +59,22 @@ function App() {
     // we do not want to bind the message to the state
     const inputElement = document.getElementById('inputMessage')
     const inputMessage = inputElement.value
-    let message = t.encode(inputMessage)
+    console.log(parseInt(latestSlot.slot.replaceAll(",", "")));
     inputElement.value = ''
     try {
       const slotScheduler = new DistanceBasedSlotScheduler()
       let slotSchedule = slotScheduler.generateSchedule({
         slotAmount: 3,
-        currentSlot: latestSlot, 
+        currentSlot: parseInt(latestSlot.slot.replaceAll(",", "")), 
         distance: 5,
       })
-      let out = api.encrypt(message, 2, slotSchedule._slotIds, "test")
-
+      let out = api.encrypt(inputMessage, 2, slotSchedule, "testSeed")
+      console.log(out);
       let o = {
         ciphertext: out.ct.aes_ct.ciphertext,
         nonce: out.ct.aes_ct.nonce,
         capsule: out.ct.etf_ct,
-        slotSchedule: out.slotSchedule,
+        slotSchedule: slotSchedule,
       }
       let js = JSON.stringify(o)
       let cid = await ipfs.add(js)
@@ -86,10 +86,7 @@ function App() {
 
   /**
    * Attempt to decrypt something
-   * @param {*} ct
-   * @param {*} nonce
-   * @param {*} capsule
-   * @param {*} ss
+   * @param {*} cid
    */
   async function decrypt(cid) {
     try {
