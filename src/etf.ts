@@ -23,7 +23,7 @@ import chainSpec from './etfTestSpecRaw.json'
 export class Etf<T extends {}> {
   public latestSlot: any
   public latestBlockNumber: number
-  public ibeParams: any
+  public ibePubkey: number
   private host: string
   private port: number
   private api!: ApiPromise
@@ -59,7 +59,7 @@ export class Etf<T extends {}> {
       PreDigest: {
         slot: 'u64',
         secret: '[u8;48]',
-        proof: '([u8;48], [u8;48], [u8;32], [u8;48])',
+        proof: '[u8;224]',
       },
     })
 
@@ -70,7 +70,7 @@ export class Etf<T extends {}> {
     await init()
     console.log('wasm initialized successfully')
     const pps = await this.api.query.etf.ibeParams()
-    this.ibeParams = pps;
+    this.ibePubkey = pps[1]
     this.etfApi = new EtfApiWrapper(pps[1], pps[2])
     console.log('etf api initialized')
 

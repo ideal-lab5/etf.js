@@ -22,7 +22,7 @@ function App() {
   useEffect(() => {
     const setup = async () => {
 
-      let api = new Etf()
+      let api = new Etf('172.25.181.1', '9944')
       await api.init()
       setApi(api)
 
@@ -64,11 +64,12 @@ function App() {
     try {
       const slotScheduler = new DistanceBasedSlotScheduler()
       let slotSchedule = slotScheduler.generateSchedule({
-        slotAmount: 3,
+        slotAmount: shares,
         currentSlot: parseInt(latestSlot.slot.replaceAll(",", "")), 
-        distance: 5,
+        distance: distance,
       })
-      let out = api.encrypt(inputMessage, 2, slotSchedule, "testSeed")
+      console.log(slotSchedule);
+      let out = api.encrypt(inputMessage, threshold, slotSchedule, "testSeed")
       console.log(out);
       let o = {
         ciphertext: out.ct.aes_ct.ciphertext,
@@ -96,7 +97,7 @@ function App() {
       }
       let data = concat(o)
       let js = JSON.parse(new TextDecoder().decode(data).toString())
-      console.log(js.slotSchedule)
+      console.log(js);
       let m = await api.decrypt(
         js.ciphertext,
         js.nonce,
@@ -104,6 +105,7 @@ function App() {
         js.slotSchedule
       )
       let message = String.fromCharCode(...m)
+      console.log(message);
       setDecrypted(message)
     } catch (e) {
       console.error(e)
@@ -114,7 +116,7 @@ function App() {
    functions to calc estimated time to decryption
   */
   function calculateEstimatedTime(distance, shares, threshold, TARGET) {
-    if (threshold === 0 || shares - threshold <= 0) {
+    if (threshold === 0 || shares - threshold < 0) {
       return 'Invalid threshold'
     }
 

@@ -9,7 +9,7 @@ import { blake2AsHex, cryptoWaitReady } from '@polkadot/util-crypto';
 import { construct, decode, deriveAddress, getRegistry, methods } from '@ideallabs/txwrapper-etf';
 import { signWith } from './util';
 
-import { BN, BN_ONE } from "@polkadot/util";
+import { BN, BN_ONE, hexToU8a } from "@polkadot/util";
 
 import contractMetadata from './resources/timelock_auction.json';
 
@@ -24,7 +24,7 @@ function App() {
   const [api, setApi] = useState(null);
   const [alice, setAlice] = useState(null);
   const [contract, setContract] = useState(null);
-  const [contractAddr, setContractAddr] = useState("5CVpvmM5Sje52FJQTvN1pMsdbs2kEZVNz3PDdepu8FMx4N2R");
+  const [contractAddr, setContractAddr] = useState("5FJmduN6BiScQ5TA2ktsQR1qYtmfvhZ5Z5Yt82nNoLze9KQv");
   const [registry, setRegistry] = useState(null);
   const [specVersion, setSpecVersion] = useState(null);
   const [metadataRpc, setMetadataRpc] = useState(null);
@@ -38,7 +38,6 @@ function App() {
       let api = new Etf('127.0.0.1', '9944')
       await api.init()
       setApi(api);
-
       const keyring = new Keyring();
 
       const { specVersion, transactionVersion, specName } = await api.api.rpc.state.getRuntimeVersion();
@@ -230,10 +229,21 @@ function App() {
     // we do not want to bind the message to the state
     const inputElement = document.getElementById('bid')
     const bid = inputElement.value.toString()
+    // console.log(bid);
     // let signedTx = await build_transaction(api, alice, bid)
-    console.log(slots);
-    let t = new TextEncoder();
-    let encryptedSignedTx = api.encrypt(bid, 1, slots, "testing");
+    // console.log(slots);
+    let timelockedBid = api.encrypt(bid.toString(), 1, slots, "testing234");
+    console.log(timelockedBid);
+    // testing only: decryption works here :)
+    // let pt = await api.decrypt(timelockedBid.ct.aes_ct.ciphertext,
+    //   timelockedBid.ct.aes_ct.nonce, timelockedBid.ct.etf_ct, slots);
+    
+    // console.log('plaintext');
+    // console.log(String.fromCharCode(...pt))
+
+    // etf_ct = Vec<IbeCt> w/ 1 item
+    console.log([...timelockedBid.ct.etf_ct[0]])
+
     // now we want to call the publish function of the contract
     const value = 1000000000000;
     // call the publish function of the contract
@@ -246,9 +256,9 @@ function App() {
         storageDepositLimit: null,
         value: value,
       },
-        Array.from(encryptedSignedTx.ct.aes_ct.ciphertext),
-        encryptedSignedTx.ct.aes_ct.nonce,
-        encryptedSignedTx.ct.etf_ct
+        timelockedBid.ct.aes_ct.ciphertext,
+        timelockedBid.ct.aes_ct.nonce,
+        [...timelockedBid.ct.etf_ct[0]],
       ).signAndSend(alice, result => {
         if (result.status.isInBlock) {
           console.log('in a block');
@@ -262,18 +272,33 @@ function App() {
 
   const doComplete = async () => {
     let secrets = await api.secrets(slots);
-    
-    let f = [];
-    for (let s of secrets) {
-      f.push(Array.from(s))
-    }
-
-    let p = Array.from(api.ibeParams[0]);
-
-    console.log(p);
-    console.log(secrets);
+    // P \in G2
+    let ibePubkey = Array.from(api.ibePubkey);
+    console.log(ibePubkey)
+    console.log(Array.from(secrets[0]));
 
     const storageDepositLimit = null
+    // console.log(alice.address);
+    // const { gasRequired, storageDeposit, result, output } = await contract.query.getProposals(
+    //   alice.address,
+    //   {
+    //     gasLimit: api?.registry.createType('WeightV2', {
+    //       refTime: MAX_CALL_WEIGHT,
+    //       proofSize: PROOFSIZE,
+    //     }),
+    //     storageDepositLimit,
+    //   },
+    //   alice.address
+    // );
+
+    // let o = output.toHuman().Ok;
+    // let ct = hexToU8a(o.ciphertext);
+    // let nonce = hexToU8a(o.nonce);
+    // console.log(o.capsule);
+    // let cap = hexToU8a(o.capsule);
+    // console.log(cap);
+    // let pt = await api.decrypt(ct, nonce, cap, slots);
+    // console.log(pt);
 
     await contract.tx
       .complete({
@@ -282,8 +307,10 @@ function App() {
           proofSize: PROOFSIZE,
         }),
         storageDepositLimit,
-      }, p, secrets)
-      .signAndSend(alice, result => {
+      }, 
+        ibePubkey, 
+        Array.from(secrets[0])
+      ).signAndSend(alice, result => {
         if (result.isErr) {
           const errorMsg = result.toJSON();
           console.log(errorMsg)
