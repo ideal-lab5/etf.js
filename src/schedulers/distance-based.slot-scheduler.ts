@@ -44,9 +44,6 @@ export class DistanceBasedSlotScheduler extends SlotScheduler<DistanceInput> {
 
     slotIndices.forEach((slotIndex: number) => {
       // Calculate `slotId`, ensuring it's a multiple of 2.
-      console.log(currentSlot)
-      console.log(slotIndex)
-      console.log(currentSlot + slotIndex * 2)
       const slotId = currentSlot + slotIndex * 2
       schedule.push(slotId)
     })
