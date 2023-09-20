@@ -1,15 +1,18 @@
+/* global BigInt */
 import React, { useEffect, useState } from 'react'
-import { Etf, SlotSchedule } from '@ideallabs/etf.js'
+import { Etf } from '@ideallabs/etf.js'
 import './App.css'
 
 import { Keyring } from '@polkadot/api';
 import { ContractPromise } from '@polkadot/api-contract';
 import { blake2AsHex, cryptoWaitReady } from '@polkadot/util-crypto';
 
+import { SHA3 } from 'sha3';
+
 import { construct, decode, deriveAddress, getRegistry, methods } from '@ideallabs/txwrapper-etf';
 import { signWith } from './util';
 
-import { BN, BN_ONE, hexToU8a } from "@polkadot/util";
+import { BN, BN_ONE } from "@polkadot/util";
 
 import contractMetadata from './resources/timelock_auction.json';
 
@@ -19,12 +22,10 @@ function App() {
   const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   const PROOFSIZE = new BN(1_000_000_000);
 
-  const STORAGE_DEP_LIMIT = new BN(9_000_000_000_000_000);
-
   const [api, setApi] = useState(null);
   const [alice, setAlice] = useState(null);
   const [contract, setContract] = useState(null);
-  const [contractAddr, setContractAddr] = useState("5FJmduN6BiScQ5TA2ktsQR1qYtmfvhZ5Z5Yt82nNoLze9KQv");
+  const [contractAddr, setContractAddr] = useState("5DFU5KKpEu87i5z8cBhEVKZWTFZ3gvSAu6CAKGBfphDuCRQe");
   const [registry, setRegistry] = useState(null);
   const [specVersion, setSpecVersion] = useState(null);
   const [metadataRpc, setMetadataRpc] = useState(null);
@@ -66,7 +67,7 @@ function App() {
       // if null is passed, unlimited balance can be used
       const storageDepositLimit = null
       // https://substrate.stackexchange.com/questions/6401/smart-contract-function-call-error
-      const { gasRequired, storageDeposit, result, output } = await contract.query.getSlots(
+      const { gasRequired, storageDeposit, result, output } = await contract.query.getDeadline(
         alice.address,
         {
           gasLimit: api?.registry.createType('WeightV2', {
@@ -77,13 +78,12 @@ function App() {
         }
       );
 
-      let formatted = []
-      let slots = output.toHuman().Ok;
-      for (let slot of slots) {
-        formatted.push(Number.parseInt(slot.replaceAll(",", "")))
-      }
+      let slot = output.toHuman().Ok;
+      // for (let slot of slots) {
+      //   formatted.push()
+      // }
 
-      setSlots(formatted)
+      setSlots([Number.parseInt(slot.replaceAll(",", ""))])
       console.log('contract ready');
 
     }
@@ -228,22 +228,11 @@ function App() {
     e.preventDefault()
     // we do not want to bind the message to the state
     const inputElement = document.getElementById('bid')
-    const bid = inputElement.value.toString()
-    // console.log(bid);
-    // let signedTx = await build_transaction(api, alice, bid)
-    // console.log(slots);
-    let timelockedBid = api.encrypt(bid.toString(), 1, slots, "testing234");
-    console.log(timelockedBid);
-    // testing only: decryption works here :)
-    // let pt = await api.decrypt(timelockedBid.ct.aes_ct.ciphertext,
-    //   timelockedBid.ct.aes_ct.nonce, timelockedBid.ct.etf_ct, slots);
-    
-    // console.log('plaintext');
-    // console.log(String.fromCharCode(...pt))
-
-    // etf_ct = Vec<IbeCt> w/ 1 item
-    console.log([...timelockedBid.ct.etf_ct[0]])
-
+    const hasher = new SHA3(256)
+    hasher.update(inputElement.value)
+    const hash = hasher.digest();
+    // the seed shouldn't be reused 
+    let timelockedBid = api.encrypt(inputElement.value, 1, slots, "testing234");
     // now we want to call the publish function of the contract
     const value = 1000000000000;
     // call the publish function of the contract
@@ -258,7 +247,8 @@ function App() {
       },
         timelockedBid.ct.aes_ct.ciphertext,
         timelockedBid.ct.aes_ct.nonce,
-        [...timelockedBid.ct.etf_ct[0]],
+        timelockedBid.ct.etf_ct[0],
+        Array.from(hash),
       ).signAndSend(alice, result => {
         if (result.status.isInBlock) {
           console.log('in a block');
@@ -277,36 +267,13 @@ function App() {
     console.log(ibePubkey)
     console.log(Array.from(secrets[0]));
 
-    const storageDepositLimit = null
-    // console.log(alice.address);
-    // const { gasRequired, storageDeposit, result, output } = await contract.query.getProposals(
-    //   alice.address,
-    //   {
-    //     gasLimit: api?.registry.createType('WeightV2', {
-    //       refTime: MAX_CALL_WEIGHT,
-    //       proofSize: PROOFSIZE,
-    //     }),
-    //     storageDepositLimit,
-    //   },
-    //   alice.address
-    // );
-
-    // let o = output.toHuman().Ok;
-    // let ct = hexToU8a(o.ciphertext);
-    // let nonce = hexToU8a(o.nonce);
-    // console.log(o.capsule);
-    // let cap = hexToU8a(o.capsule);
-    // console.log(cap);
-    // let pt = await api.decrypt(ct, nonce, cap, slots);
-    // console.log(pt);
-
     await contract.tx
       .complete({
         gasLimit: api.api.registry.createType('WeightV2', {
-          refTime: MAX_CALL_WEIGHT2,
-          proofSize: PROOFSIZE,
+          refTime: new BN(1_290_000_000_000),
+          proofSize: new BN(5_000_000_000_000),
         }),
-        storageDepositLimit,
+        storageDepositLimit: null,
       }, 
         ibePubkey, 
         Array.from(secrets[0])
