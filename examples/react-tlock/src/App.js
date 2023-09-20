@@ -22,8 +22,7 @@ function App() {
   useEffect(() => {
     const setup = async () => {
 
-      const distanceBasedSlotScheduler = new DistanceBasedSlotScheduler()
-      let api = new Etf(distanceBasedSlotScheduler)
+      let api = new Etf('172.25.181.1', '9944')
       await api.init()
       setApi(api)
 
@@ -60,17 +59,23 @@ function App() {
     // we do not want to bind the message to the state
     const inputElement = document.getElementById('inputMessage')
     const inputMessage = inputElement.value
-    let message = t.encode(inputMessage)
+    console.log(parseInt(latestSlot.slot.replaceAll(",", "")));
     inputElement.value = ''
     try {
-      // message, slotAmount, threshold, range
-      let out = api.encrypt(message, 3, 2, 5)
-
+      const slotScheduler = new DistanceBasedSlotScheduler()
+      let slotSchedule = slotScheduler.generateSchedule({
+        slotAmount: shares,
+        currentSlot: parseInt(latestSlot.slot.replaceAll(",", "")), 
+        distance: distance,
+      })
+      console.log(slotSchedule);
+      let out = api.encrypt(inputMessage, threshold, slotSchedule, "testSeed")
+      console.log(out);
       let o = {
         ciphertext: out.ct.aes_ct.ciphertext,
         nonce: out.ct.aes_ct.nonce,
         capsule: out.ct.etf_ct,
-        slotSchedule: out.slotSchedule,
+        slotSchedule: slotSchedule,
       }
       let js = JSON.stringify(o)
       let cid = await ipfs.add(js)
@@ -82,10 +87,7 @@ function App() {
 
   /**
    * Attempt to decrypt something
-   * @param {*} ct
-   * @param {*} nonce
-   * @param {*} capsule
-   * @param {*} ss
+   * @param {*} cid
    */
   async function decrypt(cid) {
     try {
@@ -95,7 +97,7 @@ function App() {
       }
       let data = concat(o)
       let js = JSON.parse(new TextDecoder().decode(data).toString())
-      console.log(js.slotSchedule)
+      console.log(js);
       let m = await api.decrypt(
         js.ciphertext,
         js.nonce,
@@ -103,6 +105,7 @@ function App() {
         js.slotSchedule
       )
       let message = String.fromCharCode(...m)
+      console.log(message);
       setDecrypted(message)
     } catch (e) {
       console.error(e)
@@ -113,7 +116,7 @@ function App() {
    functions to calc estimated time to decryption
   */
   function calculateEstimatedTime(distance, shares, threshold, TARGET) {
-    if (threshold === 0 || shares - threshold <= 0) {
+    if (threshold === 0 || shares - threshold < 0) {
       return 'Invalid threshold'
     }
 
