@@ -22,7 +22,7 @@ function App() {
   useEffect(() => {
     const setup = async () => {
 
-      let api = new Etf('172.25.181.1', '9944')
+      let api = new Etf()
       await api.init()
       setApi(api)
 
@@ -68,7 +68,6 @@ function App() {
         currentSlot: parseInt(latestSlot.slot.replaceAll(",", "")), 
         distance: distance,
       })
-      console.log(slotSchedule);
       let out = api.encrypt(inputMessage, threshold, slotSchedule, "testSeed")
       console.log(out);
       let o = {

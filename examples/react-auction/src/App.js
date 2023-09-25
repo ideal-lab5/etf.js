@@ -4,7 +4,7 @@ import { Etf } from '@ideallabs/etf.js'
 import './App.css'
 
 import { Keyring } from '@polkadot/api';
-import { ContractPromise } from '@polkadot/api-contract';
+import { ContractPromise, CodePromise } from '@polkadot/api-contract';
 import { blake2AsHex, cryptoWaitReady } from '@polkadot/util-crypto';
 
 import { SHA3 } from 'sha3';
@@ -15,6 +15,7 @@ import { signWith } from './util';
 import { BN, BN_ONE } from "@polkadot/util";
 
 import contractMetadata from './resources/timelock_auction.json';
+import contractWasm from './resources/timelock_auction.wasm';
 
 function App() {
 
@@ -25,7 +26,7 @@ function App() {
   const [api, setApi] = useState(null);
   const [alice, setAlice] = useState(null);
   const [contract, setContract] = useState(null);
-  const [contractAddr, setContractAddr] = useState("5DFU5KKpEu87i5z8cBhEVKZWTFZ3gvSAu6CAKGBfphDuCRQe");
+  const [contractAddr, setContractAddr] = useState("5FuUvayWSWZnqtCoqT6FZjAGVatFgijAAfYQZLsuW95cQ82L");
   const [registry, setRegistry] = useState(null);
   const [specVersion, setSpecVersion] = useState(null);
   const [metadataRpc, setMetadataRpc] = useState(null);
@@ -36,7 +37,7 @@ function App() {
   useEffect(() => {
     const setup = async () => {
       await cryptoWaitReady()
-      let api = new Etf('127.0.0.1', '9944')
+      let api = new Etf()
       await api.init()
       setApi(api);
       const keyring = new Keyring();
@@ -58,33 +59,29 @@ function App() {
         metadataRpc,
       })
       setRegistry(registry)
-      // load the contract
-      const contract = new ContractPromise(api.api, contractMetadata, contractAddr);
-      setContract(contract)
+
       const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519')
       setAlice(alice)
       // a limit to how much Balance to be used to pay for the storage created by the contract call
       // if null is passed, unlimited balance can be used
-      const storageDepositLimit = null
-      // https://substrate.stackexchange.com/questions/6401/smart-contract-function-call-error
-      const { gasRequired, storageDeposit, result, output } = await contract.query.getDeadline(
-        alice.address,
-        {
-          gasLimit: api?.registry.createType('WeightV2', {
-            refTime: MAX_CALL_WEIGHT,
-            proofSize: PROOFSIZE,
-          }),
-          storageDepositLimit,
-        }
-      );
+      // const contract = new ContractPromise(api.api, contractMetadata, contractAddr);
+      // setContract(contract)
+      // const storageDepositLimit = null
+      // // https://substrate.stackexchange.com/questions/6401/smart-contract-function-call-error
+      // const { gasRequired, storageDeposit, result, output } = await contract.query.getDeadline(
+      //   alice.address,
+      //   {
+      //     gasLimit: api?.registry.createType('WeightV2', {
+      //       refTime: MAX_CALL_WEIGHT,
+      //       proofSize: PROOFSIZE,
+      //     }),
+      //     storageDepositLimit,
+      //   }
+      // );
 
-      let slot = output.toHuman().Ok;
-      // for (let slot of slots) {
-      //   formatted.push()
-      // }
-
-      setSlots([Number.parseInt(slot.replaceAll(",", ""))])
-      console.log('contract ready');
+      // // load the contract
+      // let slot = output.toHuman().Ok;
+      // setSlots([Number.parseInt(slot.replaceAll(",", ""))])
 
     }
     setup()
@@ -224,6 +221,48 @@ function App() {
     return callData
   }
 
+  const deployContract = async (name, assetId, assetAmount, deadline, deposit) => {
+
+    // const { web3FromSource } = await import("@polkadot/extension-dapp");
+    // const performingAccount = accounts[0];
+    // const injector = await web3FromSource(performingAccount.meta.source);
+
+    // let deadline = api.getLatestSlot();
+    const contract = new CodePromise(api, contractMetadata, contractWasm);
+    console.log("contract is :", contract);
+
+    const tx = contract.tx.new(
+      {
+        gasLimit: api?.registry.createType('WeightV2', {
+          refTime: MAX_CALL_WEIGHT,
+          proofSize: PROOFSIZE,
+        }),
+        storageDepositLimit: null,
+      }, 
+      name,
+      assetId,
+      assetAmount,
+      deadline,
+      deposit,
+      );
+    let address = "";
+    const unsub = await tx.signAndSend(
+      alice.address,
+      { signer: alice.signer },
+      ({ contract, status }) => {
+        if (status.isInBlock) {
+          // setResult("in a block");
+          console.log(contract.address.toString())
+        } else if (status.isFinalized) {
+          // setResult("finalized");
+          address = contract.address.toString();
+          // setContractAddress(address);
+          unsub();
+        }
+      }
+    );
+  };
+
   const proposeBid = async (e) => {
     e.preventDefault()
     // we do not want to bind the message to the state
@@ -291,13 +330,44 @@ function App() {
       });
   }
 
+  const CreateAuctionForm = () => {
+
+    const [name, setName] = useState('');
+    const [deadline, setDeadline] = useState(0);
+    const [assetId, setAssetId] = useState(0);
+    const [assetAmount, setAssetAmount] = useState(0);
+    const [deposit, setDeposit] = useState(0);
+
+    return (
+      <div>
+        Create Auction
+        <div className='form'>
+          <input type="text" placeholder='name' onChange={(e) => setName(e.target.value)} />
+          <input type="number" placeholder='deadline' onChange={(e) => setDeadline(e.target.value)} />
+          <input type="number" placeholder='assetId' onChange={(e) => setAssetId(e.target.value)} />
+          <input type="number" placeholder='assetAmount' onChange={(e) => setAssetAmount(e.target.value)} />
+          <div>
+            <input type="number" placeholder='deposit' onChange={(e) => setDeposit(e.target.value)} /> ETF
+          </div>
+          <button onClick={() => deployContract(
+            name, assetId, assetAmount, deadline, deposit
+          )}>Deploy</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       <div className="header">
-        Etf Futures Contract Example
+        Etf Auction Contract Example
+        <div>
+        { api === null ? '' : api.latestSlot }
+        </div>
       </div>
       <div className="body">
         <div>
+         <CreateAuctionForm />
           <div>
             <input type='number' placeholder='100' id='bid' /> Unit
           </div>

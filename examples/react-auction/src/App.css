@@ -48,3 +48,9 @@ td {
 .encrypted-message-data-display {
   border: solid 1px black;
 }
+
+
+.form {
+  display: grid;
+  max-width: 200px;
+}
