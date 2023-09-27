@@ -40,6 +40,11 @@ td {
   border: 1px solid black;
 }
 
+.body {
+  /* display: flex;
+  margin: 0 auto; */
+}
+
 .data-display {
   float: left;
   padding: 10px;

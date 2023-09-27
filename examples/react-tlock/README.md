@@ -1,12 +1,6 @@
-# EtF JS SDK Example
+# Timelock Encryption Example
 
-This is an example of using the etf.js sdk in a React app in order to:
-
-- basic initialization of the ETF API
-- encrypt messages to the future
-- decrypt messages when ready
-- use IPFS to store large ciphertexts
-- usage of the etf lightclient to connect and sync to a hosted bootnode
+This is an application that allows you to encryption messages for future slots. It is intended as a demonstration on using the etf.js SDK.
 
 ## Prerequisites
 
