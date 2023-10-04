@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react'
 import { CID, create } from 'ipfs-http-client'
 import { concat } from 'uint8arrays'
 
+import chainSpec from './resources/etfTestSpecRaw.json';
+
 function App() {
   const [api, setApi] = useState(null)
   const [ipfs, setIpfs] = useState(null)
@@ -23,7 +25,7 @@ function App() {
     const setup = async () => {
 
       let api = new Etf()
-      await api.init()
+      await api.init(chainSpec)
       setApi(api)
 
       api.eventEmitter.on('blockHeader', () => {

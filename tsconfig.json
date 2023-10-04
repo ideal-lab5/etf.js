@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "outDir": "./dist",
     "declaration": true,
     "resolveJsonModule": true,
-    "noEmit": false
+    "emitDeclarationOnly": true,
+    "allowImportingTsExtensions": true,
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules"]

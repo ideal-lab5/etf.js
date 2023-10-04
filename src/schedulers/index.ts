@@ -1,2 +1,2 @@
-export * from './distance-based.slot-scheduler'
-export * from './base.slot-scheduler'
+export * from './distance-based.slot-scheduler.ts'
+export * from './base.slot-scheduler.ts'

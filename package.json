@@ -1,6 +1,6 @@
 {
   "name": "@ideallabs/etf.js",
-  "version": "0.0.7-dev",
+  "version": "0.0.8-dev",
   "description": "a typescript sdk for encryption/decryption with the etf network",
   "license": "GPL-3.0",
   "repository": "https://github.com/ideal-lab5/etf.js",
@@ -27,12 +27,15 @@
     "transformIgnorePatterns": [
       "//node_modules/(?!variables/.*)"
     ],
+    "testPathIgnorePatterns": [
+      "dist"
+    ],
     "moduleNameMapper": {
-      "@ideallabs/etf-sdk": "<rootDir>/__mocks__/@ideallabs/etf-sdk.ts",
-      "@polkadot/rpc-provider": "<rootDir>/__mocks__/@polkadot/rpc-provider.ts",
-      "@polkadot/api": "<rootDir>/__mocks__/@polkadot/api.ts",
-      "@polkadot/api-augment": "<rootDir>/__mocks__/@polkadot/api-augment.ts",
-      "@polkadot/types": "<rootDir>/__mocks__/@polkadot/types.ts"
+      "@ideallabs/etf-sdk": "<rootDir>/test/__mocks__/@ideallabs/etf-sdk.ts",
+      "@polkadot/rpc-provider": "<rootDir>/test/__mocks__/@polkadot/rpc-provider.ts",
+      "@polkadot/api": "<rootDir>/test/__mocks__/@polkadot/api.ts",
+      "@polkadot/api-augment": "<rootDir>/test/__mocks__/@polkadot/api-augment.ts",
+      "@polkadot/types": "<rootDir>/test/__mocks__/@polkadot/types.ts"
     }
   },
   "scripts": {

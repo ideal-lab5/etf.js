@@ -5,15 +5,12 @@
 // see: https://polkadot.js.org/docs/api/FAQ/#since-upgrading-to-the-7x-series-typescript-augmentation-is-missing
 import '@polkadot/api-augment'
 import { ApiPromise, WsProvider } from '@polkadot/api'
-
 import { Metadata, TypeRegistry } from '@polkadot/types'
 import { hexToU8a } from '@polkadot/util'
 import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@ideallabs/connect'
 import init, { EtfApiWrapper } from '@ideallabs/etf-sdk'
 import { EventEmitter } from 'events'
-
-import chainSpec from './etfTestSpecRaw.json'
 
 /**
  * Encryption to the Future
@@ -31,14 +28,22 @@ export class Etf<T extends {}> {
   private etfApi!: EtfApiWrapper
   public eventEmitter!: EventEmitter
 
+  /**
+   * Constructor for the etf api
+   * @param host The optional host, if provided will be used to connect to a full node at host:port
+   * @param port The optional port, if provided will be used to connect to a full node at host:port
+   */
   constructor(host?: string, port?: number) {
     this.host = host
     this.port = port
     this.eventEmitter = new EventEmitter()
   }
 
-  // connect to the chain and init wasm
-  async init(): Promise<void> {
+  /**
+   * Connect to the chain and start etf api wrapper
+   * @param chainSpec The ETF Network (raw) chain spec
+   */
+  async init(chainSpec: string): Promise<void> {
     let provider
     if (this.host == undefined && this.port == undefined) {
       let spec = JSON.stringify(chainSpec)

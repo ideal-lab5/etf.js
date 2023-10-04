@@ -3,6 +3,8 @@ import { Etf } from './etf'
 import { DistanceBasedSlotScheduler } from './schedulers'
 import { ApiPromise } from '@polkadot/api'
 
+import chainSpec from './test/etfTestSpecRaw.json';
+
 describe('DistanceBasedSlotScheduler', () => {
   it('should generate a valid schedule', () => {
     const scheduler = new DistanceBasedSlotScheduler()
@@ -62,7 +64,7 @@ describe('Etf', () => {
   it('should initialize correctly', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create')
     const etf = new Etf('localhost', 9944)
-    await etf.init()
+    await etf.init(JSON.stringify(chainSpec))
     expect(createSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: expect.anything(),
@@ -74,7 +76,7 @@ describe('Etf', () => {
   it('should initialize correctly with light client', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create')
     const etf = new Etf()
-    await etf.init() // Passing true to use light client
+    await etf.init(JSON.stringify(chainSpec))
     expect(createSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: expect.anything(),
@@ -85,7 +87,7 @@ describe('Etf', () => {
 
   it('should encrypt a message', async () => {
     const etf = new Etf()
-    await etf.init()
+    await etf.init(JSON.stringify(chainSpec))
     const nextSlot = {
       slot: '123,456,789',
     }
@@ -103,7 +105,7 @@ describe('Etf', () => {
 
   it('should fail to encrypt a message with an empty slot schedule', async () => {
     const etf = new Etf()
-    await etf.init()
+    await etf.init(JSON.stringify(chainSpec))
     const nextSlot = {
       slot: '123,456,789',
     }
@@ -120,7 +122,7 @@ describe('Etf', () => {
 
   it('should decrypt a message', async () => {
     const etf = new Etf()
-    await etf.init()
+    await etf.init(JSON.stringify(chainSpec))
     const nextSlot = {
       slot: '123,456,789',
     }

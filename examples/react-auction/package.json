@@ -9,7 +9,7 @@
     "@ideallabs/txwrapper-etf": "file:../../packages/txwrapper-etf/dist/index.js",
     "@polkadot/api": "^10.3.4",
     "@polkadot/api-contract": "^10.9.1",
-    "@polkadot/extension-dapp": "^0.46.3",
+    "@polkadot/extension-dapp": "^0.46.5",
     "@polkadot/types": "^10.9.1",
     "@polkadot/util": "^12.0.1",
     "@polkadot/util-crypto": "^12.4.2",

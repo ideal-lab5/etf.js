@@ -4,21 +4,15 @@ import { Etf } from '@ideallabs/etf.js'
 import './App.css'
 
 import { Keyring } from '@polkadot/api';
-import { ContractPromise, CodePromise } from '@polkadot/api-contract';
-import { blake2AsHex, cryptoWaitReady } from '@polkadot/util-crypto';
-
+import { ContractPromise } from '@polkadot/api-contract';
+import { cryptoWaitReady } from '@polkadot/util-crypto';
 import { SHA3 } from 'sha3';
-
-import { construct, decode, deriveAddress, getRegistry, methods } from '@ideallabs/txwrapper-etf';
-import { signWith } from './util';
-
 import { BN, BN_ONE } from "@polkadot/util";
 
+import chainSpec from './resources/etfTestSpecRaw.json';
 import contractMetadata from './resources/proxy/tlock_proxy.json';
-import contractData from './resources/proxy/tlock_proxy.contract.json';
-import { setConstantValue } from 'typescript';
 
-// import proxyContractMetadata from './resources/proxy/tlock_proxy.json';
+import { web3Accounts, web3Enable, web3FromAddress } from '@polkadot/extension-dapp';
 
 function App() {
 
@@ -26,7 +20,7 @@ function App() {
   const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   const PROOFSIZE = new BN(1_000_000_000);
 
-  const PROXY_CONTRACT_ADDR = "5DoJSZyRFV1a7GujYdWfAahhEhnUESW9FFeWj1HtrpDbzpx3";
+  const PROXY_CONTRACT_ADDR = "5DhpJWYkkByMuegiFcmifCEwiDF9ZkM8AJwCKi8swcw545st";
 
   const [api, setApi] = useState(null);
   const [alice, setAlice] = useState(null);
@@ -34,41 +28,33 @@ function App() {
   const [contract, setContract] = useState(null);
   const [auctionContractId, setAuctionContractId] = useState('');
   const [auctionReady, setAuctionReady] = useState(false);
+  const [latestSlot, setLatestSlot] = useState(null)
 
   const [slots, setSlots] = useState([]);
 
   useEffect(() => {
     const setup = async () => {
       await cryptoWaitReady()
-      let api = new Etf('localhost', 9944)
-      await api.init()
+      let api = new Etf()
+      await api.init(chainSpec)
       setApi(api);
       const keyring = new Keyring();
-
-      // const { specVersion, transactionVersion, specName } = await api.api.rpc.state.getRuntimeVersion();
-      // setSpecVersion(transactionVersion);
-      // setTransactionVersion(transactionVersion);
-
-      // let metadata = await api.api.rpc.state.getMetadata()
-      // // let magicNumber = metadata.get('magicNumber').toHex()
-      // let metadataRpc = '0x6d657461' + metadata.get('metadata').toHex().substring(2)
-
-      // setMetadataRpc(metadataRpc);
-
-      // const registry = getRegistry({
-      //   chainName: 'ETF',
-      //   specName,
-      //   specVersion,
-      //   metadataRpc,
-      // })
-      // setRegistry(registry)
 
       // load the proxy contract
       const contract = new ContractPromise(api.api, contractMetadata, PROXY_CONTRACT_ADDR);
       setContract(contract)      
 
+      // const allInjected = await web3Enable('etf-auction-example');
+      // const allAccounts = await web3Accounts();
+      // finds an injector for an address
+      // const injector = await web3FromAddress(SENDER);
+
       const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519')
       setAlice(alice)
+      // api.eventEmitter.on('blockHeader', () => {
+      //   // setLatestSlot(api.latestSlot)
+      //   // console.log(api.latestSlot.slot);
+      // })
     }
     setup()
   }, [])
@@ -90,7 +76,7 @@ function App() {
         deposit,
        ).signAndSend(alice, result => {
          if (result.status.isInBlock) {
-          console.log(result.toHuman().Ok)
+          // console.log(result.toHuman().Ok)
           console.log('auction created');
          } else if (result.status.isFinalized) {
            console.log('finalized');
@@ -101,8 +87,8 @@ function App() {
 
   const loadAuction = async(accountId) => {
     const storageDepositLimit = null
-    // https://substrate.stackexchange.com/questions/6401/smart-contract-function-call-error
-    const { gasRequired, storageDeposit, result, output } = await contract.query.getAuctionDetails(
+    const { gasRequired, storageDeposit, result, output } = 
+      await contract.query.getAuctionDetails(
       alice.address,
       {
         gasLimit: api?.registry.createType('WeightV2', {
@@ -154,7 +140,6 @@ function App() {
           console.log('finalized');
         }
       });
-
   }
 
   const doComplete = async () => {
@@ -166,6 +151,8 @@ function App() {
 
 
     // fetch ciphertexts from the appropriate auction contract and decrypt them
+
+
 
     await contract.tx
       .complete({
@@ -192,7 +179,6 @@ function App() {
   }
 
   const CreateAuctionForm = () => {
-
     const [name, setName] = useState('');
     const [deadline, setDeadline] = useState(0);
     const [assetId, setAssetId] = useState(0);
@@ -220,9 +206,6 @@ function App() {
     <div className="App">
       <div className="header">
         Etf Auction Contract Example
-        <div>
-        { api === null ? '' : JSON.stringify(api.latestSlot) }
-        </div>
       </div>
       <div className="body">
         <div>
