@@ -1,3 +1,3 @@
-export * from './etf.ts'
+export * from './etf'
 //
-export * from './schedulers/index.ts'
+export * from './schedulers/index'

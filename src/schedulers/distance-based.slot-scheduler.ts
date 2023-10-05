@@ -1,7 +1,7 @@
 import {
   GenerateParams as BaseGenerateParams,
   SlotScheduler,
-} from './base.slot-scheduler.ts'
+} from './base.slot-scheduler'
 
 interface DistanceInput {
   distance: number
