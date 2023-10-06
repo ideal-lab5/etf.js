@@ -6,7 +6,6 @@
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
     "@ideallabs/etf.js": "file:../../dist/index.js",
-    "@ideallabs/txwrapper-etf": "file:../../packages/txwrapper-etf/dist/index.js",
     "@polkadot/api": "^10.3.4",
     "@polkadot/api-contract": "^10.9.1",
     "@polkadot/extension-dapp": "^0.46.5",

@@ -43,7 +43,7 @@ export class Etf<T extends {}> {
    * Connect to the chain and start etf api wrapper
    * @param chainSpec The ETF Network (raw) chain spec
    */
-  async init(chainSpec: string): Promise<void> {
+  async init(chainSpec: string, extraTypes?: any): Promise<void> {
     let provider
     if (this.host == undefined && this.port == undefined) {
       let spec = JSON.stringify(chainSpec)
@@ -53,7 +53,12 @@ export class Etf<T extends {}> {
       provider = new WsProvider(`ws://${this.host}:${this.port}`)
     }
 
-    this.api = await ApiPromise.create({ provider })
+    this.api = await ApiPromise.create({
+      provider,
+      types: {
+        ...extraTypes
+      }
+    })
     await this.api.isReady
     console.log('api is ready')
     this.registry = new TypeRegistry()
@@ -81,6 +86,13 @@ export class Etf<T extends {}> {
 
     const version = String.fromCharCode(...this.etfApi.version())
     console.log('version ' + version)
+  }
+
+  /**
+   * A proxy to the polkadotjs api type registry creation
+   */
+  createType(typeName: string, typeData: any): any {
+    return this.api.registry.createType(typeName, typeData);
   }
 
   /**
