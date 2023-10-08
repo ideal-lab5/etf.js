@@ -49,12 +49,17 @@ function App() {
   useEffect(() => {
     const setup = async () => {
       await cryptoWaitReady()
-      let api = new Etf('3.136.13.113', 9944)
+      // let api = new Etf('ws://3.136.13.113:9944')
+      let api = new Etf('wss://etf1.idealabs.network:443')
       await api.init(chainSpec, CustomTypes)
       setApi(api);
-      const keyring = new Keyring();
+      const keyring = new Keyring()
       // load the proxy contract
-      const contract = new ContractPromise(api.api, contractMetadata, PROXY_CONTRACT_ADDR);
+      const contract = new ContractPromise(
+        api.api, 
+        contractMetadata, 
+        PROXY_CONTRACT_ADDR
+      )
       setContract(contract)
       // const allInjected = await web3Enable('etf-auction-example');
       // const allAccounts = await web3Accounts();

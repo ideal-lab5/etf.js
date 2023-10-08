@@ -21,8 +21,7 @@ export class Etf<T extends {}> {
   public latestSlot: any
   public latestBlockNumber: number
   public ibePubkey: number
-  private host: string
-  private port: number
+  private providerMultiAddr: string
   private api!: ApiPromise
   private registry!: TypeRegistry
   private etfApi!: EtfApiWrapper
@@ -30,12 +29,12 @@ export class Etf<T extends {}> {
 
   /**
    * Constructor for the etf api
-   * @param host The optional host, if provided will be used to connect to a full node at host:port
-   * @param port The optional port, if provided will be used to connect to a full node at host:port
+   * @param providerMultiAddr (optional): The multiaddress of an RPC node
+   * e.g. insecure local node:    ws://localhost:9944 
+   *      secure websocket (rpc): wss://etf1.idealabs.network:443
    */
-  constructor(host?: string, port?: number) {
-    this.host = host
-    this.port = port
+  constructor(providerMultiAddr?: string) {
+    this.providerMultiAddr = providerMultiAddr
     this.eventEmitter = new EventEmitter()
   }
 
@@ -45,12 +44,12 @@ export class Etf<T extends {}> {
    */
   async init(chainSpec: string, extraTypes?: any): Promise<void> {
     let provider
-    if (this.host == undefined && this.port == undefined) {
+    if (this.providerMultiAddr == undefined) {
       let spec = JSON.stringify(chainSpec)
       provider = new ScProvider(Sc, spec)
       await provider.connect()
     } else {
-      provider = new WsProvider(`ws://${this.host}:${this.port}`)
+      provider = new WsProvider(this.providerMultiAddr)
     }
 
     this.api = await ApiPromise.create({

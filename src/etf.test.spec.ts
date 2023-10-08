@@ -63,7 +63,7 @@ describe('Etf', () => {
 
   it('should initialize correctly', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create')
-    const etf = new Etf('localhost', 9944)
+    const etf = new Etf('ws://localhost:9944')
     await etf.init(JSON.stringify(chainSpec))
     expect(createSpy).toHaveBeenCalledWith(
       expect.objectContaining({
