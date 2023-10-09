@@ -65,7 +65,7 @@ function App() {
       // const allAccounts = await web3Accounts();
       // finds an injector for an address
       // const injector = await web3FromAddress(SENDER);
-      const alice = keyring.addFromUri('//Bob', { name: 'Bob' }, 'sr25519')
+      const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519')
       setAlice(alice)
     }
     setup()
