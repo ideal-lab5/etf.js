@@ -93,7 +93,26 @@ let out = api.encrypt(message, threshold, slotSchedule, seed)
 
 The output contains: `aes_out = (AES ciphertext, AES nonce, AES secret key), capsule = (encrypted key shares), slot_schedule`. The `capsule` contains the IBE encrypted key shares and the slot schedule are the slots for which they're encrypted. It assumes the two lists are the same size and follow the same order.
 
-The SDK provides the `SlotScheduler` interface that can be implemented to create your own slot scheduling logic. By default, we implement the `DistanceBasedSlotScheduler`:
+**Decryption**
+
+```javascript
+let m = await api.decrypt(ciphertext, nonce, capsule, slotSchedule)
+let message = String.fromCharCode(...m)
+```
+
+### Slot Scheduler
+
+A `slot schedule` is simply a list of slots that you want to encrypt a message for. For example, a slot schedule could be `[290871100, 290871105, 290871120]`. In general, we can think of the slot schedule as being the `ids` input field to the encrypt function in the `EtfApi`. Along with the AES secret key produced by the `DefaultApiClient`, knowledge of the slot schedule along with the capsule (output from encryption) is enough information to recover the master key.
+
+The SDK provides the `SlotScheduler` interface that can be implemented to create your own slot scheduling logic. 
+
+``` javascript
+export interface SlotScheduler<T> {
+    generateSchedule(n: number, currentSlot: number, input: T): SlotSchedule;
+}
+```
+
+By default, the SDK includes an implementation: the  `DistanceBasedSlotScheduler`:
 
 ``` javascript
 const slotScheduler = new DistanceBasedSlotScheduler()
@@ -102,13 +121,6 @@ let slotSchedule = slotScheduler.generateSchedule({
         currentSlot: parseInt(latestSlot.slot.replaceAll(",", "")), 
         distance: distance,
       })
-```
-
-**Decryption**
-
-```javascript
-let m = await api.decrypt(ciphertext, nonce, capsule, slotSchedule)
-let message = String.fromCharCode(...m)
 ```
 
 ### Events

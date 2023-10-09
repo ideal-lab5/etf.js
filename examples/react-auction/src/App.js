@@ -20,7 +20,7 @@ function App() {
   const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   const PROOFSIZE = new BN(1_000_000_000);
 
-  const PROXY_CONTRACT_ADDR = "5EedR8gqiqe3n4nAoaJj5ewcHfkUqwkXMeMWkTSxXNaAWqPe";
+  const PROXY_CONTRACT_ADDR = "5F9ah8X6Qs2mtcvYyRxQsx5iSa8tkEiQ3s72GgLh5QisqPxp";
 
   const [api, setApi] = useState(null);
   const [alice, setAlice] = useState(null);
@@ -34,16 +34,16 @@ function App() {
 
   // custom types for the auction structs
   const CustomTypes = {
-    RevealedBid: {
-      bidder: 'AccountId',
-      bid: 'u128',
-    },
     Proposal: {
       ciphertext: 'Vec<u8>',
       nonce: 'Vec<u8>',
       capsule: 'Vec<u8>',
       commitment: 'Vec<u8>',
     },
+    AuctionResult: {
+      winner: 'AccountId',
+      debt: 'Balance'
+    }
   };
 
   useEffect(() => {
@@ -132,6 +132,7 @@ function App() {
     const hash = hasher.digest();
     // the seed shouldn't be reused 
     let timelockedBid = api.encrypt(inputElement.value, 1, [deadline], "testing234");
+    console.log(timelockedBid)
     // now we want to call the publish function of the contract
     const value = 1000000;
     // call the publish function of the contract
@@ -206,13 +207,13 @@ function App() {
       },
       auctionContractId,
     );
-
     if (!result.err) {
       let revealedBids = []
       let cts = output.toHuman().Ok.Ok;
-      cts.forEach(async c => {
+      for (const c of cts) {
         let bidder = c[0];
         let proposal = api.createType('Proposal', c[1])
+        console.log(proposal)
         let plaintext = await api.decrypt(
           proposal.ciphertext,
           proposal.nonce,
@@ -225,16 +226,36 @@ function App() {
           bid: bid,
         }
         revealedBids.push(revealedBid)
-      })
+      }
       return revealedBids
     }
     
     return []
   }
 
-  const doClaim = async () => {
+  const getWinner = async () => {
+    const storageDepositLimit = null
+    const { gasRequired, storageDeposit, result, output } = 
+      await contract.query.getWinner(
+      alice.address,
+      {
+        gasLimit: api?.registry.createType('WeightV2', {
+          refTime: MAX_CALL_WEIGHT,
+          proofSize: PROOFSIZE,
+        }),
+        storageDepositLimit,
+      },
+      auctionContractId,
+    );
+    return api.createType('AuctionResult', result).toHuman()
+    // return api.createType('AuctionResult', result.toHuman().Ok.Ok)
+  }
 
-    // TODO: we need to fetch the debt owed by the winner
+  const doClaim = async () => {
+    // call get winner
+    let result = await getWinner()
+    // if you're the winner, send the debt
+    let value = alice.address === result.winner ? result.debt : 0
 
     await contract.tx
       .claim({
@@ -243,6 +264,7 @@ function App() {
           proofSize: new BN(5_000_000_000_000),
         }),
         storageDepositLimit: null,
+        value: value,
       },
         auctionContractId,
       ).signAndSend(alice, result => {
