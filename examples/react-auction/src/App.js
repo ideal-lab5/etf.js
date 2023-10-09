@@ -14,14 +14,13 @@ import contractMetadata from './resources/proxy/tlock_proxy.json';
 
 import { web3Accounts, web3Enable, web3FromAddress } from '@polkadot/extension-dapp';
 
+import { PROXY_CONTRACT_ADDR } from './constants.js';
+
 function App() {
 
   const MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   const PROOFSIZE = new BN(1_000_000_000);
-
-  const PROXY_CONTRACT_ADDR = "5F9ah8X6Qs2mtcvYyRxQsx5iSa8tkEiQ3s72GgLh5QisqPxp";
-
   const [api, setApi] = useState(null);
   const [alice, setAlice] = useState(null);
 
