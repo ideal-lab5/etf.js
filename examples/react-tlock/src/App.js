@@ -24,7 +24,7 @@ function App() {
   useEffect(() => {
     const setup = async () => {
 
-      let api = new Etf()
+      let api = new Etf("wss://etf1.idealabs.network:443")
       await api.init(chainSpec)
       setApi(api)
 
@@ -70,6 +70,7 @@ function App() {
         currentSlot: parseInt(latestSlot.slot.replaceAll(",", "")), 
         distance: distance,
       })
+      console.log(slotSchedule);
       let out = api.encrypt(inputMessage, threshold, slotSchedule, "testSeed")
       console.log(out);
       let o = {
