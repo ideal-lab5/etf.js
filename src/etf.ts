@@ -9,7 +9,8 @@ import { Metadata, TypeRegistry } from '@polkadot/types'
 import { hexToU8a } from '@polkadot/util'
 import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@ideallabs/connect'
-import init, { EtfApiWrapper } from '@ideallabs/etf-sdk'
+import init, { EtfApiWrapper } from '@ideallabs/etf-sdk-web'
+// import init as initEtfBundler, { EtfApiWrapper } from '@ideallabs/etf-sdk-bundler'
 import { EventEmitter } from 'events'
 
 /**

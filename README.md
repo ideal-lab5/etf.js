@@ -61,6 +61,8 @@ await api.init(chainSpec)
 
 This will start a smoldot light client in the browser, which will automatically start syncing with the network. With the current setup, this can take a significant amount of time to complete and we will address that soon.
 
+> Warning: smoldot version is currently incompatible with smart contracts.
+
 #### Types
 
 The API has an optional `types` parameter, which is a proxy to the polkadotjs types registry, allowing you to register custom types if desired.
