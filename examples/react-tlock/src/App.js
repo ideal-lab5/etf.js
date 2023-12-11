@@ -24,7 +24,8 @@ function App() {
   useEffect(() => {
     const setup = async () => {
 
-      let api = new Etf("wss://etf1.idealabs.network:443")
+      // let api = new Etf("wss://etf1.idealabs.network:443")
+      let api = new Etf("ws://127.0.0.1:9944")
       await api.init(chainSpec)
       setApi(api)
 

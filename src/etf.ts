@@ -43,7 +43,7 @@ export class Etf<T extends {}> {
    * Connect to the chain and start etf api wrapper
    * @param chainSpec The ETF Network (raw) chain spec
    */
-  async init(chainSpec: string, extraTypes?: any): Promise<void> {
+  async init(chainSpec?: string, extraTypes?: any): Promise<void> {
     let provider
     if (this.providerMultiAddr == undefined) {
       let spec = JSON.stringify(chainSpec)

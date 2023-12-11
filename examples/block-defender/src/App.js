@@ -19,25 +19,31 @@ function App() {
  }, []);
 
   const CUSTOM_TYPES = {
+    Base: {
+      iron: 'u32',
+      atk: 'u32',
+      def: 'u32',
+      x: 'u8',
+      y: 'u8',
+    },
     TlockMessage: {
       ciphertext: 'Vec<u8>',
       nonce: 'Vec<u8>',
       capsule: 'Vec<u8>',
       commitment: 'Vec<u8>',
     },
-    PlayerBase: {
-      iron: 'u32',
-      attackPoints: 'u32',
-      defensePoints: 'u32',
-      xCoord: 'u8',
-      yCoord: 'u8',
-    }
+    DecryptedMessage: {
+      address: 'AccountId',
+      data: 'u8',
+      msk: 'Vec<u8>'
+    }, 
   };
 
   useEffect(() => {
     const setup = async () => {
       // let etf = new Etf("wss://etf1.idealabs.network:443")
-      let etf = new Etf("ws://localhost:9944")
+      // let etf = new Etf("ws://localhost:9944")
+      let etf = new Etf("wss://etf1.idealabs.network:443")
       await etf.init(chainSpec, CUSTOM_TYPES)
       setEtf(etf)
       etf.eventEmitter.on('blockHeader', () => {
@@ -50,7 +56,10 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <span className='App-title'>Block Defender</span>
+        <div className='App-title'>
+          <span>Block Defender V-0.0.1 (\(-_-)/) </span>
+          <span>Current slot: { latestSlot.slot }</span>
+        </div>
         <div className='wallet-component'>
           { etf === null ? 
           <div>

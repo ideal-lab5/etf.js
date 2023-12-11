@@ -25,9 +25,12 @@
 }
 
 .game-container {
-    overflow: scroll;
+    /* overflow: scroll; */
     max-height: 600px;
     max-width: 600px;
+    cursor: grab;
+    overflow: auto;
+    border: 2px solid gray;
 }
 
 .game-board {
@@ -54,8 +57,31 @@
     align-items: center;
 }
 
+.box:hover {
+    border: 6px solid rgb(0, 255, 115);
+}
+
 .menu-btn {
     /* width: fit-content;
     height: fit-content; */
     margin: 20px;
+}
+
+.game-details-container {
+    display: flex;
+}
+
+.players-container {
+    float: left;
+    margin: 0 auto;
+}
+
+/* .grid-container {
+    display: grid;
+    grid-template-columns: repeat(25, 1fr);
+    grid-gap: 1px;
+  } */
+
+.player-base {
+    background-color: #00f; /* blue background for player bases */
 }

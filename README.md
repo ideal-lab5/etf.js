@@ -70,7 +70,7 @@ The API has an optional `types` parameter, which is a proxy to the polkadotjs ty
 ``` javascript
 // create custom types
 const CustomTypes = {
-    Proposal: {
+    TlockMessage: {
       ciphertext: 'Vec<u8>',
       nonce: 'Vec<u8>',
       capsule: 'Vec<u8>',
