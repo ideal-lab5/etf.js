@@ -93,7 +93,7 @@ describe('Etf', () => {
     }
     etf.latestSlot = nextSlot
     etf.latestBlockNumber = 123
-    const message = 'Hello, world!'
+    const message = new TextEncoder().encode('Hello, world!')
     const threshold = 2
     const result = etf.encrypt(message, threshold, [1, 3, 5], 'test seed')
     // Verify that the result contains the expected ciphertext
@@ -111,7 +111,7 @@ describe('Etf', () => {
     }
     etf.latestSlot = nextSlot
     etf.latestBlockNumber = 123
-    const message = 'Hello, world!'
+    const message = new TextEncoder().encode('Hello, world!')
     const threshold = 2
     const result = etf.encrypt(message, threshold, null, 'test seed',)
     // Verify that the result contains the expected ciphertext

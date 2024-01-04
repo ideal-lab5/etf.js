@@ -9,8 +9,7 @@ import { Metadata, TypeRegistry } from '@polkadot/types'
 import { hexToU8a } from '@polkadot/util'
 import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@ideallabs/connect'
-import init, { EtfApiWrapper } from '@ideallabs/etf-sdk-web'
-// import init as initEtfBundler, { EtfApiWrapper } from '@ideallabs/etf-sdk-bundler'
+import init, { EtfApiWrapper } from '@ideallabs/etf-sdk'
 import { EventEmitter } from 'events'
 
 /**
@@ -52,6 +51,8 @@ export class Etf<T extends {}> {
     } else {
       provider = new WsProvider(this.providerMultiAddr)
     }
+
+    // await cryptoWaitReady()
 
     this.api = await ApiPromise.create({
       provider,
@@ -125,7 +126,7 @@ export class Etf<T extends {}> {
    * @returns the ciphertext and slot schedule
    */
   encrypt(
-    message: string,
+    messageBytes: Uint8Array,
     threshold: number,
     slotSchedule: number[],
     seed: string
@@ -141,7 +142,7 @@ export class Etf<T extends {}> {
       ids.push(t.encode(id.toString()))
     }
     return {
-      ct: this.etfApi.encrypt(t.encode(message), ids, threshold, t.encode(seed)),
+      ct: this.etfApi.encrypt(messageBytes, ids, threshold, t.encode(seed)),
     }
   }
 
