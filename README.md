@@ -50,6 +50,8 @@ let api = new Etf(ws)
 await api.init(chainSpec)
 ```
 
+Note: You can connect to the test network by specifying `ws = 'wss://etf1.idealabs.network:443'`
+
 #### Smoldot
 
 To run with an in-browser light client (smoldot), the library is initalized with:
@@ -81,6 +83,9 @@ await api.init(chainSpec, CustomTypes)
 ```
 
 ### Timelock Encryption
+
+See the [react-tlock](./examples/react-tlock/) example.
+
 **Encryption**
 
 Messages can be encrypted by passing a number of shares, threshold, and some input to the slot scheduler implementation. In the default EtfClient, encryption uses AES-GCM alongside ETF. It uses TSS to generate key shares, which are encrypted for future slots based on the slot scheduler logic.
@@ -102,27 +107,25 @@ let m = await api.decrypt(ciphertext, nonce, capsule, slotSchedule)
 let message = String.fromCharCode(...m)
 ```
 
-### Slot Scheduler
+### Delayed Transactions
 
-A `slot schedule` is simply a list of slots that you want to encrypt a message for. For example, a slot schedule could be `[290871100, 290871105, 290871120]`. In general, we can think of the slot schedule as being the `ids` input field to the encrypt function in the `EtfApi`. Along with the AES secret key produced by the `DefaultApiClient`, knowledge of the slot schedule along with the capsule (output from encryption) is enough information to recover the master key.
+Delayed transactions can be submitted by  using the `etf.delay` API.
 
-The SDK provides the `SlotScheduler` interface that can be implemented to create your own slot scheduling logic. 
-
-``` javascript
-export interface SlotScheduler<T> {
-    generateSchedule(n: number, currentSlot: number, input: T): SlotSchedule;
-}
-```
-
-By default, the SDK includes an implementation: the  `DistanceBasedSlotScheduler`:
+See the [react-delayed-txs](./examples/react-delayed-txs//) example.
 
 ``` javascript
-const slotScheduler = new DistanceBasedSlotScheduler()
-let slotSchedule = slotScheduler.generateSchedule({
-        slotAmount: shares,
-        currentSlot: parseInt(latestSlot.slot.replaceAll(",", "")), 
-        distance: distance,
-      })
+// the call we want to delay
+let rawCall = etf.api.tx.balances.transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
+// calculate a slot deadline
+let latest = parseInt(latestSlot.slot.replaceAll(",", ""));
+let deadline = latest + 2;
+// prepare a delayed call
+let outerCall = etf.delay(innerCall, 127, deadline);
+await outerCall.signAndSend(alice, result => {
+  if (result.status.isInBlock) {
+    console.log('in block')
+  }
+});
 ```
 
 ### Events

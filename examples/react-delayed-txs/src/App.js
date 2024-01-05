@@ -40,13 +40,14 @@ function App() {
    * Encrypt the current inputMessage textbox
    * @param {*} e
    */
-  async function encrypt() {
-    let rawCall = etf.api.tx.balances.transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 1000);
-    let innerCall = etf.createType('Call', rawCall);
-    // calculate a slot + block deadline 
+  async function delay() {
+    // the call to delay
+    let innerCall = etf.api.tx.balances
+      .transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
+    // calculate a deadline (slot)
     let latest = parseInt(latestSlot.slot.replaceAll(",", ""));
     let deadline = latest + 2;
-
+    // prepare delayed call
     let outerCall = etf.delay(innerCall, 127, deadline);
     await outerCall.signAndSend(alice, result => {
       if (result.status.isInBlock) {
@@ -67,7 +68,7 @@ function App() {
         <button
             className="button"
             type="submit"
-            onClick={encrypt}
+            onClick={delay}
             value="Encrypt"
           >Encrypt</button>
       </div>
