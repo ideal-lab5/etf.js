@@ -114,12 +114,13 @@ Delayed transactions can be submitted by  using the `etf.delay` API.
 See the [react-delayed-txs](./examples/react-delayed-txs//) example.
 
 ``` javascript
-// the call we want to delay
-let rawCall = etf.api.tx.balances.transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
-// calculate a slot deadline
+// the call to delay
+let innerCall = etf.api.tx.balances
+  .transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
+// calculate a deadline (slot)
 let latest = parseInt(latestSlot.slot.replaceAll(",", ""));
 let deadline = latest + 2;
-// prepare a delayed call
+// prepare delayed call
 let outerCall = etf.delay(innerCall, 127, deadline);
 await outerCall.signAndSend(alice, result => {
   if (result.status.isInBlock) {
