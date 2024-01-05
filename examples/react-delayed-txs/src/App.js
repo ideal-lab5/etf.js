@@ -41,67 +41,19 @@ function App() {
    * @param {*} e
    */
   async function encrypt() {
-    // let rawCall = etf.api.tx.etf.updateIbeParams([], [], []);
     let rawCall = etf.api.tx.balances.transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 1000);
-    let call = etf.createType('Call', rawCall);
-    
-    // console.log(call.toU8a([true]))
-    // console.log(call.toU8a());
+    let innerCall = etf.createType('Call', rawCall);
+    // calculate a slot + block deadline 
     let latest = parseInt(latestSlot.slot.replaceAll(",", ""));
-    let target = latest + 2;
-    try {
-      let out = etf.encrypt(call.toU8a(), threshold, [target], "testSeed")
-      let o = {
-        ciphertext: out.ct.aes_ct.ciphertext,
-        nonce: out.ct.aes_ct.nonce,
-        capsule: out.ct.etf_ct[0],
-      };
-      console.log(o)
-      let diffSlots = target - latest;
-      let targetBlock = etf.latestBlockNumber + diffSlots;
-      console.log('submitting for ' + targetBlock);
-      // and finally call the schedule endpoint
-      await etf.api.tx.scheduler.scheduleSealed(
-        targetBlock,
-        127,
-        o,
-      ).signAndSend(alice, result => {
-        if (result.status.isInBlock) {
-          console.log('in block')
-        }
-      });
+    let deadline = latest + 2;
 
-    } catch (e) {
-      console.log(e)
-    }
+    let outerCall = etf.delay(innerCall, 127, deadline);
+    await outerCall.signAndSend(alice, result => {
+      if (result.status.isInBlock) {
+        console.log('in block')
+      }
+    });
   }
-
-  // /**
-  //  * Attempt to decrypt something
-  //  * @param {*} cid
-  //  */
-  // async function decrypt(cid) {
-  //   try {
-  //     let o = []
-  //     for await (const val of ipfs.cat(CID.parse(cid))) {
-  //       o.push(val)
-  //     }
-  //     let data = concat(o)
-  //     let js = JSON.parse(new TextDecoder().decode(data).toString())
-  //     console.log(js);
-  //     let m = await api.decrypt(
-  //       js.ciphertext,
-  //       js.nonce,
-  //       js.capsule,
-  //       js.slotSchedule
-  //     )
-  //     let message = String.fromCharCode(...m)
-  //     console.log(message);
-  //     setDecrypted(message)
-  //   } catch (e) {
-  //     console.error(e)
-  //   }
-  // }
 
   return (
     <div className="App">

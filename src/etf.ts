@@ -164,6 +164,41 @@ export class Etf<T extends {}> {
     return this.etfApi.decrypt(ct, nonce, capsule, sks)
   }
 
+  /**
+   * ex:
+   * 
+   * etf.delay(
+   *  api.tx.balances
+   *    .transferKeepAlive(BOB, 100), 477382)
+   *    .signAndSend(alice, result => {...})
+   * 
+   * @param call 
+   * @param deadline 
+   * @param signer 
+   * @returns 
+   */
+  delay(rawCall, priority, deadline) {
+    let call = this.createType('Call', rawCall);
+    try {
+      let out = this.encrypt(call.toU8a(), 1, [deadline], new Date().toString());
+      let o = {
+        ciphertext: out.ct.aes_ct.ciphertext,
+        nonce: out.ct.aes_ct.nonce,
+        capsule: out.ct.etf_ct[0],
+      };
+
+      let diffSlots = deadline - this.getLatestSlot();
+      let targetBlock = this.latestBlockNumber + diffSlots;
+      return this.api.tx.scheduler.scheduleSealed(
+        targetBlock,
+        priority,
+        o,
+      );
+    } catch (e) {
+      return Error(e)
+    }
+  }
+
   // listen for incoming block headers and emit an event
   // when new headers are encountered
   // currently stores no history
