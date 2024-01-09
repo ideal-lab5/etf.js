@@ -31,10 +31,9 @@ function WalletConnect(props) {
         await connect();
     }
 
-    const checkBalance = async () => {
-        let bal  = await etf.api.query.balances.account(signerAddress);
-        console.log(bal.toHuman());
-        let bigBalance = BigInt(parseInt(bal.free))
+    const checkBalance = async (address) => {
+        let bal  = await etf.api.query.system.account(address);
+        let bigBalance = BigInt(parseInt(bal.data.free))
         setBalance(Number(bigBalance) || 0);
     }
 
@@ -45,13 +44,13 @@ function WalletConnect(props) {
         setSignerAddress(address);
         setIsConnected(true);
         setShowWalletSelection(false);
-        checkBalance()
+        checkBalance(address)
     }
 
     return (
         <div className="connect">
             {isConnected ?
-                <div className="wallet-m">
+                <div className="wallet-amount">
                     Balance: {balance} ETF
                 </div> :
                 <div className="connect-modal-container">
@@ -73,13 +72,15 @@ function WalletConnect(props) {
                                 {availableAccounts.map((account, index) => (
                                     <tr key={index}>
                                         <td>
-                                            {account.meta.name}
+                                            {account.meta.name.substring(0, 8) + (account.meta.name.length > 8 ? ' ...' : '')}
+                                        </td>
+                                        <td className="address">
+                                            <span onClick={() => navigator.clipboard.writeText(account.address)} className='clickable'>
+                                                {account.address.substring(0, 8) + '...'}
+                                            </span>
                                         </td>
                                         <td>
-                                            {account.address.substring(0, 8) + '...'}
-                                        </td>
-                                        <td>
-                                            <button onClick={handleSelectWallet(account.address)}>
+                                            <button className="start-btn" onClick={handleSelectWallet(account.address)}>
                                                 Connect
                                             </button>
                                         </td>

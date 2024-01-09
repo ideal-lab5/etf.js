@@ -7,7 +7,7 @@ import { concat } from 'uint8arrays'
 import chainSpec from './resources/etfTestSpecRaw.json';
 
 function App() {
-  const [api, setApi] = useState(null)
+  const [etf, setEtf] = useState(null)
   const [ipfs, setIpfs] = useState(null)
 
   const [latestSlot, setLatestSlot] = useState(null)
@@ -24,13 +24,13 @@ function App() {
   useEffect(() => {
     const setup = async () => {
 
-      // let api = new Etf("wss://etf1.idealabs.network:443")
-      let api = new Etf("ws://127.0.0.1:9944")
-      await api.init(chainSpec)
-      setApi(api)
+      let etf = new Etf("wss://etf1.idealabs.network:443")
+      // let api = new Etf("ws://127.0.0.1:9944")
+      await etf.init(chainSpec)
+      setEtf(etf)
 
-      api.eventEmitter.on('blockHeader', () => {
-        setLatestSlot(api.latestSlot)
+      etf.eventEmitter.on('blockHeader', () => {
+        setLatestSlot(etf.latestSlot)
       })
     }
     setup()
@@ -46,12 +46,6 @@ function App() {
     setIpfs(ipfs)
   }
 
-  useEffect(() => {
-    setEstimatedUnlockMinutes(
-      calculateEstimatedTime(distance, shares, threshold, TARGET)
-    )
-  }, [distance, shares, threshold])
-
   /**
    * Encrypt the current inputMessage textbox
    * @param {*} e
@@ -62,22 +56,15 @@ function App() {
     // we do not want to bind the message to the state
     const inputElement = document.getElementById('inputMessage')
     const inputMessage = inputElement.value
-    console.log(parseInt(latestSlot.slot.replaceAll(",", "")));
     inputElement.value = ''
+    // slots increase by 2
+    let slotSchedule = [parseInt(latestSlot.slot.replaceAll(",", "")) + 2 * distance]
     try {
-      const slotScheduler = new DistanceBasedSlotScheduler()
-      let slotSchedule = slotScheduler.generateSchedule({
-        slotAmount: shares,
-        currentSlot: parseInt(latestSlot.slot.replaceAll(",", "")), 
-        distance: distance,
-      })
-      console.log(slotSchedule);
-      let out = api.encrypt(inputMessage, threshold, slotSchedule, "testSeed")
-      console.log(out);
+      let out = etf.encrypt(t.encode(inputMessage), threshold, slotSchedule, "testSeed")
       let o = {
-        ciphertext: out.ct.aes_ct.ciphertext,
-        nonce: out.ct.aes_ct.nonce,
-        capsule: out.ct.etf_ct,
+        ciphertext: out.aes_ct.ciphertext,
+        nonce: out.aes_ct.nonce,
+        capsule: out.etf_ct,
         slotSchedule: slotSchedule,
       }
       let js = JSON.stringify(o)
@@ -101,59 +88,17 @@ function App() {
       let data = concat(o)
       let js = JSON.parse(new TextDecoder().decode(data).toString())
       console.log(js);
-      let m = await api.decrypt(
+      let res = await etf.decrypt(
         js.ciphertext,
         js.nonce,
         js.capsule,
         js.slotSchedule
       )
-      let message = String.fromCharCode(...m)
-      console.log(message);
+      let message = String.fromCharCode(...res.message)
       setDecrypted(message)
     } catch (e) {
       console.error(e)
     }
-  }
-
-  /*
-   functions to calc estimated time to decryption
-  */
-  function calculateEstimatedTime(distance, shares, threshold, TARGET) {
-    if (threshold === 0 || shares - threshold < 0) {
-      return 'Invalid threshold'
-    }
-
-    const probabilities = []
-    const p = threshold / shares // Probability of finding a winning share in a slot
-
-    for (let i = 0; i <= threshold; i++) {
-      probabilities[i] =
-        binomialCoefficient(shares, i) *
-        Math.pow(p, i) *
-        Math.pow(1 - p, shares - i)
-    }
-
-    let estimatedTime = 0
-
-    for (let i = 1; i <= threshold; i++) {
-      estimatedTime += i * probabilities[i]
-    }
-
-    return (estimatedTime * distance * TARGET) / 60
-  }
-
-  // Helper function to calculate binomial coefficient
-  function binomialCoefficient(n, k) {
-    if (k === 0 || k === n) {
-      return 1
-    }
-
-    let result = 1
-    for (let i = 1; i <= k; i++) {
-      result *= (n - i + 1) / i
-    }
-
-    return result
   }
 
   return (
@@ -188,22 +133,6 @@ function App() {
           rows="5"
         ></textarea>
         <form className="form">
-          <label htmlFor="shares">Number of slots</label>
-          <input
-            id="shares"
-            type="number"
-            value={shares}
-            onChange={(e) => setShares(e.target.value)}
-            placeholder=""
-          />
-          <label htmlFor="threshold">Threshold</label>
-          <input
-            id="threshold"
-            type="number"
-            onChange={(e) => setThreshold(e.target.value)}
-            value={threshold}
-            placeholder=""
-          />
           <label htmlFor="distance">Distance</label>
           <input
             id="distance"
@@ -218,9 +147,6 @@ function App() {
             onClick={encrypt}
             value="Encrypt"
           />
-          <span>
-            Estimated time to decryption (minutes): {estimatedUnlockMinutes}
-          </span>
         </form>
       </div>
     </div>

@@ -1,20 +1,25 @@
 import { Etf, DistanceBasedSlotScheduler } from '@ideallabs/etf.js'
 import './App.css'
-import React, { useEffect, useState } from 'react'
-import { CID, create } from 'ipfs-http-client'
-import { concat } from 'uint8arrays'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Keyring } from '@polkadot/api';
 
 
 import chainSpec from './resources/etfTestSpecRaw.json';
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 import { hexToU8a } from '@polkadot/util'
+import { EtfContext } from './EtfContext';
+import WalletConnect from './components/connect/connect.component';
 
 function App() {
   const [etf, setEtf] = useState(null)
   const [alice, setAlice] = useState(null)
   const [threshold, setThreshold] = useState(2)
   const [latestSlot, setLatestSlot] = useState(null)
+  const [signer, setSigner] = useState(null);
+
+  const handleSignerChange = useCallback((newSigner) => {
+    setSigner(newSigner)
+ }, []);
 
 
   useEffect(() => {
@@ -59,22 +64,31 @@ function App() {
   return (
     <div className="App">
       <div className="header">
-        EtF Js Example
+        Transmutation
         <div>
           Latest Block : {latestSlot === null ? 'Loading...' : latestSlot.slot}
         </div>
       </div>
       <div className="encrypt-body">
-        <button
-            className="button"
-            type="submit"
-            onClick={delay}
-            value="Encrypt"
-          >Encrypt</button>
+        <div className='wallet-component'>
+          { etf === null ? 
+          <div>
+            <span>Loading...</span>
+          </div> :
+          <div>
+            <span onClick={() => navigator.clipboard.writeText(
+              latestSlot === null ? '' : latestSlot.slot)} className='clickable'>
+                Current slot: { latestSlot.slot }
+            </span>
+            <EtfContext.Provider value={{etf, signer}} >
+              <WalletConnect setSigner={handleSignerChange} />
+            </EtfContext.Provider>
+          </div>
+          }
+        </div>
       </div>
     </div>
   )
 }
 
 export default App
-

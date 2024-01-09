@@ -29,14 +29,7 @@ The etf.js library can be run either with a full node or with a light client (in
 
 ### Connecting to a node
 
-First fetch the chainspec and import it into your project
-
-``` bash
-wget https://raw.githubusercontent.com/ideal-lab5/substrate/milestone3/etfTestSpecRaw.json
-```
-
-```
-import chainSpec from './resources/etfTestSpecRaw.json'
+``` javascript
 import { Etf } from '@ideallabs/etf.js'
 ```
 
@@ -46,8 +39,8 @@ To connect to a full node, pass the address of the node's rpc to the init functi
 
 ```javascript
 let ws = 'ws://localhost:9944';
-let api = new Etf(ws)
-await api.init(chainSpec)
+let etf = new Etf(ws)
+await etf.init()
 ```
 
 Note: You can connect to the test network by specifying `ws = 'wss://etf1.idealabs.network:443'`
@@ -57,8 +50,20 @@ Note: You can connect to the test network by specifying `ws = 'wss://etf1.ideala
 To run with an in-browser light client (smoldot), the library is initalized with:
 
 ```javascript
-let api = new Etf()
-await api.init(chainSpec)
+let etf = new Etf()
+await etf.init(chainSpec)
+```
+
+where you must first fetch the chainspec:
+
+``` bash
+wget https://raw.githubusercontent.com/ideal-lab5/etf/main/etfDevSpecRaw.json
+```
+
+and import into your codebase:
+
+``` javascript
+import chainSpec from './resources/etfTestSpecRaw.json'
 ```
 
 This will start a smoldot light client in the browser, which will automatically start syncing with the network. With the current setup, this can take a significant amount of time to complete and we will address that soon.
@@ -95,7 +100,7 @@ let message = "encrypt me!"
 let threshold = 2
 let slotSchedule = [282777621, 282777882, 282777982]
 let seed = "random-seed"
-let out = api.encrypt(message, threshold, slotSchedule, seed)
+let out = etf.encrypt(message, threshold, slotSchedule, seed)
 ```
 
 The output contains: `aes_out = (AES ciphertext, AES nonce, AES secret key), capsule = (encrypted key shares), slot_schedule`. The `capsule` contains the IBE encrypted key shares and the slot schedule are the slots for which they're encrypted. It assumes the two lists are the same size and follow the same order.
@@ -103,7 +108,7 @@ The output contains: `aes_out = (AES ciphertext, AES nonce, AES secret key), cap
 **Decryption**
 
 ```javascript
-let m = await api.decrypt(ciphertext, nonce, capsule, slotSchedule)
+let m = await etf.decrypt(ciphertext, nonce, capsule, slotSchedule)
 let message = String.fromCharCode(...m)
 ```
 

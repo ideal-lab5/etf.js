@@ -4,24 +4,12 @@
   display: grid; */
 }
 
-.form {
-  display: grid;
-  /* width: 200px; */
-  margin: 0 auto;
-}
-
 .encrypt-body {
-  display: grid;
-  max-width: 300px;
+  /* display: grid; */
+  /* max-width: 300px; */
   margin: 0 auto;
   padding: 10px;
-}
-
-.button {
-  margin: 10px;
-  /* width: 100px; */
-  /* margin: 0 auto; */
-  /* padding": */
+  /* border: solid 1px salmon; */
 }
 
 .header {
@@ -29,14 +17,14 @@
   padding: 22px;
 }
 
-.table {
+table {
   margin: 0 auto;
   border: 1px solid black;
 }
 
 td {
-  width: 200px;
-  border: 1px solid black;
+  width: 10vw;
+  /* border: 1px solid black; */
 }
 
 .data-display {
