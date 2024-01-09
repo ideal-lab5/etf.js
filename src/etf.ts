@@ -107,7 +107,6 @@ export class Etf<T extends {}> {
       // division by 2 since slot numbers increment by 2 but block numbers increment by 1
       let distance = (latest - slotId) / 2
       let blockNumber = this.latestBlockNumber - distance
-      console.log(blockNumber);
       let blockHash = await this.api.query.system.blockHash(blockNumber)
       let blockHeader = await this.api.rpc.chain.getHeader(blockHash)
       let encodedPreDigest =
@@ -188,6 +187,7 @@ export class Etf<T extends {}> {
 
       let diffSlots = deadline - this.getLatestSlot();
       let targetBlock = this.latestBlockNumber + diffSlots;
+
       return ({
         call: this.api.tx.scheduler.scheduleSealed(targetBlock, priority, o),
         sk: out.ct.sk,
