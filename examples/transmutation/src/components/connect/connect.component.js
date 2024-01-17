@@ -14,19 +14,19 @@ function WalletConnect(props) {
     const [availableAccounts, setAvailableAccounts] = useState([]);
     const [balance, setBalance] = useState(0);
 
-    const { etf, signer } = useContext(EtfContext);
+    const { etf } = useContext(EtfContext);
 
     useEffect(() => {
         handleConnect()
     }, []);
 
     async function connect() {
-        await web3Enable('BlockDefender');
+        await web3Enable('Etf|Transmutation');
         const allAccounts = await web3Accounts();
         setAvailableAccounts(allAccounts);
     }
 
-    // Handler for the click event of the `Connect` button on the NavBar.
+    // Handler for the click event of the `Connect` button
     const handleConnect = async () => {
         await connect();
     }
@@ -44,6 +44,7 @@ function WalletConnect(props) {
         setSignerAddress(address);
         setIsConnected(true);
         setShowWalletSelection(false);
+        etf.api.setSigner(injector.signer);
         checkBalance(address)
     }
 

@@ -1,0 +1,7 @@
+.world-details-body {
+ display: grid;   
+ max-width: 30%;
+ padding: 20px;
+ border: 1px solid black;
+ margin: 0 auto;
+}

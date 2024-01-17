@@ -21,12 +21,13 @@ function App() {
     const setup = async () => {
       
       await cryptoWaitReady();
-      let etf = new Etf("ws://127.0.0.1:9944")
+      let etf = new Etf("ws://127.0.0.1:9944", false)
+      // let etf = new Etf("wss://etf1.idealabs.network:443")
       await etf.init()
       setEtf(etf)
 
       const keyring = new Keyring()
-      const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519')
+      const alice = keyring.addFromUri('//Bob', { name: 'Bob' }, 'sr25519')
       setAlice(alice)
 
       etf.eventEmitter.on('blockHeader', () => {
@@ -43,12 +44,13 @@ function App() {
   async function delay() {
     // the call to delay
     let innerCall = etf.api.tx.balances
-      .transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
+      .transferKeepAlive('5CMHXGNmDzSpQotcBUUPXyR8jRqfKttXuU87QraJrydrMdcz', 1000);
     // calculate a deadline (slot)
     let latest = parseInt(latestSlot.slot.replaceAll(",", ""));
-    let deadline = latest + 2;
+    let deadline = latest + 4; // 2 blocks for now
+    console.log(deadline)
     // prepare delayed call
-    let outerCall = etf.delay(innerCall, 127, deadline);
+    let outerCall = etf.delay(innerCall, 127, deadline).call;
     await outerCall.signAndSend(alice, result => {
       if (result.status.isInBlock) {
         console.log('in block')
@@ -59,7 +61,7 @@ function App() {
   return (
     <div className="App">
       <div className="header">
-        EtF Js Example
+        Delayed Transactions Balance Transfer
         <div>
           Latest Block : {latestSlot === null ? 'Loading...' : latestSlot.slot}
         </div>

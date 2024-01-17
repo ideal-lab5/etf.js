@@ -21,6 +21,7 @@ export class Etf<T extends {}> {
   public latestSlot: any
   public latestBlockNumber: number
   public ibePubkey: number
+  public isProd: boolean
   private providerMultiAddr: string
   private api!: ApiPromise
   private registry!: TypeRegistry
@@ -33,8 +34,9 @@ export class Etf<T extends {}> {
    * e.g. insecure local node:    ws://localhost:9944 
    *      secure websocket (rpc): wss://etf1.idealabs.network:443
    */
-  constructor(providerMultiAddr?: string) {
+  constructor(providerMultiAddr?: string, isProd?: boolean) {
     this.providerMultiAddr = providerMultiAddr
+    this.isProd = isProd
     this.eventEmitter = new EventEmitter()
   }
 
@@ -51,8 +53,6 @@ export class Etf<T extends {}> {
     } else {
       provider = new WsProvider(this.providerMultiAddr)
     }
-
-    // await cryptoWaitReady()
 
     this.api = await ApiPromise.create({
       provider,
@@ -175,22 +175,25 @@ export class Etf<T extends {}> {
    * @param signer 
    * @returns 
    */
+  // TODO: this function should expect a block number instead of a slot
   delay(rawCall, priority, deadline) {
     let call = this.createType('Call', rawCall);
     try {
       let out = this.encrypt(call.toU8a(), 1, [deadline], new Date().toString());
       let o = {
-        ciphertext: out.ct.aes_ct.ciphertext,
-        nonce: out.ct.aes_ct.nonce,
-        capsule: out.ct.etf_ct[0],
+        ciphertext: out.aes_ct.ciphertext,
+        nonce: out.aes_ct.nonce,
+        capsule: out.etf_ct[0],
       };
 
       let diffSlots = deadline - this.getLatestSlot();
+      diffSlots = this.isProd ? diffSlots / 2 : diffSlots;
       let targetBlock = this.latestBlockNumber + diffSlots;
 
       return ({
         call: this.api.tx.scheduler.scheduleSealed(targetBlock, priority, o),
-        sk: out.ct.sk,
+        sk: out.aes_ct.key,
+        block: targetBlock,
       });
     } catch (e) {
       return Error(e)

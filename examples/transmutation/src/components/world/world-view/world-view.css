@@ -1,0 +1,20 @@
+.your-world-container {
+    text-align: center;
+}
+
+.your-world-body {
+    height: 100vh;
+    display: grid;
+    padding: 10px;
+}
+
+.canvas-container {
+    padding: 50px;
+    margin: 0 auto;
+    width: 600px;
+    height: 600px;
+    border: solid 1px black;
+    /* background-color: azure; */
+    background-color: rgba(255, 255, 255, 0.6); /* Semi-transparent Darker Blue */
+
+}

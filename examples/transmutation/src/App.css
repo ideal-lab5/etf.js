@@ -1,37 +1,51 @@
-.App {
-  text-align: center;
-  /* margin: 0 auto;
-  display: grid; */
-}
+/* App.css */
 
-.encrypt-body {
-  /* display: grid; */
-  /* max-width: 300px; */
-  margin: 0 auto;
-  padding: 10px;
-  /* border: solid 1px salmon; */
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background: url('./resources/ok.gif');
+  color: #00ff00;
+  margin: 0;
+  padding: 0;
+  background-size: 100vw 120vh;
 }
 
 .header {
-  font-size: 25px;
-  padding: 22px;
-}
-
-table {
-  margin: 0 auto;
-  border: 1px solid black;
-}
-
-td {
-  width: 10vw;
-  /* border: 1px solid black; */
-}
-
-.data-display {
-  float: left;
+  background-color: #001f3f; /* Dark Blue */
+  color: #00ff00; /* Neon Green text */
   padding: 10px;
+  margin: 8px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle box shadow */
 }
 
-.encrypted-message-data-display {
-  border: solid 1px black;
+.App {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.app-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 50px;
+  padding: 20px;
+  background-color: rgba(0, 39, 77, 0.4); /* Semi-transparent Darker Blue */
+  border: 1px solid #00ff00; /* Neon Green border */
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); /* Neon Green glow */
+  max-height: 90vh;
+  /* width: 50%; */
+  overflow: none;
+}
+
+.wallet-component {
+  background-color: #00274d; /* Darker Blue */
+  border: 1px solid #00ff00; /* Neon Green border */
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.loading-message {
+  color: #00ff00; /* Neon Green text */
 }
