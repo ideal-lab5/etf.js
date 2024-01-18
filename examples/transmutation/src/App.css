@@ -7,6 +7,7 @@ body {
   margin: 0;
   padding: 0;
   background-size: 100vw 120vh;
+  font-size: 25px;
 }
 
 .header {
@@ -34,9 +35,16 @@ body {
   background-color: rgba(0, 39, 77, 0.4); /* Semi-transparent Darker Blue */
   border: 1px solid #00ff00; /* Neon Green border */
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); /* Neon Green glow */
-  max-height: 90vh;
+  width: 50%;
+  height: 80vh;
+  /* max-height: 90vh; */
   /* width: 50%; */
-  overflow: none;
+  /* overflow: none; */
+}
+
+.app-container {
+  margin: 30px;
+  background-color: rgba(68, 39, 71, 0.3); /* Semi-transparent Darker Blue */
 }
 
 .wallet-component {
@@ -59,7 +67,7 @@ body {
   padding: 15px;
   border: 1px solid #00ff00; /* Neon Green border */
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); /* Neon Green glow */
-  max-width: 300px;
+  max-width: 400px;
 }
 
 .close-button {
@@ -98,4 +106,28 @@ a {
 a:hover {
   color: #ff00ff; /* Neon Magenta on hover */
   border-bottom-color: #ff00ff; /* Neon Magenta border-bottom on hover */
+}
+
+input[type="text"] {
+  padding: 10px;
+  margin: 5px;
+  border: 2px solid #00ff00; /* Neon Green border */
+  background-color: rgba(167, 191, 216, 0.4); /* Dark Blue background */
+  color: #00ff00; /* Neon Green text */
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus {
+  border-color: #ff00ff; /* Neon Magenta border on focus */
+}
+
+.container {
+  display: grid;
+  text-align: center;
+  padding: 100px;
+}
+
+.copy:hover {
+  cursor: copy;
 }

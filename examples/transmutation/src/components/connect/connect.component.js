@@ -52,7 +52,8 @@ function WalletConnect(props) {
         <div className="connect">
             {isConnected ?
                 <div className="wallet-amount">
-                    Balance: {balance} ETF
+                    <span>{ signerAddress }</span>
+                    <span>Balance: {balance} ETF</span>
                 </div> :
                 <div className="connect-modal-container">
                     <Modal

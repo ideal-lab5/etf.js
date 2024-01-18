@@ -35,7 +35,7 @@ function WorldRegistry() {
    }
 
    return (
-   <div className='world-registry-component'>
+   <div className='container world-registry-component'>
       World Registry
       <div className='world-registry-body'>
          <table>

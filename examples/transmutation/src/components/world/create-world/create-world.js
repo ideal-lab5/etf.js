@@ -24,15 +24,15 @@ function CreateWorld(props) {
 
    const createWorld = async () => {      
       let paddedNonce = nonce.padEnd(48, '0');
-      await randomSeed(etf, signer, paddedNonce, contract).then(result => {
-         props.callback();
+      await randomSeed(etf, signer, paddedNonce, contract, result => {
+         props.callback(result);
       });
    }
 
    return (
    <div>
       Create World
-      <div className='world-details-body'>
+      <div className='container create-world-body'>
          <label htmlFor='seed'>Nonce (max 48-bytes)</label>
          <input 
             id="seed" 

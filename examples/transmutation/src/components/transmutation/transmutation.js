@@ -11,7 +11,12 @@ function Transmutation() {
     const { etf, signer, contract, latestSlot, latestBlock } = useContext(EtfContext);
 
     const [activeSwap, setActiveSwap] = useState('');
+    const [swapStatus, setSwapStatus] = useState('');
     const [swap, setSwap] = useState('');
+    const [refreshKey, setRefreshKey] = useState(0);
+    const [showInfo, setShowInfo] = useState(true);
+
+    // const [swapAcceptanceStatus, setSwapAcceptanceStatus] = useState(false);
 
     const [to, setTo] = useState('');
     const [deadline, setDeadline] = useState(0);
@@ -24,10 +29,11 @@ function Transmutation() {
             if (swap.Ok) {
                 let activeSwap = await handleQueryActiveSwapHash(swap.Ok);
                 setActiveSwap(activeSwap);
+                setSwapStatus(localStorage.getItem(activeSwap))
             }
         }
         setup();
-    }, []);
+    }, [refreshKey]);
 
     const handleTransmute = async () => {
         // submit a delayed transaction to call transmute at the swap deadline
@@ -41,7 +47,8 @@ function Transmutation() {
         await outerCall.signAndSend(signer.address, result => {
             if (result.status.isInBlock) {
                 console.log('transmutation scheduled')
-                localStorage.setItem("transmutationStatus", "submitted");
+                localStorage.setItem(activeSwap, true);
+                setRefreshKey((prevKey) => prevKey + 1);
             }
         });
     }
@@ -55,13 +62,16 @@ function Transmutation() {
         await rejectSwap(etf, signer, contract, result => {
             if (result.status.isInBlock) {
                 console.log('swap rejected');
+                setRefreshKey((prevKey) => prevKey + 1);
+                setActiveSwap(null);
             }
         });
     }
 
     const handleCreateSwap = async () => {
-        await tryNewSwap(etf, signer, contract, to, etf.latestBlockNumber + 100, result => {
+        await tryNewSwap(etf, signer, contract, to, deadline, result => {
             console.log('it worked!');
+            setRefreshKey((prevKey) => prevKey + 1);
         });
     }
 
@@ -69,13 +79,61 @@ function Transmutation() {
         await complete(etf, signer, contract, activeSwap, result => {
             if (result.status.isInBlock) {
                 console.log('it worked! swap completed')
+                setRefreshKey((prevKey) => prevKey + 1);
+                setSwap(null);
+                setActiveSwap('');
             }
         });
     }
 
     return (
-        <div className='transmutation-component'>
+        <div className='container' key={refreshKey}>
             Transmute Assets
+            {showInfo && (
+            <div className='fixed-textbox inner'>
+            <h3>Instructions</h3>
+            { activeSwap === null || activeSwap === '' && (
+            <p>
+                Transmutation lets two parties trustlessly swap their worlds. It is a two-party <b>non-interactive trustless atomic asset swap</b>
+                 enabled with secure delayed transactions. Specify the owner of the seed you want to swap with.
+                 If both recipients accept the swap by the deadline, then the protocol can be completed and the worlds are swapped.
+                 If either party rejects or does not participate, then it fails.
+            </p>
+            )}
+            {swap && (
+                <div>
+                    { parseInt(swap['deadline'].replaceAll(",", "")) < etf.latestBlockNumber && (
+                    <p>
+                        If a swap is expired and either participant rejected or didn't participate, 
+                         then you must reject if before participating in a new swap.
+                    </p>
+                    )}  
+                </div>
+            )}
+
+            {swap && !activeSwap && !swapStatus && (
+                <p>
+                    Swaps can either be accepted or rejected. When a swap is accepted, a delayed transaction is submitted to the chain to be 
+                     executed at the swap's specified deadline. If rejected, then the swap is failed and there are no consequences.
+                </p>
+            )}
+
+            { swapStatus && (
+                <p>
+                    Once accepted (delayed transaction submitted), you must wait for the swap deadline.
+                </p>
+            )}
+
+            <button className='close-button' onClick={() => setShowInfo(false)}>
+                Close
+            </button>
+            </div>
+            )}
+            {!showInfo && (
+            <button className='open-button instructions-button' onClick={() => setShowInfo(true)}>
+                Show Instructions
+            </button>
+            )}
             <div className='transmutation-body'>
                 <span>Current Block: {latestBlock}</span>
                 {(activeSwap === null || activeSwap === '') && (swap === '' || swap === null) ?
@@ -84,7 +142,7 @@ function Transmutation() {
                         <label htmlFor='acct-id-input'>AccountId</label>
                         <input type="text" id="acct-id-input" value={to} onChange={e => setTo(e.target.value)} />
                         <label htmlFor='deadline-input' onChange={e => setDeadline(e.target.value)}>Deadline (block)</label>
-                        <input type="number" id="deadline-input" />
+                        <input type="number" id="deadline-input" placeholder={latestBlock} />
                          <button className="open-button" onClick={handleCreateSwap}>
                             Create Swap
                         </button>
@@ -92,20 +150,35 @@ function Transmutation() {
                     <div>
                         {activeSwap !== null && activeSwap !== '0x00000' ?
                             <div className='pending-swap-container'>
-                                <span>Swap Id: {activeSwap}</span>
+                                <span className='copy' onClick={() => navigator.clipboard.writeText(activeSwap)}>
+                                    Swap Id: { activeSwap.slice(0, 8) + '...' }
+                                </span>
                                 <button className="open-button" onClick={handleCompleteSwap}>Complete</button>
                             </div> :
                             <div className='pending-swap-container'>
                                 <span>Pending Swap</span>
-                                <span>Asset One: {swap['assetIdOne']} </span>
-                                <span>Asset Two: {swap['assetIdTwo']} </span>
+                                <span className='copy' onClick={() => navigator.clipboard.writeText(swap['assetIdOne'])}>Asset One: { swap['assetIdOne'].slice(0, 6) + '...' } </span>
+                                <span className='copy' onClick={() => navigator.clipboard.writeText(swap['assetIdTwo'])}>Asset Two: {swap['assetIdTwo'].slice(0, 6) + '...'} </span>
                                 <span>Deadline: {swap['deadline']} </span>
                                 {parseInt(swap['deadline'].replaceAll(",", "")) < etf.latestBlockNumber ?
                                     <div>
-                                        <button className="open-button" onClick={handleReject}>Reject Swap (expired)</button>
+                                        {/* {swapStatus && (
+                                            <button className="open-button" onClick={handleCompleteSwap}>Complete</button>
+                                        )} */}
+                                        {!swapStatus && (
+                                        <div>
+                                            <button className="open-button" onClick={handleCompleteSwap}>Complete</button>
+                                            <button className="open-button" onClick={handleReject}>Reject Swap (expired)</button>
+                                        </div>)}
                                     </div> :
                                     <div>
-                                        <button className="open-button" onClick={handleTransmute}>Transmute</button>
+                                        { swapStatus && ( <span>Swap Accepted, waiting { parseInt(swap['deadline'].replaceAll(",", "")) - etf.latestBlockNumber } blocks for deadline. </span> )}
+                                        { !swapStatus && (
+                                        <div>
+                                            <button className="open-button" onClick={handleTransmute}>Accept</button>
+                                            <button className="open-button" onClick={handleReject}>Reject</button>
+                                        </div>
+                                        ) }
                                     </div>}
 
                             </div>

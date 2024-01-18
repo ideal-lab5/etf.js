@@ -109,14 +109,37 @@ function App() {
   return (
     <div className="App">
       <div className="header">
-        Transmutation
+        Hexmutation
       </div>
       {showInfo && (
         <div className='fixed-textbox'>
-          <p>This is some text in the fixed textbox.</p>
+          <h3>Information</h3>
+          <p>
+            This is a demonstration of using <b>publicly verifiable onchain randomness </b> 
+            and <b>secure delayed transactions</b> in dapps built on the ETF Network.</p>
+          <p>
+            Users generate and own unique onchain random seeds that are used to procedurally generate 
+             one-of-a-kind worlds. 
+          </p>
+          <p>
+            Transmutation is a protocol built using delayed transactions where participants. It is a 
+            trustless and non-interactive atomic asset swap that lets participants swap their worlds.
+          </p>
+          <p>
+            <a target='_blank' href='https://etf.idealabs.network/'>docs</a>
+            |
+            <a target='_blank' href='https://etf.idealabs.network/docs/examples/getting_started'>faucet</a>
+            |
+            <a target='_blank' href='https://github.com/ideal-lab5/'>github</a>
+            |
+            <a target='_blank' href='https://discord.gg/4fMDbyRw7R'>discord</a>
+          </p>
           <button className='close-button' onClick={() => setShowInfo(false)}>
             Close
           </button>
+          <p>
+          2024 &#169; Ideal Labs
+          </p>
         </div>
       )}
       {!showInfo && (
@@ -138,10 +161,10 @@ function App() {
           </div>
           }
         </div>
-        <div className='app-body'>
+        <div className='app-container'>
           { etf === null || signer === null ? <div></div> : 
           <div>
-            { contract.address.toString() }
+            {/* { contract.address.toString() } */}
             <EtfContext.Provider value={{etf, signer, contract, latestSlot, latestBlock}} >
               <RouterProvider router={router} />
             </EtfContext.Provider>

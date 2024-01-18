@@ -37,6 +37,9 @@ function WorldView() {
    const { etf, signer, contract, latestSlot } = useContext(EtfContext);
    const [seed, setSeed] = useState('');
    const [account, setAccount] = useState('');
+   const [showInfo, setShowInfo] = useState(true);
+   const [refreshKey, setRefreshKey] = useState(0);
+   const [fullscreen, setFullscreen] = useState(false);
    // the data returned when there is no world 
    const NOWORLD = "0x0000";
 
@@ -48,7 +51,11 @@ function WorldView() {
 
    useEffect(() => {
       queryWorld();
-   }, []);
+   }, [refreshKey]);
+
+   const toggleFullscreen = () => {
+      setFullscreen(!fullscreen);
+   };
 
    const queryWorld = async () => {
       // console.log('hey')
@@ -78,6 +85,14 @@ function WorldView() {
          return etf.createType('AccountId', account);
       } catch (e) {
          return new Uint8Array(32).fill(0);
+      }
+   }
+
+   const handleCreateWorld = async (result) => {
+      if (result.status.isInBlock) {
+         console.log('refreshing');
+         setRefreshKey((prevKey) => prevKey + 1);
+         setShowInfo(true);
       }
    }
 
@@ -114,17 +129,76 @@ function WorldView() {
       return rand;
    }
 
+   const HexCanvas = () => {
+      return (
+         <Canvas
+            // className={`${fullscreen ? " fullscreen" : ""}`}
+            shadows
+            gl={{
+               antialias: true,
+               toneMappingExposure: 0.5,
+               shadowMap: {
+                  enabled: true,
+                  type: PCFShadowMap
+               },
+               outputEncoding: sRGBEncoding
+            }}
+            camera={{ zoom: 30, position: [0, 0, 600] }}
+         >
+            <Suspense fallback={null}>
+               <group rotation-x={-Math.PI / 2}>
+                  {general.Trees && <Trees points={points} />}
+                  {general.Grass && <Grass points={points} />}
+                  {general.Clouds && <Clouds />}
+                  <Terrain points={points} />
+               </group>
+               <Environment preset="sunset" />
+               <OrbitControls autoRotate autoRotateSpeed={0.6} enablePan={false} />
+               {/* <Helpers /> */}
+               <Effects />
+               {/* <Stats /> */}
+            </Suspense>
+            <Lights />
+         </Canvas>
+      );
+   }
+
    return (
-      <div className='your-world-container'>
+      <div className='container' key={refreshKey}>
          World View
+         {showInfo && (
+            <div className='fixed-textbox inner'>
+               <h3>Instructions</h3>
+               {seed === '' || seed === NOWORLD ?
+                  <p>
+                     Use onchain randomness to create a unique seed to generate your world. Optionally provide
+                     a nonce to further randomize your world's seed.
+                  </p> :
+                  <ul>
+                     <li>Each user can only own a single seed at a time. </li>
+                     <li>Each seed is used to construct a procedurally generated world. </li>
+                     <li>Toggle between Perlin noise and a Hex world</li>
+                     <li>Use the <b>world registry</b> to view other worlds.</li>
+                     <li>Use <b>transmutation</b> to swap worlds with others.</li>
+                  </ul>}
+               <button className='close-button' onClick={() => setShowInfo(false)}>
+                  Close
+               </button>
+            </div>
+         )}
+         {!showInfo && (
+            <button className='open-button instructions-button' onClick={() => setShowInfo(true)}>
+               Show Instructions
+            </button>
+         )}
          <div className='your-world-body'>
-            {seed === '' || seed === NOWORLD ? <div><CreateWorld callback={queryWorld} /></div> :
-               <div>
-                  <span>Owner: </span>
-                  <span>{accountId === undefined ? signer.address : accountId}</span>
+            {seed === '' || seed === NOWORLD ? <div><CreateWorld callback={handleCreateWorld} /></div> :
+               <div className='world-info'>
+                  <span>Owner:</span>
+                  <span className='copy' onClick={() => navigator.clipboard.writeText(accountId === undefined ? signer.address : accountId)}>{accountId === undefined ? signer.address : accountId}</span>
                   <div>
                      <span>Seed: </span>
-                     <span>{seed}</span>
+                     <span className='copy' onClick={() => navigator.clipboard.writeText(seed)}>{seed.slice(0, 4) + '...' + seed.slice(seed.length - 4)}</span>
                   </div>
                   <div className='toggle-container'>
                      <label className='toggle-label' htmlFor='toggle'>Perlin</label>
@@ -150,9 +224,12 @@ function WorldView() {
                         </Canvas>
                      </div>
                      :
-                     <div className='canvas-container'>
-                        {/* <GUI /> */}
+                     <div className={`canvas-container${fullscreen ? " fullscreen" : ""}`}>
+                        <button className={`open-button fullscreen-button ${fullscreen ? "exit" : ""}`} onClick={toggleFullscreen}>
+                           {fullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                        </button>
                         <Canvas
+                           // className={`${fullscreen ? " fullscreen" : ""}`}
                            shadows
                            gl={{
                               antialias: true,
@@ -163,7 +240,7 @@ function WorldView() {
                               },
                               outputEncoding: sRGBEncoding
                            }}
-                           camera={{ zoom: 30, position: [0, 50, 100] }}
+                           camera={{ zoom: 30, position: [0, 0, 600] }}
                         >
                            <Suspense fallback={null}>
                               <group rotation-x={-Math.PI / 2}>
@@ -180,6 +257,7 @@ function WorldView() {
                            </Suspense>
                            <Lights />
                         </Canvas>
+                        {/* <HexCanvas /> */}
                      </div>
                   }
                </div>
