@@ -9,20 +9,35 @@ import Controls from '../../controls';
 import Scene from '../../scene';
 import { SHA3 } from 'sha3';
 import seedrandom from 'seedrandom';
-import Lights from '../../scene/lights';
+import Lights from '../../Lights';
 import { useNavigate, useParams } from 'react-router-dom';
 // import Lights from '../../scene/lights';
+import useHexagonScatter from '../../../hooks/useHexagonScatter';
+import appState from '../../../state/appState';
+import GUI from '../../GUI';
+import Effects from '../../../Effects';
+import Terrain from '../../ScatterHexagonMesh';
+import { PCFShadowMap, sRGBEncoding } from 'three';
+import { Environment, OrbitControls } from '@react-three/drei';
+import Trees from '../../Trees';
+import Grass from '../../Grass';
+import Clouds from '../../Clouds';
 
 function WorldView() {
 
-
    let { accountId } = useParams();
+
+   const points = useHexagonScatter(25);
+   const general = appState((s) => s.general);
+   const setGeneration = appState((s) => s.setGeneration);
 
    const { etf, signer, contract, latestSlot } = useContext(EtfContext);
    const [seed, setSeed] = useState('');
    const [account, setAccount] = useState('');
    // the data returned when there is no world 
    const NOWORLD = "0x0000";
+
+   const [style, setStyle] = useState('Perlinp');
 
    useEffect(() => {
       setAccount(account);
@@ -39,7 +54,9 @@ function WorldView() {
       let output = await queryWorldRegistry(
             etf, signer, contract, account);
       if (output.Ok) {
-         setSeed(output.Ok.data);
+         let data = output.Ok.data;
+         setGeneration(data);
+         setSeed(data);
       }
    }
 
@@ -87,6 +104,7 @@ function WorldView() {
                <span>Seed: </span>
                <span>{ seed }</span>
             </div>
+            { style === 'Perlin' ?
             <div className='canvas-container'>
                <Canvas camera={{ zoom: 30, position: [0, 0, 600] }}>
                <Suspense
@@ -98,6 +116,39 @@ function WorldView() {
                </Suspense>
                </Canvas>
             </div>
+            : 
+            <div className='canvas-container'>
+               {/* <GUI /> */}
+               <Canvas
+               shadows
+               gl={{
+                  antialias: true,
+                  toneMappingExposure: 0.5,
+                  shadowMap: {
+                     enabled: true,
+                     type: PCFShadowMap
+                  },
+                  outputEncoding: sRGBEncoding
+               }}
+               camera={{ zoom: 20, position: [0, 50, 100] }}
+               >
+               <Suspense fallback={null}>
+                  <group rotation-x={-Math.PI / 2}>
+                     {general.Trees && <Trees points={points} />}
+                     {general.Grass && <Grass points={points} />}
+                     {general.Clouds && <Clouds />}
+                     <Terrain points={points} />
+                  </group>
+                  <Environment preset="sunset" />
+                  <OrbitControls autoRotate autoRotateSpeed={0.6} enablePan={false} />
+                  {/* <Helpers /> */}
+                  <Effects />
+                  {/* <Stats /> */}
+                  </Suspense>
+                  <Lights />
+               </Canvas>
+            </div>
+            }
          </div>
       }
       </div>

@@ -41,7 +41,7 @@ function CreateWorld(props) {
             onChange={handleInputChange}>
          </input>
          { seedInputError !== "" ? <span>{ seedInputError }</span> : <span></span> } 
-         <button onClick={createWorld} disabled={seedInputError !== ""}>
+         <button className='open-button' onClick={createWorld} disabled={seedInputError !== ""}>
             Create World
          </button>
       </div>

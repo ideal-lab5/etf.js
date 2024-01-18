@@ -81,7 +81,7 @@ function WalletConnect(props) {
                                             </span>
                                         </td>
                                         <td>
-                                            <button className="start-btn" onClick={handleSelectWallet(account.address)}>
+                                            <button className="open-button" onClick={handleSelectWallet(account.address)}>
                                                 Connect
                                             </button>
                                         </td>

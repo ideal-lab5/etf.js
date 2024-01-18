@@ -18,3 +18,8 @@ npm i && npm run start
 ## TODOs
 
 - [ ] Properly generate source map [see here](https://stackoverflow.com/questions/63195843/webpack-module-warning-failed-to-parse-source-map-from-data-url)
+
+
+## Honorary Mentions
+
+- https://codesandbox.io/p/sandbox/hexterrain-l9i5u?file=%2Fsrc%2Fcomponents%2FBeveledHexagonGeometry.jsx
