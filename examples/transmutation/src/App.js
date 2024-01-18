@@ -109,7 +109,7 @@ function App() {
   return (
     <div className="App">
       <div className="header">
-        Hexmutation
+        TerraBit
       </div>
       {showInfo && (
         <div className='fixed-textbox'>
