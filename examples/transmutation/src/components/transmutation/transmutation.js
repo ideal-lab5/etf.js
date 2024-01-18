@@ -85,7 +85,7 @@ function Transmutation() {
                         <input type="text" id="acct-id-input" value={to} onChange={e => setTo(e.target.value)} />
                         <label htmlFor='deadline-input' onChange={e => setDeadline(e.target.value)}>Deadline (block)</label>
                         <input type="number" id="deadline-input" />
-                         <button onClick={handleCreateSwap}>
+                         <button className="open-button" onClick={handleCreateSwap}>
                             Create Swap
                         </button>
                     </div> :
@@ -93,7 +93,7 @@ function Transmutation() {
                         {activeSwap !== null && activeSwap !== '0x00000' ?
                             <div className='pending-swap-container'>
                                 <span>Swap Id: {activeSwap}</span>
-                                <button onClick={handleCompleteSwap}>Complete</button>
+                                <button className="open-button" onClick={handleCompleteSwap}>Complete</button>
                             </div> :
                             <div className='pending-swap-container'>
                                 <span>Pending Swap</span>
@@ -102,10 +102,10 @@ function Transmutation() {
                                 <span>Deadline: {swap['deadline']} </span>
                                 {parseInt(swap['deadline'].replaceAll(",", "")) < etf.latestBlockNumber ?
                                     <div>
-                                        <button onClick={handleReject}>Reject Swap (expired)</button>
+                                        <button className="open-button" onClick={handleReject}>Reject Swap (expired)</button>
                                     </div> :
                                     <div>
-                                        <button onClick={handleTransmute}>Transmute</button>
+                                        <button className="open-button" onClick={handleTransmute}>Transmute</button>
                                     </div>}
 
                             </div>

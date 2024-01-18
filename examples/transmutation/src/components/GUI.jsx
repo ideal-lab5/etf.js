@@ -64,7 +64,9 @@ export default function GUI() {
           value: generation[param],
           min: 0,
           max: 1,
-          onChange: (v) => setGeneration(param, v)
+          onChange: (v) => {
+            setGeneration(param, v)
+          }
         };
       });
 

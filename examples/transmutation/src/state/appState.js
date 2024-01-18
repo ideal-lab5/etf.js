@@ -64,6 +64,13 @@ export default create((set) => ({
     // Contrast: 0.5,
   },
 
+  setSeed: (s) => 
+    set(
+      produce((state) => {
+        state.generation.Seed = s;
+      })
+    ),
+
   setGeneration: (key, value) =>
     set(
       produce((state) => {

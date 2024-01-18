@@ -38,6 +38,8 @@ function App() {
   const [signer, setSigner] = useState(null);
   const [contract, setContract] = useState(null);
 
+  const [showInfo, setShowInfo] = useState(true);
+
   const [loading, setLoading] = useState(false);
 
   const handleSignerChange = useCallback((newSigner) => {
@@ -109,6 +111,19 @@ function App() {
       <div className="header">
         Transmutation
       </div>
+      {showInfo && (
+        <div className='fixed-textbox'>
+          <p>This is some text in the fixed textbox.</p>
+          <button className='close-button' onClick={() => setShowInfo(false)}>
+            Close
+          </button>
+        </div>
+      )}
+      {!showInfo && (
+        <button className='open-button' onClick={() => setShowInfo(true)}>
+          More Info
+        </button>
+      )}
       { latestSlot === null ? <div>Loading...</div>  : 
       <div className="app-body">
         <div className='wallet-component'>

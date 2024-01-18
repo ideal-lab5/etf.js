@@ -57,7 +57,7 @@ function WorldRegistry() {
                            { item.slice(0, 5) + '...' + item.slice(item.length - 4) }
                         </td>
                         <td>
-                           <button onClick={() => handleNavigateToWorldView(item)}>
+                           <button className='open-button' onClick={() => handleNavigateToWorldView(item)}>
                               Details
                            </button>
                         </td>

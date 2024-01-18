@@ -49,3 +49,53 @@ body {
 .loading-message {
   color: #00ff00; /* Neon Green text */
 }
+
+.fixed-textbox {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(0, 39, 77, 0.7); /* Semi-transparent Darker Blue */
+  color: #00ff00; /* Neon Green text */
+  padding: 15px;
+  border: 1px solid #00ff00; /* Neon Green border */
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); /* Neon Green glow */
+  max-width: 300px;
+}
+
+.close-button {
+  background-color: #00274d; /* Darker Blue for the button */
+  color: #00ff00; /* Neon Green text on button */
+  border: 1px solid #00ff00; /* Neon Green border for button */
+  padding: 10px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.close-button:hover {
+  background-color: #001f3f; /* Dark Blue on button hover */
+}
+
+.open-button {
+  background-color: #00274d; /* Darker Blue for the button */
+  color: #00ff00; /* Neon Green text on button */
+  border: 1px solid #00ff00; /* Neon Green border for button */
+  padding: 10px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.open-button:hover {
+  background-color: #001f3f; /* Dark Blue on button hover */
+}
+
+a {
+  color: #00ff00; /* Neon Green text */
+  text-decoration: none;
+  border-bottom: 1px solid #00ff00; /* Neon Green border-bottom */
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #ff00ff; /* Neon Magenta on hover */
+  border-bottom-color: #ff00ff; /* Neon Magenta border-bottom on hover */
+}
