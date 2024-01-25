@@ -47,7 +47,7 @@ function App() {
       .transferKeepAlive('5CMHXGNmDzSpQotcBUUPXyR8jRqfKttXuU87QraJrydrMdcz', 1000);
     // calculate a deadline (slot)
     let latest = parseInt(latestSlot.slot.replaceAll(",", ""));
-    let deadline = latest + 4; // 2 blocks for now
+    let deadline = latest + 4;
     console.log(deadline)
     // prepare delayed call
     let outerCall = etf.delay(innerCall, 127, deadline).call;
