@@ -19,7 +19,7 @@ const Terrain = (props) => {
     // Define a function to map height to color in the rainbow
     const mapHeightToRainbowColor = (height) => {
       // Modify this function to adjust the color mapping as needed
-      const hue = (height + 1) / 2; // Map height to hue (0 to 1)
+      const hue = (1 - height) / (height + 1); // Map height to hue (0 to 1)
       const rgb = new THREE.Color().setHSL(hue, 1, 0.45).toArray(); // Convert hue to RGB
       return rgb;
     };

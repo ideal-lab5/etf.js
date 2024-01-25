@@ -24,13 +24,15 @@ function Transmutation() {
     useEffect(() => {
         const setup = async () => {
             let swap = await getPendingSwap(etf, signer, contract);
-            setSwap(swap.Ok);
-            console.log(swap.Ok)
-            if (swap.Ok) {
-                let activeSwap = await handleQueryActiveSwapHash(swap.Ok);
-                setActiveSwap(activeSwap);
-                setSwapStatus(localStorage.getItem(activeSwap))
+            if (swap) {
+                setSwap(swap.toHuman().Ok);
+                if (swap.Ok) {
+                    let activeSwap = await handleQueryActiveSwapHash(swap.Ok);
+                    setActiveSwap(activeSwap);
+                    setSwapStatus(localStorage.getItem(activeSwap))
+                }
             }
+            
         }
         setup();
     }, [refreshKey]);
@@ -55,7 +57,12 @@ function Transmutation() {
 
     const handleQueryActiveSwapHash = async (swap) => {
         let hash = await getAssetSwapHash(etf, signer, contract, swap['assetIdOne']);
-        return hash.Ok;
+        if (hash) {
+            return hash.toHuman().Ok;    
+        } else {
+            return null;
+        }
+        
     }
 
     const handleReject = async () => {
@@ -98,7 +105,10 @@ function Transmutation() {
                  enabled with secure delayed transactions. Specify the owner of the seed you want to swap with.
                  If both recipients accept the swap by the deadline, then the protocol can be completed and the worlds are swapped.
                  If either party rejects or does not participate, then it fails.
+                 <br/>
+                <b>If swap creation fails, check if the other party is already in an active swap or does not have an asset.</b>
             </p>
+            
             )}
             {swap && (
                 <div>
@@ -136,25 +146,26 @@ function Transmutation() {
             )}
             <div className='transmutation-body'>
                 <span>Current Block: {latestBlock}</span>
-                {(activeSwap === null || activeSwap === '') && (swap === '' || swap === null) ?
+                {!activeSwap && !swap ?
                     <div className='pending-swap-container'>
                         <span>Create a new swap</span>
                         <label htmlFor='acct-id-input'>AccountId</label>
                         <input type="text" id="acct-id-input" value={to} onChange={e => setTo(e.target.value)} />
-                        <label htmlFor='deadline-input' onChange={e => setDeadline(e.target.value)}>Deadline (block)</label>
-                        <input type="number" id="deadline-input" placeholder={latestBlock} />
+                        <label htmlFor='deadline-input'>Deadline (block)</label>
+                        <input onChange={e => setDeadline(e.target.value)} type="number" id="deadline-input" placeholder={latestBlock} />
                          <button className="open-button" onClick={handleCreateSwap}>
                             Create Swap
                         </button>
                     </div> :
                     <div>
-                        {activeSwap !== null && activeSwap !== '0x00000' ?
+                        { activeSwap && (
                             <div className='pending-swap-container'>
                                 <span className='copy' onClick={() => navigator.clipboard.writeText(activeSwap)}>
                                     Swap Id: { activeSwap.slice(0, 8) + '...' }
                                 </span>
                                 <button className="open-button" onClick={handleCompleteSwap}>Complete</button>
-                            </div> :
+                            </div>)}
+                            { swap && (
                             <div className='pending-swap-container'>
                                 <span>Pending Swap</span>
                                 <span className='copy' onClick={() => navigator.clipboard.writeText(swap['assetIdOne'])}>Asset One: { swap['assetIdOne'].slice(0, 6) + '...' } </span>
@@ -180,9 +191,8 @@ function Transmutation() {
                                         </div>
                                         ) }
                                     </div>}
-
-                            </div>
-                        }
+                                </div>
+                            ) }
                     </div>
                 }
             </div>

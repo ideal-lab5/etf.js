@@ -54,11 +54,12 @@ describe('Etf', () => {
     const result = etf.encrypt(message, threshold, [1, 3, 5], 'test seed')
     // Verify that the result contains the expected ciphertext
     expect(result).toEqual({
-      ciphertext: {
-        aes_ct: 'mocked-aes-ct',
-        etf_ct: 'mocked-etf-ct',
+      aes_ct: {
+        ciphertext: [0],
+        nonce: [1],
       },
-      sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
+      etf_ct: 'mocked-etf-ct',
+      sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
     })
   })
 
@@ -95,8 +96,52 @@ describe('Etf', () => {
 
     const result = await etf.decrypt(ct, nonce, capsule, [1, 3, 5])
     expect(result).toEqual({
-      message: 'mocked-decrypted', 
-      sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
+      message: 'mocked-decrypted',
+      sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
     })
+  })
+
+  it('should reject invalid call data', async () => {
+    const etf = new Etf()
+    await etf.init(JSON.stringify(chainSpec))
+
+    const nextSlot = {
+      slot: '123,456,789',
+    }
+    etf.latestSlot = nextSlot
+    etf.latestBlockNumber = 123
+
+
+    let deadline = 123456791
+
+    let innerCall = "";
+    let outerCall = etf.delay(innerCall, 127, deadline);
+    if (!(outerCall instanceof Error)) {
+      throw new Error('the call should throw an error');
+    }
+  })
+
+  it('should construct a delayed transaction', async () => {
+    const etf = new Etf()
+    await etf.init(JSON.stringify(chainSpec))
+
+    const nextSlot = {
+      slot: '123,456,789',
+    }
+    etf.latestSlot = nextSlot
+    etf.latestBlockNumber = 123
+
+
+    let deadline = 123456791
+
+    let innerCall = etf.api.tx.balances
+      .transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
+    let outerCall = etf.delay(innerCall, 127, deadline);
+    if (outerCall instanceof Error) {
+      console.log(outerCall)
+      throw new Error('the test should not have an error');
+    } else {
+      expect(outerCall.block).toBe(125);
+    }
   })
 })

@@ -1,7 +1,6 @@
-// /**
-//  * Encryption to the Future
-//  * This class initializes the ETF.js SDK
-//  */
+// Encryption to the Future
+// This class initializes the ETF.js SDK
+//
 // see: https://polkadot.js.org/docs/api/FAQ/#since-upgrading-to-the-7x-series-typescript-augmentation-is-missing
 import '@polkadot/api-augment'
 import { ApiPromise, WsProvider } from '@polkadot/api'
@@ -17,13 +16,13 @@ import { EventEmitter } from 'events'
  * This class initializes the ETF.js SDK
  * It assumes a time-based SlotScheduler
  */
-export class Etf<T extends {}> {
+export class Etf {
   public latestSlot: any
   public latestBlockNumber: number
   public ibePubkey: number
   public isProd: boolean
+  public api!: ApiPromise
   private providerMultiAddr: string
-  private api!: ApiPromise
   private registry!: TypeRegistry
   private etfApi!: EtfApiWrapper
   public eventEmitter!: EventEmitter
@@ -145,12 +144,12 @@ export class Etf<T extends {}> {
   }
 
   /**
-   * Decrypt the ciphertext
-   * @param ct
-   * @param nonce
-   * @param capsule
-   * @param slotSchedule
-   * @returns
+   * Decrypt a timelocked ciphertext
+   * @param ct: the ciphertext (AES-GCM ciphertext)
+   * @param nonce: the nonce (AES-GCM)
+   * @param capsule: the capsule (IBE ciphertexts)
+   * @param slotSchedule: the slots whose secrets we should use
+   * @returns the original message if successful, else the empty string
    */
   async decrypt(
     ct: Uint8Array,
@@ -163,22 +162,22 @@ export class Etf<T extends {}> {
   }
 
   /**
-   * ex:
+   * Prepare a secure delayed transaction for a given deadline.
    * 
+   * ex:
    * etf.delay(
    *  api.tx.balances
    *    .transferKeepAlive(BOB, 100), 477382)
    *    .signAndSend(alice, result => {...})
    * 
-   * @param call 
-   * @param deadline 
-   * @param signer 
-   * @returns 
+   * @param rawCall: The call to delay
+   * @param priority: The call priority
+   * @param deadline: The deadline (when the call should be executed)
+   * @returns (call, sk, block) where the call is a call to schedule the delayed transaction
    */
-  // TODO: this function should expect a block number instead of a slot
   delay(rawCall, priority, deadline) {
-    let call = this.createType('Call', rawCall);
     try {
+      let call = this.createType('Call', rawCall);
       let out = this.encrypt(call.toU8a(), 1, [deadline], new Date().toString());
       let o = {
         ciphertext: out.aes_ct.ciphertext,
@@ -200,9 +199,10 @@ export class Etf<T extends {}> {
     }
   }
 
-  // listen for incoming block headers and emit an event
-  // when new headers are encountered
-  // currently stores no history
+  /**
+   * listen for incoming block headers and emit an event  when new headers are encountered
+   * @param eventEmitter: an event emitter from which to emit events
+   */
   listenForSecrets(eventEmitter: EventEmitter): void {
     this.api.rpc.chain.subscribeNewHeads((header) => {
       // read the predigest from each block
@@ -215,6 +215,10 @@ export class Etf<T extends {}> {
     })
   }
 
+  /**
+   * Fetch the latest slot 
+   * @returns the latest known slot as an int
+   */
   public getLatestSlot() {
     return Number.parseInt(this.latestSlot.slot.replaceAll(',', ''))
   }

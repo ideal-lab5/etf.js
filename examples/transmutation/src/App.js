@@ -86,9 +86,9 @@ function App() {
     const setup = async () => {
       
       await cryptoWaitReady();
-      let etf = new Etf("ws://127.0.0.1:9944")
-      // let etf = new Etf("wss://etf1.idealabs.network:443")
-      await etf.init(null, TYPES)
+      // let etf = new Etf("ws://127.0.0.1:9944")
+      let etf = new Etf("wss://etf1.idealabs.network:443", true)
+      await etf.init()
       setEtf(etf)
 
       // const keyring = new Keyring()
@@ -122,7 +122,7 @@ function App() {
              one-of-a-kind worlds. 
           </p>
           <p>
-            Transmutation is a protocol built using delayed transactions where participants. It is a 
+            Transmutation is a protocol built using delayed transactions. It is a 
             trustless and non-interactive atomic asset swap that lets participants swap their worlds.
           </p>
           <p>

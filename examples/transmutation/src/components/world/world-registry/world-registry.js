@@ -21,7 +21,10 @@ function WorldRegistry() {
 
    const handleQueryClaimedAssets = async () => {
       let output = await queryClaimedAssets(etf, signer, contract);
-      setKnownAssetIds(output.Ok);
+      if (output) {
+         setKnownAssetIds(output.toHuman().Ok);
+      }
+      
    }
 
    const handleNavigateToWorldView = async (seed) => {
@@ -31,7 +34,12 @@ function WorldRegistry() {
 
    const handleQueryOwner = async (seed) => {
       let result = await queryAssetOwner(etf, signer, contract, seed);
-      return result;
+      if (result) {
+         return result.toHuman();
+      } else {
+         return null;
+      }
+      
    }
 
    return (

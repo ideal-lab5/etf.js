@@ -17,10 +17,11 @@ export class EtfApiWrapper {
 
   encrypt(message_bytes, slot_id_bytes, t) {
     return {
-      ciphertext: {
-        aes_ct: 'mocked-aes-ct',
-        etf_ct: 'mocked-etf-ct',
+      aes_ct: {
+        ciphertext: [0],
+        nonce: [1],
       },
+      etf_ct: 'mocked-etf-ct',
       sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
     }
   }

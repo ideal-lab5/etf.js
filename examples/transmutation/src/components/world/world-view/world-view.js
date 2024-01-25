@@ -176,7 +176,7 @@ function WorldView() {
                   </p> :
                   <ul>
                      <li>Each user can only own a single seed at a time. </li>
-                     <li>Each seed is used to construct a procedurally generated world. </li>
+                     <li>Each seed is created from publicly verifiable onchain randomness and is used to construct a procedurally generated world. </li>
                      <li>Toggle between Perlin noise and a Hex world</li>
                      <li>Use the <b>world registry</b> to view other worlds.</li>
                      <li>Use <b>transmutation</b> to swap worlds with others.</li>

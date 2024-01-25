@@ -109,7 +109,7 @@ export async function queryClaimedAssets(etf, signer, transmutation) {
                 storageDepositLimit: null,
             },
     );
-    return output.toHuman()
+    return output
 }
 
 export async function queryAssetOwner(etf, signer, transmutation, seed) {
@@ -123,7 +123,7 @@ export async function queryAssetOwner(etf, signer, transmutation, seed) {
                 storageDepositLimit: null,
             }, seed,
     );
-    return output.toHuman()
+    return output
 }
 
 export async function getPendingSwap(etf, signer, transmutation) {
@@ -137,7 +137,7 @@ export async function getPendingSwap(etf, signer, transmutation) {
                 storageDepositLimit: null,
             },
         );
-    return output.toHuman()
+    return output
 }
 
 export async function getAssetSwapHash(etf, signer, transmutation, assetId) {
@@ -151,5 +151,5 @@ export async function getAssetSwapHash(etf, signer, transmutation, assetId) {
             storageDepositLimit: null,
         }, assetId,
     );
-    return output.toHuman()
+    return output
 }

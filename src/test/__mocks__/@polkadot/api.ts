@@ -3,6 +3,8 @@ export class ApiPromise {
   public isReady: any
   public rpc: any
   public query: any
+  public registry: any
+  public tx: any
 
   static create(options) {
     const mockApi = new ApiPromise()
@@ -11,6 +13,7 @@ export class ApiPromise {
 
   constructor() {
     this.isReady = Promise.resolve()
+
     this.rpc = {
       state: {
         getMetadata: async () => ({
@@ -33,7 +36,7 @@ export class ApiPromise {
                         {
                           toJSON: () => {
                             return {
-                              secret: '0x01010101010',
+                              secret: '0x01010101010'
                             }
                           },
                         },
@@ -47,13 +50,37 @@ export class ApiPromise {
         },
       },
     }
+
     this.query = {
       etf: {
-        ibeParams: async () => ['param1', 'param2'],
+        ibeParams: async () => ['param1', 'param2']
       },
       system: {
-        blockHash: async () => '0xBlockHash',
+        blockHash: async () => '0xBlockHash'
       },
+    }
+
+    this.registry = {
+      createType: (typeName, typeData) => {
+        if (typeData == "") {
+          throw new Error("invalid call data")
+        }
+        if (typeName == "Call") {
+          return new MockCall("mock-created-type");
+        }
+        return "";
+      },
+    }
+
+    this.tx = {
+      balances: {
+        transferKeepAlive: (address, amount) => 
+          new MockCall("mock-balance-transfer")
+      },
+      scheduler: {
+        scheduleSealed: (target, priority, ciphertext) => 
+          new MockCall("mock-schedule-sealed-call")
+      }
     }
   }
 }
@@ -64,7 +91,17 @@ export class WsProvider {
   }
 
   async connect() {
-    // Simulate connecting logic or implement other behavior
     console.log('Mock WsProvider connected')
   }
+}
+
+export class MockCall {
+  constructor(call) {
+
+  }
+
+  toU8a() {
+    return [];
+  }
+
 }
