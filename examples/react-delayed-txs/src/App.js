@@ -16,6 +16,8 @@ function App() {
   const [threshold, setThreshold] = useState(2)
   const [latestSlot, setLatestSlot] = useState(null)
 
+  const [when, setWhen] = useState(0);
+
 
   useEffect(() => {
     const setup = async () => {
@@ -47,12 +49,14 @@ function App() {
       .transferKeepAlive('5CMHXGNmDzSpQotcBUUPXyR8jRqfKttXuU87QraJrydrMdcz', 1000);
     // calculate a deadline (slot)
     let latest = parseInt(latestSlot.slot.replaceAll(",", ""));
-    let deadline = latest + 4;
+    let deadline = latest + 10;
     console.log(deadline)
     // prepare delayed call
-    let outerCall = etf.delay(innerCall, 127, deadline).call;
-    await outerCall.signAndSend(alice, result => {
+    let outerCall = etf.delay(innerCall, 127, deadline);
+    await outerCall.call.signAndSend(alice, result => {
       if (result.status.isInBlock) {
+        setWhen(outerCall.block)
+        console.log(outerCall.block)
         console.log('in block')
       }
     });
@@ -73,6 +77,12 @@ function App() {
             onClick={delay}
             value="Encrypt"
           >Encrypt</button>
+      </div>
+      <div>
+        { when > etf.latestBlockNumber ? 
+        <span>
+          Balance transfer scheduled for block { when }
+        </span> : <span></span> }
       </div>
     </div>
   )

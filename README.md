@@ -145,3 +145,48 @@ document.addEventListener('blockHeader', () => {
   console.log(api.latestSlot)
 })
 ```
+
+# API Reference
+
+## `Etf` Class
+
+### `constructor(providerMultiAddr?: string, isProd?: boolean)`
+
+Initializes an instance of the ETF class.
+
+### `init(chainSpec?: string, extraTypes?: any): Promise<void>`
+
+Connects to the chain and initializes the ETF API wrapper.
+
+### `createType(typeName: string, typeData: any): any`
+
+A proxy to the polkadotjs API type registry creation.
+
+### `secrets(slots: number[]): Promise<Uint8Array[]>`
+
+Fetches secrets from specified slots.
+
+### `encrypt(messageBytes: Uint8Array, threshold: number, slotSchedule: number[], seed: string): { ciphertext: string, sk: string }`
+
+Encrypts a message for specified slots.
+
+### `decrypt(ct: Uint8Array, nonce: Uint8Array, capsule: Uint8Array, slotIds: number[]): Promise<string>`
+
+Decrypts a timelocked ciphertext.
+
+### `delay(rawCall: any, priority: number, deadline: number): { call: any, sk: string, block: number } | Error`
+
+Prepares a secure delayed transaction for a given deadline.
+
+### `listenForSecrets(eventEmitter: EventEmitter): void`
+
+Listens for incoming block headers and emits an event when new headers are encountered.
+
+### `getLatestSlot(): number`
+
+Fetches the latest known slot.
+
+
+# License
+
+This project is licensed under the Apache2 License - see the LICENSE file for details.
