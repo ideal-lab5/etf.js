@@ -93,12 +93,12 @@ See the [react-tlock](./examples/react-tlock/) example.
 
 **Encryption**
 
-Messages can be encrypted by passing a number of shares, threshold, and some input to the slot scheduler implementation. In the default EtfClient, encryption uses AES-GCM alongside ETF. It uses TSS to generate key shares, which are encrypted for future slots based on the slot scheduler logic.
+Messages can be encrypted by passing a number of shares, threshold, and a list of future block numbers. In the default EtfClient, encryption uses AES-GCM alongside ETF. It uses TSS to generate key shares, which are encrypted for blocks.
 
 ```javascript
 let message = "encrypt me!"
 let threshold = 2
-let slotSchedule = [282777621, 282777882, 282777982]
+let blocks = [151, 152, 159]
 let seed = "random-seed"
 let out = etf.encrypt(message, threshold, slotSchedule, seed)
 ```
@@ -108,7 +108,7 @@ The output contains: `aes_out = (AES ciphertext, AES nonce, AES secret key), cap
 **Decryption**
 
 ```javascript
-let m = await etf.decrypt(ciphertext, nonce, capsule, slotSchedule)
+let m = await etf.decrypt(ciphertext, nonce, capsule, blockNumbers)
 let message = String.fromCharCode(...m)
 ```
 
@@ -122,12 +122,11 @@ See the [react-delayed-txs](./examples/react-delayed-txs//) example.
 // the call to delay
 let innerCall = etf.api.tx.balances
   .transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
-// calculate a deadline (slot)
-let latest = parseInt(latestSlot.slot.replaceAll(",", ""));
-let deadline = latest + 2;
-// prepare delayed call
+// calculate a deadline (block)
+let deadline = etf.latestBlockNumber + 2;
+// prepare delayed call  (call, msk)
 let outerCall = etf.delay(innerCall, 127, deadline);
-await outerCall.signAndSend(alice, result => {
+await outerCall.call.signAndSend(alice, result => {
   if (result.status.isInBlock) {
     console.log('in block')
   }
@@ -140,9 +139,9 @@ The Etf client subscribes to new block headers and emits a "blockHeader" event e
 
 ```javascript
 // listen for blockHeader events
-const [slotSecrets, setSlotSecrets] = []
 document.addEventListener('blockHeader', () => {
-  console.log(api.latestSlot)
+  console.log(etf.latestBlockNumber)
+  console.log(etf.latestSlot.slot)
 })
 ```
 
@@ -162,15 +161,15 @@ Connects to the chain and initializes the ETF API wrapper.
 
 A proxy to the polkadotjs API type registry creation.
 
-### `secrets(slots: number[]): Promise<Uint8Array[]>`
+### `secrets(blockNumbers: number[]): Promise<Uint8Array[]>`
 
-Fetches secrets from specified slots.
+Fetches secrets from specified blocks.
 
-### `encrypt(messageBytes: Uint8Array, threshold: number, slotSchedule: number[], seed: string): { ciphertext: string, sk: string }`
+### `encrypt(messageBytes: Uint8Array, threshold: number, blockNumbers: number[], seed: string): { ciphertext: string, sk: string }`
 
-Encrypts a message for specified slots.
+Encrypts a message for future blocks.
 
-### `decrypt(ct: Uint8Array, nonce: Uint8Array, capsule: Uint8Array, slotIds: number[]): Promise<string>`
+### `decrypt(ct: Uint8Array, nonce: Uint8Array, capsule: Uint8Array, blockNumbers: number[]): Promise<string>`
 
 Decrypts a timelocked ciphertext.
 
@@ -185,6 +184,12 @@ Listens for incoming block headers and emits an event when new headers are encou
 ### `getLatestSlot(): number`
 
 Fetches the latest known slot.
+
+### Fields
+
+#### `public latestBlockNumber: number`
+
+The latest known block number
 
 
 # License

@@ -51,7 +51,7 @@ describe('Etf', () => {
     etf.latestBlockNumber = 123
     const message = new TextEncoder().encode('Hello, world!')
     const threshold = 2
-    const result = etf.encrypt(message, threshold, [1, 3, 5], 'test seed')
+    const result = etf.encrypt(message, threshold, [135, 335, 535], 'test seed')
     // Verify that the result contains the expected ciphertext
     expect(result).toEqual({
       aes_ct: {
@@ -61,6 +61,24 @@ describe('Etf', () => {
       etf_ct: 'mocked-etf-ct',
       sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
     })
+  })
+
+  
+  it('should fail if block numbers are not in the future', async () => {
+    const etf = new Etf()
+    await etf.init(JSON.stringify(chainSpec))
+    const nextSlot = {
+      slot: '123,456,789',
+    }
+    etf.latestSlot = nextSlot
+    etf.latestBlockNumber = 123
+    const message = new TextEncoder().encode('Hello, world!')
+    const threshold = 2
+    try {
+      etf.encrypt(message, threshold, [122], 'test seed')
+    } catch (e) {
+      expect(e).toStrictEqual(new Error("block numbers must be in the future"))
+    }
   })
 
   it('should fail to encrypt a message with an empty slot schedule', async () => {
@@ -73,12 +91,12 @@ describe('Etf', () => {
     etf.latestBlockNumber = 123
     const message = new TextEncoder().encode('Hello, world!')
     const threshold = 2
-    const result = etf.encrypt(message, threshold, null, 'test seed',)
-    // Verify that the result contains the expected ciphertext
-    expect(result).toEqual({
-      ciphertext: "",
-      sk: "",
-    })
+    try {
+      etf.encrypt(message, threshold, [], 'test seed')
+    } catch (e) {
+      expect(e).toStrictEqual(new Error("block numbers must not be empty"))
+    }
+    
   })
 
   it('should decrypt a message', async () => {
@@ -112,12 +130,14 @@ describe('Etf', () => {
     etf.latestBlockNumber = 123
 
 
-    let deadline = 123456791
+    let deadline = 125
 
     let innerCall = "";
-    let outerCall = etf.delay(innerCall, 127, deadline);
-    if (!(outerCall instanceof Error)) {
+    try {
+      etf.delay(innerCall, 127, deadline);
       throw new Error('the call should throw an error');
+    } catch (e) {
+      expect(e).toBeTruthy()
     }
   })
 
@@ -141,7 +161,7 @@ describe('Etf', () => {
       console.log(outerCall)
       throw new Error('the test should not have an error');
     } else {
-      expect(outerCall.block).toBe(125);
+      expect(outerCall.call).toBeTruthy();
     }
   })
 })

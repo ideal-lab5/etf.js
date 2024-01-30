@@ -1,6 +1,6 @@
 {
   "name": "@ideallabs/etf.js",
-  "version": "1.0.0-rc",
+  "version": "0.1.8-dev",
   "description": "a typescript sdk for encryption/decryption with the etf network",
   "license": "GPL-3.0",
   "repository": "https://github.com/ideal-lab5/etf.js",

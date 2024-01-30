@@ -99,13 +99,13 @@ export class Etf {
    * Attempt to fetch secrets from each slot, if it
    * @param slots the slots
    */
-  async secrets(slots: number[]) {
+  async secrets(blockNumbers: number[]) {
     let sks = []
-    let latest = this.getLatestSlot()
-    for (const slotId of slots) {
+    // let latest = this.getLatestSlot()
+    for (const blockNumber of blockNumbers) {
       // division by 2 since slot numbers increment by 2 but block numbers increment by 1
-      let distance = (latest - slotId) / 2
-      let blockNumber = this.latestBlockNumber - distance
+      // let distance = (latest - slotId) / 2
+      // let blockNumber = this.latestBlockNumber - distance
       let blockHash = await this.api.query.system.blockHash(blockNumber)
       let blockHeader = await this.api.rpc.chain.getHeader(blockHash)
       let encodedPreDigest =
@@ -127,18 +127,28 @@ export class Etf {
   encrypt(
     messageBytes: Uint8Array,
     threshold: number,
-    slotSchedule: number[],
+    blockNumbers: number[],
     seed: string
   ) {
 
-    if (slotSchedule === undefined || slotSchedule === null) {
-      return { ciphertext: "", sk: "" }
+    if (blockNumbers === undefined || blockNumbers === null) {
+      throw new Error("block numbers must not be empty");
+    }
+
+    if (Math.min(...blockNumbers) < this.latestBlockNumber) {
+      throw new Error("block numbers must be in the future");
     }
 
     let t = new TextEncoder()
     let ids = []
-    for (const id of slotSchedule) {
-      ids.push(t.encode(id.toString()))
+
+    let latestSlot = this.getLatestSlot();
+
+    for (const blockNumber of blockNumbers) {
+      // convert to a slot number
+      let diff = blockNumber - this.latestBlockNumber;
+      let slot = latestSlot + diff;
+      ids.push(t.encode(slot.toString()))
     }
     return this.etfApi.encrypt(messageBytes, ids, threshold, t.encode(seed))
   }
@@ -148,16 +158,16 @@ export class Etf {
    * @param ct: the ciphertext (AES-GCM ciphertext)
    * @param nonce: the nonce (AES-GCM)
    * @param capsule: the capsule (IBE ciphertexts)
-   * @param slotSchedule: the slots whose secrets we should use
+   * @param blockNumbers: the blocks whose secrets we should use
    * @returns the original message if successful, else the empty string
    */
   async decrypt(
     ct: Uint8Array,
     nonce: Uint8Array,
     capsule: Uint8Array,
-    slotIds: number[],
+    blockNumbers: number[],
   ) {
-    let sks = await this.secrets(slotIds)
+    let sks = await this.secrets(blockNumbers)
     return this.etfApi.decrypt(ct, nonce, capsule, sks)
   }
 
@@ -177,25 +187,29 @@ export class Etf {
    */
   delay(rawCall, priority, deadline) {
     try {
+
+      let diffBlocks = deadline - this.latestBlockNumber;
+      // diffSlots = this.isProd ? diffSlots / 2 : diffSlots;
+      let targetSlot = this.getLatestSlot() + diffBlocks;
+
       let call = this.createType('Call', rawCall);
-      let out = this.encrypt(call.toU8a(), 1, [deadline], new Date().toString());
+      let out = this.encrypt(call.toU8a(), 1, [targetSlot], new Date().toString());
       let o = {
         ciphertext: out.aes_ct.ciphertext,
         nonce: out.aes_ct.nonce,
         capsule: out.etf_ct[0],
       };
 
-      let diffSlots = deadline - this.getLatestSlot();
-      diffSlots = this.isProd ? diffSlots / 2 : diffSlots;
-      let targetBlock = this.latestBlockNumber + diffSlots;
+      // let diffSlots = deadline - this.getLatestSlot();
+      // diffSlots = this.isProd ? diffSlots / 2 : diffSlots;
+      // let targetBlock = this.latestBlockNumber + diffSlots;
 
       return ({
-        call: this.api.tx.scheduler.scheduleSealed(targetBlock, priority, o),
+        call: this.api.tx.scheduler.scheduleSealed(deadline, priority, o),
         sk: out.aes_ct.key,
-        block: targetBlock,
       });
     } catch (e) {
-      return Error(e)
+      throw e;
     }
   }
 

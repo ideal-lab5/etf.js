@@ -47,10 +47,7 @@ function App() {
     // the call to delay
     let innerCall = etf.api.tx.balances
       .transferKeepAlive('5CMHXGNmDzSpQotcBUUPXyR8jRqfKttXuU87QraJrydrMdcz', 1000);
-    // calculate a deadline (slot)
-    let latest = parseInt(latestSlot.slot.replaceAll(",", ""));
-    let deadline = latest + 10;
-    console.log(deadline)
+    let deadline = etf.latestBlockNumber + 2;
     // prepare delayed call
     let outerCall = etf.delay(innerCall, 127, deadline);
     await outerCall.call.signAndSend(alice, result => {
@@ -79,7 +76,7 @@ function App() {
           >Encrypt</button>
       </div>
       <div>
-        { when > etf.latestBlockNumber ? 
+        { etf == null ? '' : when > etf.latestBlockNumber ? 
         <span>
           Balance transfer scheduled for block { when }
         </span> : <span></span> }
