@@ -101,11 +101,7 @@ export class Etf {
    */
   async secrets(blockNumbers: number[]) {
     let sks = []
-    // let latest = this.getLatestSlot()
     for (const blockNumber of blockNumbers) {
-      // division by 2 since slot numbers increment by 2 but block numbers increment by 1
-      // let distance = (latest - slotId) / 2
-      // let blockNumber = this.latestBlockNumber - distance
       let blockHash = await this.api.query.system.blockHash(blockNumber)
       let blockHeader = await this.api.rpc.chain.getHeader(blockHash)
       let encodedPreDigest =
@@ -147,6 +143,7 @@ export class Etf {
     for (const blockNumber of blockNumbers) {
       // convert to a slot number
       let diff = blockNumber - this.latestBlockNumber;
+      if (this.isProd) diff *= 2;
       let slot = latestSlot + diff;
       ids.push(t.encode(slot.toString()))
     }
@@ -188,9 +185,9 @@ export class Etf {
   delay(rawCall, priority, deadline) {
     try {
 
-      let diffBlocks = deadline - this.latestBlockNumber;
-      // diffSlots = this.isProd ? diffSlots / 2 : diffSlots;
-      let targetSlot = this.getLatestSlot() + diffBlocks;
+      let diff = deadline - this.latestBlockNumber;
+      if (this.isProd) diff *= 2;
+      let targetSlot = this.getLatestSlot() + diff;
 
       let call = this.createType('Call', rawCall);
       let out = this.encrypt(call.toU8a(), 1, [targetSlot], new Date().toString());
@@ -199,10 +196,6 @@ export class Etf {
         nonce: out.aes_ct.nonce,
         capsule: out.etf_ct[0],
       };
-
-      // let diffSlots = deadline - this.getLatestSlot();
-      // diffSlots = this.isProd ? diffSlots / 2 : diffSlots;
-      // let targetBlock = this.latestBlockNumber + diffSlots;
 
       return ({
         call: this.api.tx.scheduler.scheduleSealed(deadline, priority, o),
