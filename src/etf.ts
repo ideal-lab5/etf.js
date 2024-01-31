@@ -184,13 +184,8 @@ export class Etf {
    */
   delay(rawCall, priority, deadline) {
     try {
-
-      let diff = deadline - this.latestBlockNumber;
-      if (this.isProd) diff *= 2;
-      let targetSlot = this.getLatestSlot() + diff;
-
       let call = this.createType('Call', rawCall);
-      let out = this.encrypt(call.toU8a(), 1, [targetSlot], new Date().toString());
+      let out = this.encrypt(call.toU8a(), 1, [deadline], new Date().toString());
       let o = {
         ciphertext: out.aes_ct.ciphertext,
         nonce: out.aes_ct.nonce,
