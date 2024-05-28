@@ -1,6 +1,8 @@
 # ETF.JS SDK
 
-This is a javascript SDK to encrypt and decrypt messages with the ETF network. In particular, it lets users read slot secrets from the ETF network, encrypt messages to future slots, and decrypt from historical slots.
+##### "Encryption to the Future"
+
+This is an SDK for use within js/ts application to interact with the [Ideal Network](https://github.com/ideal-lab5/ideal-network).
 
 ## Installation
 
