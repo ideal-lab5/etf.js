@@ -11,7 +11,7 @@ import * as Sc from '@substrate/connect'
 // import init, { EtfApiWrapper } from '@ideallabs/etf-sdk'
 import { EventEmitter } from 'events'
 import { BN, BN_ONE } from "@polkadot/util";
-import { build_encoded_commitment, encrypt } from '@ideallabs/etf-sdk'
+import { build_encoded_commitment, encrypt, decrypt, extract_signature } from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
 
 
@@ -130,6 +130,12 @@ export class Etf {
   }
 
   decrypt(ciphertext, blockNumber: number) {
+    this.subscribeJustifications((justification) => {
+      let bls_sigs = justification.signaturesFrom;
+      let encodedCommitment = justification.commitment;
+      let sig_vec = extract_signature(encodedCommitment, bls_sigs);
+      let plaintext_message = decrypt(ciphertext, sig_vec);
+    })
 
   }
 }
