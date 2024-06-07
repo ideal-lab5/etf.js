@@ -1,67 +1,77 @@
-// import { describe, expect } from '@jest/globals'
-// import { Etf } from './etf'
-// import { ApiPromise } from '@polkadot/api'
+import { describe, expect } from '@jest/globals'
+import { Etf } from './etf'
+import { ApiPromise } from '@polkadot/api'
+import __wbg_init from '@ideallabs/etf-sdk'
 
-// import chainSpec from './test/etfTestSpecRaw.json';
+import chainSpec from './test/etfTestSpecRaw.json';
 
-// describe('Etf', () => {
-//   // let emitter;
-//   beforeEach(() => {
-//     jest.clearAllMocks()
-//     // emitter = new EventEmitter();
-//   })
+describe('Etf', () => {
+  // let emitter;
+  beforeEach(() => {
+    jest.clearAllMocks()
+    // emitter = new EventEmitter();
+  })
 
-//   class MockSlotSchedule {
-//     generateSchedule(input) {
-//       return [1, 3, 5]
-//     }
-//   }
+  class MockSlotSchedule {
+    generateSchedule(input) {
+      return [1, 3, 5]
+    }
+  }
 
-//   it('should initialize correctly', async () => {
-//     const createSpy = jest.spyOn(ApiPromise, 'create')
-//     const etf = new Etf('ws://localhost:9944')
-//     await etf.init(JSON.stringify(chainSpec))
-//     expect(createSpy).toHaveBeenCalledWith(
-//       expect.objectContaining({
-//         provider: expect.anything(),
-//       })
-//     )
-//     createSpy.mockRestore()
-//   })
+  it('should initialize correctly', async () => {
+    const createSpy = jest.spyOn(ApiPromise, 'create')
+    const etf = new Etf('ws://localhost:9944')
+    await etf.init(JSON.stringify(chainSpec))
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: expect.anything(),
+      })
+    )
+    createSpy.mockRestore()
+  })
 
-//   it('should initialize correctly with light client', async () => {
-//     const createSpy = jest.spyOn(ApiPromise, 'create')
-//     const etf = new Etf()
-//     await etf.init(JSON.stringify(chainSpec))
-//     expect(createSpy).toHaveBeenCalledWith(
-//       expect.objectContaining({
-//         provider: expect.anything(),
-//       })
-//     )
-//     createSpy.mockRestore()
-//   })
+  it('should initialize correctly with light client', async () => {
+    const createSpy = jest.spyOn(ApiPromise, 'create')
+    const etf = new Etf()
+    await etf.init(JSON.stringify(chainSpec))
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: expect.anything(),
+      })
+    )
+    createSpy.mockRestore()
+  })
 
-//   it('should encrypt a message', async () => {
-//     const etf = new Etf()
-//     await etf.init(JSON.stringify(chainSpec))
-//     const nextSlot = {
-//       slot: '123,456,789',
-//     }
-//     etf.latestSlot = nextSlot
-//     etf.latestBlockNumber = 123
-//     const message = new TextEncoder().encode('Hello, world!')
-//     const threshold = 2
-//     const result = etf.encrypt(message, threshold, [135, 335, 535], 'test seed')
-//     // Verify that the result contains the expected ciphertext
-//     expect(result).toEqual({
-//       aes_ct: {
-//         ciphertext: [0],
-//         nonce: [1],
-//       },
-//       etf_ct: 'mocked-etf-ct',
-//       sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
-//     })
-//   })
+  it('should encrypt a message', async () => {
+    const etf = new Etf()
+    await etf.init(JSON.stringify(chainSpec), false)
+    const nextSlot = {
+      slot: '123,456,789',
+    }
+    const latestSlot = nextSlot;
+    const latestBlockNumber = 123;
+    // etf.latestSlot = nextSlot
+    // etf.latestBlockNumber = 123
+    const message = new TextEncoder().encode('Hello, world!')
+    const threshold = 2
+    // const result = etf.encrypt(message, threshold, [135, 335, 535], 'test seed')
+    await etf.encrypt(message, latestBlockNumber, latestSlot.slot).then((result) => {
+        console.log("TESTING");
+        console.log(result);
+        expect(result).toBeNull;
+    });
+    // Verify that the result contains the expected ciphertext
+    // expect(result).toEqual({
+    //   aes_ct: {
+    //     ciphertext: [0],
+    //     nonce: [1],
+    //   },
+    //   etf_ct: 'mocked-etf-ct',
+    //   sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+    // })
+    // console.log(result);
+    // expect(result).toBeNull;
+  })
 
   
 //   it('should fail if block numbers are not in the future', async () => {
@@ -164,4 +174,4 @@
 //       expect(outerCall.call).toBeTruthy();
 //     }
 //   })
-// })
+})

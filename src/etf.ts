@@ -12,8 +12,8 @@ import * as Sc from '@substrate/connect'
 import { EventEmitter } from 'events'
 import { BN, BN_ONE } from "@polkadot/util";
 import { build_encoded_commitment, encrypt, decrypt, extract_signature } from '@ideallabs/etf-sdk'
+import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
-
 
 /**
  * Represents a 'justification' from the Ideal network
@@ -91,6 +91,7 @@ export class Etf {
         ...extraTypes
       }
     })
+    await init();
     await this.api.isReady
     console.log('api is ready')
 
@@ -114,18 +115,22 @@ export class Etf {
     })
   }
 
-  encrypt(message: Uint8Array, blockNumber: number, seed: string) {
+  encrypt(message: Uint8Array, blockNumber: number, seed: string): Promise<String> {
     // TODO: we need to calculate the future validator set id using
     // the diff between current block number and target block number divided by session length
+    console.log("WE ENCRYPT THIS STUFF");
     let validator_set_id = 1;
     let t = new TextEncoder();
     let masterSecret = t.encode(seed);
     const hash = 'SHA-256';
     const length = 32;
     const info = '';
-    hkdf.compute(masterSecret, hash, length, info).then((derivedKey) => {
-      let encodedCommitment = t.encode(build_encoded_commitment(blockNumber, validator_set_id));
+    return hkdf.compute(masterSecret, hash, length, info).then((derivedKey) => {
+      console.log("YES WE DO");
+      let commitment = build_encoded_commitment(blockNumber, validator_set_id);
+      let encodedCommitment = t.encode(commitment);
       let ct = encrypt(encodedCommitment, message, derivedKey, this.ibePubkey)
+      return ct;
     });
   }
 
@@ -136,6 +141,5 @@ export class Etf {
       let sig_vec = extract_signature(encodedCommitment, bls_sigs);
       let plaintext_message = decrypt(ciphertext, sig_vec);
     })
-
   }
 }
