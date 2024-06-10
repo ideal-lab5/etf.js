@@ -50,27 +50,21 @@ describe('Etf', () => {
     }
     const latestSlot = nextSlot;
     const latestBlockNumber = 123;
-    // etf.latestSlot = nextSlot
-    // etf.latestBlockNumber = 123
     const message = new TextEncoder().encode('Hello, world!')
-    const threshold = 2
-    // const result = etf.encrypt(message, threshold, [135, 335, 535], 'test seed')
     await etf.encrypt(message, latestBlockNumber, latestSlot.slot).then((result) => {
-        console.log("TESTING");
-        console.log(result);
-        expect(result).toBeNull;
+      let result_string = JSON.stringify(result);
+      let expected_string = JSON.stringify({
+        aes_ct: { ciphertext: [ 0 ], nonce: [ 1 ] },
+        etf_ct: 'mocked-etf-ct',
+        sk: [
+          0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 1
+        ]
+      });
+      expect(result_string).toBe(expected_string);
     });
-    // Verify that the result contains the expected ciphertext
-    // expect(result).toEqual({
-    //   aes_ct: {
-    //     ciphertext: [0],
-    //     nonce: [1],
-    //   },
-    //   etf_ct: 'mocked-etf-ct',
-    //   sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
-    // })
-    // console.log(result);
-    // expect(result).toBeNull;
   })
 
   

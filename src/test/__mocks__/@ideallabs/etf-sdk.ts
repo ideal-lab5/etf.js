@@ -5,31 +5,36 @@ export default async function init() {
   // Mock initialization logic
 }
 
-// Mocked implementation of EtfApiWrapper
-export class EtfApiWrapper {
-  constructor(pp1: any, pp2: any) {
-    // Mock constructor logic
+// Mocked implementation of etf-sdk encrypt function
+export function encrypt(message_bytes, slot_id_bytes, t) {
+  return {
+    aes_ct: {
+      ciphertext: [0],
+      nonce: [1],
+    },
+    etf_ct: 'mocked-etf-ct',
+    sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
   }
+}
 
-  version() {
-    return [1, 2, 3] // Mock version
+// Mocked implementation of etf-sdk decrypt function
+export function decrypt(ciphertext_bytes, nonce_bytes, capsule_bytes, sks_bytes) {
+  return {
+    message: 'mocked-decrypted',
+    sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
   }
-
-  encrypt(message_bytes, slot_id_bytes, t) {
-    return {
-      aes_ct: {
-        ciphertext: [0],
-        nonce: [1],
-      },
-      etf_ct: 'mocked-etf-ct',
-      sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
-    }
-  }
-
-  decrypt(ciphertext_bytes, nonce_bytes, capsule_bytes, sks_bytes) {
-    return {
-      message: 'mocked-decrypted',
-      sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
-    }
-  }
+}
+ 
+// Mocked implementation of etf-sdk build_encoded_commitment function
+export function build_encoded_commitment(blockNumber, validator_set_id) {
+  let t = new TextEncoder();
+  let commitment = {
+    "payload": "0x1101001001110110001001010011110010010101010110",
+    "block_number": 32,
+    "validator_set_id": "IDs for Validators"
+  
+  };
+  let commitment_string = JSON.stringify(commitment);
+  // let encoded_commitment = t.encode(commitment_string);
+  return commitment_string;
 }
