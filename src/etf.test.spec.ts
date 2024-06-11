@@ -1,7 +1,6 @@
 import { describe, expect } from '@jest/globals'
 import { Etf } from './etf'
 import { ApiPromise } from '@polkadot/api'
-import __wbg_init from '@ideallabs/etf-sdk'
 
 import chainSpec from './test/etfTestSpecRaw.json';
 

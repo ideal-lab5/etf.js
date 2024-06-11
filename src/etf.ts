@@ -134,10 +134,11 @@ export class Etf {
 
   decrypt(ciphertext, blockNumber: number) {
     this.subscribeJustifications((justification) => {
-      let bls_sigs = justification.signaturesFrom;
-      let encodedCommitment = justification.commitment;
-      let sig_vec = extract_signature(encodedCommitment, bls_sigs);
-      let plaintext_message = decrypt(ciphertext, sig_vec);
+      //TODO: we will eventually need to receive multiple sigs and 
+      // interpolate to retrieve the secret key. For now we
+      // only receive one signature.
+      let bls_sigs = justification.signaturesCompact;
+      let plaintext_message = decrypt(ciphertext, bls_sigs);
     })
   }
 }
