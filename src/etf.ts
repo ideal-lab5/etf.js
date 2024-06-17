@@ -48,11 +48,11 @@ export class Etf {
   public api!: ApiPromise
   private providerMultiAddr: string
   // private etfApi!: EtfApiWrapper
-
-
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
+  private readonly HASH = 'SHA-256';
+  private readonly HASHLENGTH = 32; 
 
   /**
    * Constructor for the etf api
@@ -121,10 +121,7 @@ export class Etf {
     let validator_set_id = 1;
     let t = new TextEncoder();
     let masterSecret = t.encode(seed);
-    const hash = 'SHA-256';
-    const length = 32;
-    const info = '';
-    return hkdf.compute(masterSecret, hash, length, info).then((derivedKey) => {
+    return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
       let commitment = build_encoded_commitment(blockNumber, validator_set_id);
       let encodedCommitment = t.encode(commitment);
       let ct = encrypt(encodedCommitment, t.encode(message), derivedKey, this.ibePubkey)
@@ -132,13 +129,8 @@ export class Etf {
     });
   }
 
-  decrypt(ciphertext, blockNumber: number) {
-    this.subscribeJustifications((justification) => {
-      //TODO: we will eventually need to receive multiple sigs and 
-      // interpolate to retrieve the secret key. For now we
-      // only receive one signature.
-      let bls_sigs = justification.signaturesCompact;
-      let plaintext_message = decrypt(ciphertext, bls_sigs);
-    })
+  decrypt(ciphertext, justification) {
+    let bls_sigs = justification.signaturesCompact;
+    return decrypt(ciphertext, bls_sigs);
   }
 }
