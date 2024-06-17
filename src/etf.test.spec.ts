@@ -44,13 +44,10 @@ describe('Etf', () => {
   it('should encrypt a message', async () => {
     const etf = new Etf()
     await etf.init(JSON.stringify(chainSpec), false)
-    const nextSlot = {
-      slot: '123,456,789',
-    }
-    const latestSlot = nextSlot;
+    const seed = 'seed';
     const latestBlockNumber = 123;
-    const message = new TextEncoder().encode('Hello, world!')
-    await etf.encrypt(message, latestBlockNumber, latestSlot.slot).then((result) => {
+    const message = 'Hello, world!'
+    await etf.encrypt(message, latestBlockNumber, seed).then((result) => {
       let result_string = JSON.stringify(result);
       let expected_string = JSON.stringify({
         aes_ct: { ciphertext: [ 0 ], nonce: [ 1 ] },

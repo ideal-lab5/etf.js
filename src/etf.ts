@@ -115,7 +115,7 @@ export class Etf {
     })
   }
 
-  encrypt(message: Uint8Array, blockNumber: number, seed: string): Promise<String> {
+  encrypt(message: string, blockNumber: number, seed: string): Promise<String> {
     // TODO: we need to calculate the future validator set id using
     // the diff between current block number and target block number divided by session length
     let validator_set_id = 1;
@@ -127,7 +127,7 @@ export class Etf {
     return hkdf.compute(masterSecret, hash, length, info).then((derivedKey) => {
       let commitment = build_encoded_commitment(blockNumber, validator_set_id);
       let encodedCommitment = t.encode(commitment);
-      let ct = encrypt(encodedCommitment, message, derivedKey, this.ibePubkey)
+      let ct = encrypt(encodedCommitment, t.encode(message), derivedKey, this.ibePubkey)
       return ct;
     });
   }
