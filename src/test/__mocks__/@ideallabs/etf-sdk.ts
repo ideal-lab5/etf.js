@@ -38,3 +38,7 @@ export function build_encoded_commitment(blockNumber, validator_set_id) {
   // let encoded_commitment = t.encode(commitment_string);
   return commitment_string;
 }
+
+export function extract_signature(id, sk) {
+  return parseInt(id + sk);
+}

@@ -1,3 +1,5 @@
+import { BeaconSim, Pulse  } from '../../beacon-sim';
+
 // __mocks__/@polkadot/api.js
 export class ApiPromise {
   public isReady: any
@@ -13,43 +15,30 @@ export class ApiPromise {
 
   constructor() {
     this.isReady = Promise.resolve()
+    const beaconSim = new BeaconSim('mockChainId', {sk:  '00000000000000000000000000000001' }, 0);
 
     this.rpc = {
+      beefy: {
+        subscribeJustifications: jest.fn((callback) => {
+          // Simulate new justifications every 30 seconds
+          setInterval(() => {
+            const pulse = beaconSim.nextPulse();
+            const mockJustification = {
+              commitment: 'mockCommitment',
+              signaturesFrom: 'mockSignaturesFrom',
+              validatorSetLen: 5,
+              signaturesCompact: pulse.signature,
+            };
+            callback(mockJustification);
+          }, 3000);
+        }),
+      },
       state: {
         getMetadata: async () => ({
           toHex: () => 'mockMetadataHex',
         }),
       },
-      chain: {
-        subscribeNewHeads: async () => {},
-        getHeader: async () => {
-          return {
-            digest: {
-              logs: [
-                {
-                  toHuman: () => {
-                    return {
-                      PreRuntime: [
-                        {
-                          // intentionally left empty
-                        },
-                        {
-                          toJSON: () => {
-                            return {
-                              secret: '0x01010101010'
-                            }
-                          },
-                        },
-                      ],
-                    }
-                  },
-                },
-              ],
-            },
-          }
-        },
-      },
-    }
+     }
 
     this.query = {
       etf: {

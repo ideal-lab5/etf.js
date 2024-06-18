@@ -11,7 +11,7 @@ import * as Sc from '@substrate/connect'
 // import init, { EtfApiWrapper } from '@ideallabs/etf-sdk'
 import { EventEmitter } from 'events'
 import { BN, BN_ONE } from "@polkadot/util";
-import { build_encoded_commitment, encrypt, decrypt, extract_signature } from '@ideallabs/etf-sdk'
+import { build_encoded_commitment, encrypt, decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
 
@@ -119,6 +119,9 @@ export class Etf {
     // TODO: we need to calculate the future validator set id using
     // the diff between current block number and target block number divided by session length
     let validator_set_id = 1;
+    // let setId = this.api.query.beefy.validatorSetId().then((id) => {
+    //   return id + 1;
+    // })
     let t = new TextEncoder();
     let masterSecret = t.encode(seed);
     return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {

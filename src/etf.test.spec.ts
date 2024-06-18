@@ -7,15 +7,14 @@ import chainSpec from './test/etfTestSpecRaw.json';
 describe('Etf', () => {
   // let emitter;
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.clearAllMocks();
+    jest.useFakeTimers();
     // emitter = new EventEmitter();
   })
 
-  class MockSlotSchedule {
-    generateSchedule(input) {
-      return [1, 3, 5]
-    }
-  }
+  afterEach(() => {
+    jest.clearAllTimers();
+  });
 
   it('should initialize correctly', async () => {
     const createSpy = jest.spyOn(ApiPromise, 'create')
@@ -40,6 +39,36 @@ describe('Etf', () => {
     )
     createSpy.mockRestore()
   })
+
+  it('should call subscribeJustifications callback every 30 seconds with BeaconSim pulse', async () => {
+    const mockCallback = jest.fn();
+    const etf = new Etf('wss://example.com', true);
+
+    await etf.init();
+
+    etf.subscribeJustifications(mockCallback);
+
+    // Fast-forward 30 seconds
+    jest.advanceTimersByTime(30000);
+    expect(mockCallback).toHaveBeenCalledTimes(1);
+    expect(mockCallback).toHaveBeenCalledWith(expect.objectContaining({
+      signaturesCompact: expect.any(String) // Assuming signature is a string
+    }));
+
+    // Fast-forward another 30 seconds
+    jest.advanceTimersByTime(30000);
+    expect(mockCallback).toHaveBeenCalledTimes(2);
+    expect(mockCallback).toHaveBeenCalledWith(expect.objectContaining({
+      signaturesCompact: expect.any(String)
+    }));
+
+    // Fast-forward another 30 seconds
+    jest.advanceTimersByTime(30000);
+    expect(mockCallback).toHaveBeenCalledTimes(3);
+    expect(mockCallback).toHaveBeenCalledWith(expect.objectContaining({
+      signaturesCompact: expect.any(String)
+    }));
+  });
 
   it('should encrypt a message', async () => {
     const etf = new Etf()
