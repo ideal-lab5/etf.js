@@ -2,7 +2,7 @@
 // This class initializes the ETF.js SDK
 //
 // see: https://polkadot.js.org/docs/api/FAQ/#since-upgrading-to-the-7x-series-typescript-augmentation-is-missing
-import '@polkadot/api-augment'
+// import '@polkadot/api-augment'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { Metadata, TypeRegistry } from '@polkadot/types'
 import { hexToU8a } from '@polkadot/util'

@@ -48,25 +48,25 @@ describe('Etf', () => {
 
     etf.subscribeJustifications(mockCallback);
 
-    // Fast-forward 30 seconds
-    jest.advanceTimersByTime(30000);
+    // Fast-forward 3 seconds
+    jest.advanceTimersByTime(3000);
     expect(mockCallback).toHaveBeenCalledTimes(1);
     expect(mockCallback).toHaveBeenCalledWith(expect.objectContaining({
-      signaturesCompact: expect.any(String) // Assuming signature is a string
+      signaturesCompact: expect.any(Array) // Assuming signature is a string
     }));
 
-    // Fast-forward another 30 seconds
-    jest.advanceTimersByTime(30000);
+    // Fast-forward another 3 seconds
+    jest.advanceTimersByTime(3000);
     expect(mockCallback).toHaveBeenCalledTimes(2);
     expect(mockCallback).toHaveBeenCalledWith(expect.objectContaining({
-      signaturesCompact: expect.any(String)
+      signaturesCompact: expect.any(Array)
     }));
 
-    // Fast-forward another 30 seconds
-    jest.advanceTimersByTime(30000);
+    // Fast-forward another 3 seconds
+    jest.advanceTimersByTime(3000);
     expect(mockCallback).toHaveBeenCalledTimes(3);
     expect(mockCallback).toHaveBeenCalledWith(expect.objectContaining({
-      signaturesCompact: expect.any(String)
+      signaturesCompact: expect.any(Array)
     }));
   });
 

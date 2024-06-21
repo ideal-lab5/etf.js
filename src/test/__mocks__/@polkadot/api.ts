@@ -23,12 +23,7 @@ export class ApiPromise {
           // Simulate new justifications every 30 seconds
           setInterval(() => {
             const pulse = beaconSim.nextPulse();
-            const mockJustification = {
-              commitment: 'mockCommitment',
-              signaturesFrom: 'mockSignaturesFrom',
-              validatorSetLen: 5,
-              signaturesCompact: pulse.signature,
-            };
+            const mockJustification = new MockJustification(pulse.commitment, pulse.signaturesFrom, pulse.validatorSetLen, pulse.signaturesCompact);
             callback(mockJustification);
           }, 3000);
         }),
@@ -82,6 +77,26 @@ export class WsProvider {
   async connect() {
     console.log('Mock WsProvider connected')
   }
+}
+
+export class MockJustification {
+    public commitment: string
+    public signaturesFrom: string
+    public validatorSetLen: number
+    public signaturesCompact: [string]
+
+    constructor(commitment, signaturesFrom, validatorSetLen, signaturesCompact) {
+        this.commitment = commitment;
+        this.signaturesFrom = signaturesFrom;
+        this.validatorSetLen = validatorSetLen;
+        this.signaturesCompact = signaturesCompact;
+    }
+
+    public toHuman() {
+      let mockJust = new MockJustification(this.commitment, this.signaturesFrom, this.validatorSetLen, this.signaturesCompact);
+      let toHuman = {V1: mockJust};
+      return toHuman;
+    }
 }
 
 export class MockCall {

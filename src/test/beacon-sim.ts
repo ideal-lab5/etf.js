@@ -12,6 +12,21 @@ export class Pulse {
       this.index = index;
     }
   }
+
+  export class Pulse_V2{
+    
+    public commitment: string
+    public signaturesFrom: string
+    public validatorSetLen: number
+    public signaturesCompact: [string]
+
+    constructor(commitment, signaturesFrom, validatorSetLen, signaturesCompact) {
+        this.commitment = commitment;
+        this.signaturesFrom = signaturesFrom;
+        this.validatorSetLen = validatorSetLen;
+        this.signaturesCompact = signaturesCompact;
+    }
+  }
   
   export class BeaconSim {
     public chainId: any
@@ -25,12 +40,7 @@ export class Pulse {
     }
   
     nextPulse() {
-      let nextPulseIndex = this.prevPulseIndex + 1;
-      let t = new TextEncoder();
-      let pulseId = t.encode('0x' + this.chainId + nextPulseIndex);
-      let pulseRandomness = extract_signature(pulseId, this.keypair.sk);
-      let pulse = new Pulse(pulseRandomness, pulseId, nextPulseIndex);
-      this.prevPulseIndex = nextPulseIndex;
-      return pulse;
+      let pulse_v2 = new Pulse_V2("commitment", "signaturesFrom", 1, ["sigs"]);
+      return pulse_v2;
     }
   }
