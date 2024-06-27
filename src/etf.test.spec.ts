@@ -92,42 +92,6 @@ describe('Etf', () => {
     });
   })
 
-  
-//   it('should fail if block numbers are not in the future', async () => {
-//     const etf = new Etf()
-//     await etf.init(JSON.stringify(chainSpec))
-//     const nextSlot = {
-//       slot: '123,456,789',
-//     }
-//     etf.latestSlot = nextSlot
-//     etf.latestBlockNumber = 123
-//     const message = new TextEncoder().encode('Hello, world!')
-//     const threshold = 2
-//     try {
-//       etf.encrypt(message, threshold, [122], 'test seed')
-//     } catch (e) {
-//       expect(e).toStrictEqual(new Error("block numbers must be in the future"))
-//     }
-//   })
-
-//   it('should fail to encrypt a message with an empty slot schedule', async () => {
-//     const etf = new Etf()
-//     await etf.init(JSON.stringify(chainSpec))
-//     const nextSlot = {
-//       slot: '123,456,789',
-//     }
-//     etf.latestSlot = nextSlot
-//     etf.latestBlockNumber = 123
-//     const message = new TextEncoder().encode('Hello, world!')
-//     const threshold = 2
-//     try {
-//       etf.encrypt(message, threshold, [], 'test seed')
-//     } catch (e) {
-//       expect(e).toStrictEqual(new Error("block numbers must not be empty"))
-//     }
-    
-//   })
-
 //   it('should decrypt a message', async () => {
 //     const etf = new Etf()
 //     await etf.init(JSON.stringify(chainSpec))
@@ -146,51 +110,5 @@ describe('Etf', () => {
 //       message: 'mocked-decrypted',
 //       sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
 //     })
-//   })
-
-//   it('should reject invalid call data', async () => {
-//     const etf = new Etf()
-//     await etf.init(JSON.stringify(chainSpec))
-
-//     const nextSlot = {
-//       slot: '123,456,789',
-//     }
-//     etf.latestSlot = nextSlot
-//     etf.latestBlockNumber = 123
-
-
-//     let deadline = 125
-
-//     let innerCall = "";
-//     try {
-//       etf.delay(innerCall, 127, deadline);
-//       throw new Error('the call should throw an error');
-//     } catch (e) {
-//       expect(e).toBeTruthy()
-//     }
-//   })
-
-//   it('should construct a delayed transaction', async () => {
-//     const etf = new Etf()
-//     await etf.init(JSON.stringify(chainSpec))
-
-//     const nextSlot = {
-//       slot: '123,456,789',
-//     }
-//     etf.latestSlot = nextSlot
-//     etf.latestBlockNumber = 123
-
-
-//     let deadline = 123456791
-
-//     let innerCall = etf.api.tx.balances
-//       .transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
-//     let outerCall = etf.delay(innerCall, 127, deadline);
-//     if (outerCall instanceof Error) {
-//       console.log(outerCall)
-//       throw new Error('the test should not have an error');
-//     } else {
-//       expect(outerCall.call).toBeTruthy();
-//     }
 //   })
 })
