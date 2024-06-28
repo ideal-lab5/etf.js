@@ -18,7 +18,7 @@ export function encrypt(message_bytes, slot_id_bytes, t) {
 }
 
 // Mocked implementation of etf-sdk decrypt function
-export function decrypt(ciphertext_bytes, nonce_bytes, capsule_bytes, sks_bytes) {
+export function decrypt(ciphertext, justification) {
   return {
     message: 'mocked-decrypted',
     sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]

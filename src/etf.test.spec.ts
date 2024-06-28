@@ -92,23 +92,16 @@ describe('Etf', () => {
     });
   })
 
-//   it('should decrypt a message', async () => {
-//     const etf = new Etf()
-//     await etf.init(JSON.stringify(chainSpec))
-//     const nextSlot = {
-//       slot: '123,456,789',
-//     }
-//     etf.latestSlot = nextSlot
-//     etf.latestBlockNumber = 123
-//     let encoder = new TextEncoder()
-//     const ct = encoder.encode('test1')
-//     const nonce = encoder.encode('test2')
-//     const capsule = encoder.encode('test3')
-
-//     const result = await etf.decrypt(ct, nonce, capsule, [1, 3, 5])
-//     expect(result).toEqual({
-//       message: 'mocked-decrypted',
-//       sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
-//     })
-//   })
+  it('should decrypt a message', async () => {
+    const etf = new Etf()
+    await etf.init(JSON.stringify(chainSpec), false)
+    const seed = 'seed';
+    const message = 'Hello, world!'
+    const result = await etf.decrypt(message, seed);
+    expect(result).toEqual({
+      message: 'mocked-decrypted',
+      sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+    })
+  })
+  
 })
