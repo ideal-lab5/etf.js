@@ -43,7 +43,6 @@ export class Etf {
   public isProd: boolean
   public api!: ApiPromise
   private providerMultiAddr: string
-  // private etfApi!: EtfApiWrapper
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
