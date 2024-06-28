@@ -1,4 +1,4 @@
-import { BeaconSim, Pulse  } from '../../beacon-sim';
+import { BeaconSim } from '../../beacon-sim';
 
 // __mocks__/@polkadot/api.js
 export class ApiPromise {

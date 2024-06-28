@@ -1,19 +1,4 @@
-import { extract_signature } from '@ideallabs/etf-sdk';
-
-
-export class Pulse {
-    public signature: any
-    public id: any
-    public index: any
-
-    constructor(signature, id, index) {
-      this.signature = signature;
-      this.id = id;
-      this.index = index;
-    }
-  }
-
-  export class Pulse_V2{
+  export class Pulse{
     
     public commitment: string
     public signaturesFrom: string
@@ -40,7 +25,7 @@ export class Pulse {
     }
   
     nextPulse() {
-      let pulse_v2 = new Pulse_V2("commitment", "signaturesFrom", 1, ["sigs"]);
-      return pulse_v2;
+      let pulse = new Pulse("commitment", "signaturesFrom", 1, ["sigs"]);
+      return pulse;
     }
   }

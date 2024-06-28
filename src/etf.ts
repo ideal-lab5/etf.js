@@ -4,12 +4,8 @@
 // see: https://polkadot.js.org/docs/api/FAQ/#since-upgrading-to-the-7x-series-typescript-augmentation-is-missing
 // import '@polkadot/api-augment'
 import { ApiPromise, WsProvider } from '@polkadot/api'
-import { Metadata, TypeRegistry } from '@polkadot/types'
-import { hexToU8a } from '@polkadot/util'
 import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@substrate/connect'
-// import init, { EtfApiWrapper } from '@ideallabs/etf-sdk'
-import { EventEmitter } from 'events'
 import { BN, BN_ONE } from "@polkadot/util";
 import { build_encoded_commitment, encrypt, decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
