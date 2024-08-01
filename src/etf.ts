@@ -2,7 +2,7 @@
 // This class initializes the ETF.js SDK
 //
 // see: https://polkadot.js.org/docs/api/FAQ/#since-upgrading-to-the-7x-series-typescript-augmentation-is-missing
-// import '@polkadot/api-augment'
+import '@polkadot/api-augment'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@substrate/connect'
@@ -10,6 +10,39 @@ import { BN, BN_ONE } from "@polkadot/util";
 import { build_encoded_commitment, encrypt, decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
+
+export class Pulse {
+  round: any
+  randomness: any
+  signature: any
+
+  constructor(pulse: any) {
+    this.round = pulse.round;
+    this.randomness = pulse.randomness;
+    this.signature = pulse.signature;
+
+  }
+}
+
+export class BeaconConfig {
+  public_key: any
+  period: any
+  genesis_time: any
+  hash: any
+  group_hash: any
+  scheme_id: any
+  metadata: any
+
+  constructor(config: any) {
+    this.public_key = config.public_key
+    this.period = config.period
+    this.genesis_time = config.genesis_time
+    this.hash = config.hash
+    this.group_hash = config.group_hash
+    this.scheme_id = config.scheme_id
+    this.metadata = config.metadata
+  }
+}
 
 /**
  * Represents a 'justification' from the Ideal network
@@ -42,6 +75,7 @@ export class Etf {
   public ibePubkey: any
   public isProd: boolean
   public api!: ApiPromise
+  public config: BeaconConfig
   private providerMultiAddr: string
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
@@ -83,14 +117,20 @@ export class Etf {
     this.api = await ApiPromise.create({
       provider,
       types: {
-        ...extraTypes
+        ...extraTypes, BeaconConfig, Pulse
       }
     })
     await init();
     await this.api.isReady
+    this.config = await this.getBeaconConfig();
     console.log('api is ready')
+  }
 
-    // this.api.query
+  async getBeaconConfig() {
+    return this.api.query.drand.beaconConfig().then(config => {
+      let beaconConfig = new BeaconConfig(config.toHuman);
+      return beaconConfig;
+    });
   }
 
   /**
@@ -107,6 +147,13 @@ export class Etf {
   subscribeJustifications(callback: any): void {
     this.api.rpc.beefy.subscribeJustifications((sig) => {
       callback(new Justfication(sig.toHuman()["V1"]))
+    })
+  }
+
+  async getPulse(when?: number): Promise<Pulse> {
+    return this.api.query.drand.pulses(when).then(provided_pulse => {
+      let pulse = new Pulse(provided_pulse.toHuman());
+      return pulse;
     })
   }
 
@@ -127,8 +174,9 @@ export class Etf {
     });
   }
 
-  decrypt(ciphertext, justification) {
-    let bls_sigs = justification.signaturesCompact;
-    return decrypt(ciphertext, bls_sigs);
+  decrypt(ciphertext, blockNumber) {
+    return this.getPulse(blockNumber).then(pulse => {
+      return decrypt(ciphertext, pulse.signature);
+    });
   }
 }

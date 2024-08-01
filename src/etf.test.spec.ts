@@ -70,6 +70,17 @@ describe('Etf', () => {
     }));
   });
 
+  it('should call getPulse', async () => {
+    const etf = new Etf('wss://example.com', true);
+    await etf.init()
+
+    etf.getPulse(0).then(pulse => {
+      expect(pulse.randomness).toBe('0x1001001100100110011010101');
+      expect(pulse.round).toBe(0);
+      expect(pulse.signature).toBe('coleman <3 UwO');
+    });
+  });
+
   it('should encrypt a message', async () => {
     const etf = new Etf()
     await etf.init(JSON.stringify(chainSpec), false)
@@ -95,9 +106,9 @@ describe('Etf', () => {
   it('should decrypt a message', async () => {
     const etf = new Etf()
     await etf.init(JSON.stringify(chainSpec), false)
-    const seed = 'seed';
+    const blockNumber = 1;
     const message = 'Hello, world!'
-    const result = await etf.decrypt(message, seed);
+    const result = await etf.decrypt(message, blockNumber);
     expect(result).toEqual({
       message: 'mocked-decrypted',
       sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]

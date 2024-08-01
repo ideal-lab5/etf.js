@@ -4,6 +4,7 @@ import { BeaconSim } from '../../beacon-sim';
 export class ApiPromise {
   public isReady: any
   public rpc: any
+  public drand: any
   public query: any
   public registry: any
   public tx: any
@@ -42,6 +43,12 @@ export class ApiPromise {
       system: {
         blockHash: async () => '0xBlockHash'
       },
+      drand: {
+          pulses: jest.fn((when) => {return new Promise((resolve, reject) => {resolve(new MockPulse(when)); reject(new Error())})}),
+          beaconConfig: jest.fn(() => {
+            return new Promise((resolve, reject) => {resolve(new MockBeaconConfig()); reject(new Error())})
+          })
+        },
     }
 
     this.registry = {
@@ -76,6 +83,44 @@ export class WsProvider {
 
   async connect() {
     console.log('Mock WsProvider connected')
+  }
+}
+
+export class MockPulse {
+  round: any
+  randomness: any
+  signature: any
+
+  constructor(when: any) {
+    this.round = when;
+    this.randomness = '0x1001001100100110011010101';
+    this.signature = 'coleman <3 UwO';
+  }
+
+  public toHuman() {
+    return this;
+  }
+
+}
+export class MockBeaconConfig {
+  public_key: any
+  period: any
+  genesis_time: any
+  hash: any
+  group_hash: any
+  scheme_id: any
+  metadata: any
+  constructor() {
+    this.public_key = "public key";
+    this.period = "period";
+    this.genesis_time = "genesis_time";
+    this.hash = "hash";
+    this.group_hash = "group_hash"
+    this.scheme_id = "scheme_id";
+    this.metadata = "metadata";
+  }
+  public toHuman() {
+    return this;
   }
 }
 
