@@ -123,6 +123,7 @@ export class Etf {
     await init();
     await this.api.isReady
     this.config = await this.getBeaconConfig();
+    this.ibePubkey = this.config.public_key;
     console.log('api is ready')
   }
 
