@@ -10,7 +10,7 @@ import { BN, BN_ONE, hexToString, hexToU8a } from "@polkadot/util";
 import { build_encoded_commitment, tle, tld, aes_decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
-import {Pulse, Justfication} from './types.js'
+import {Pulse, Justfication, TLECipherText} from './types.js'
 
 /**
  * Encryption to the Future
@@ -151,5 +151,40 @@ export class Etf {
       return pt;
     });
   }
+
+      /**
+   * Prepare a secure delayed transaction for a given deadline.
+   * 
+   * ex:
+   * etf.delay(
+   *  api.tx.balances
+   *    .transferKeepAlive(BOB, 100), 477382)
+   *    .signAndSend(alice, result => {...})
+   * 
+   * @param rawCall: The call to delay
+   * @param priority: The call priority
+   * @param blockNumber: The block for which the call should be executed
+   * @returns (call, sk, block) where the call is a call to schedule the delayed transaction
+   */
+      async delay(rawCall, priority, blockNumber) {
+        try {
+          let call = this.createType('Call', rawCall);
+          let out = (await this.timelockEncrypt(call.toU8a(), blockNumber, new Date().toString())).toString();
+          let ct = new TLECipherText(JSON.parse(out));
+          let o = {
+            ciphertext: ct.aes_ct.ciphertext,
+            nonce: ct.aes_ct.nonce,
+            capsule: ct.etf_ct[0],
+          };
+    
+          return ({
+            call: this.api.tx.scheduler.scheduleSealed(blockNumber, priority, o),
+            sk: ct.aes_ct.key,
+          });
+        } catch (e) {
+          throw e;
+        }
+      }
+    
 
 }

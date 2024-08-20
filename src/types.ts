@@ -32,3 +32,13 @@ export class Pulse {
     this.signature = signature;
   }
 }
+
+export class TLECipherText {
+  aes_ct: any
+  etf_ct: any
+  
+  constructor(tleCipherText: any) {
+    this.aes_ct = tleCipherText.aes_ct;
+    this.etf_ct = tleCipherText.etf_ct;
+  }
+}
