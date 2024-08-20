@@ -7,7 +7,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@substrate/connect'
 import { BN, BN_ONE } from "@polkadot/util";
-import { build_encoded_commitment, encrypt, decrypt } from '@ideallabs/etf-sdk'
+import { build_encoded_commitment, encrypt, decrypt, aes_decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
 
@@ -122,17 +122,17 @@ export class Etf {
     })
     await init();
     await this.api.isReady
-    this.config = await this.getBeaconConfig();
-    this.ibePubkey = this.config.public_key;
+    // this.config = await this.getBeaconConfig();
+    this.ibePubkey = "look on github";
     console.log('api is ready')
   }
 
-  async getBeaconConfig() {
-    return this.api.query.drand.beaconConfig().then(config => {
-      let beaconConfig = new BeaconConfig(config.toHuman);
-      return beaconConfig;
-    });
-  }
+  // async getBeaconConfig() {
+  //   return this.api.query.randomnessBeacon.beaconConfig().then(config => {
+  //     let beaconConfig = new BeaconConfig(config.toHuman);
+  //     return beaconConfig;
+  //   });
+  // }
 
   /**
    * A proxy to the polkadotjs api type registry creation
@@ -151,17 +151,36 @@ export class Etf {
     })
   }
 
-  async getPulse(when?: number): Promise<Pulse> {
-    return this.api.query.drand.pulses(when).then(provided_pulse => {
-      let pulse = new Pulse(provided_pulse.toHuman());
-      return pulse;
-    })
-  }
+  //drand pallet getPulse
+  // async getPulse(when?: number): Promise<Pulse> {
+  //   return this.api.query.drand.pulses(when).then(provided_pulse => {
+  //     let pulse = new Pulse(provided_pulse.toHuman());
+  //     return pulse;
+  //   })
+  // }
 
-  encrypt(message: string, blockNumber: number, seed: string): Promise<String> {
+  /**
+   * 
+   * @param message: Message to be encrypted
+   * @param blockNumber: Block number that will produce the signature for decryption
+   * @param seed: Seed for encryption
+   * @returns: Ciphertext of encrypted message
+   */
+  async encrypt(message: string, blockNumber: number, seed: string): Promise<String> {
     // TODO: we need to calculate the future validator set id using
     // the diff between current block number and target block number divided by session length
+    // const {hash, parentHash} = await this.api.rpc.chain.getHeader();
+    // let expected validator set id = current validator id + Math.floor(# of blocks in future/blocksPerSession)
+    // const currentBlock = await this.api.rpc.chain.getBlock();
+    // let currentBlockNumber = currentBlock.block.header.number;
+    // let num_blocks_in_future = blockNumber - blockNumber;
+    // let current_validator_set_id = this.api.query.randomnessBeacon.currentValidatorSetId;
+    // let sessionLength = 2400;
+    // is it possible to mess this number up? IE, race condition where current block is no longer the one that should be counted for
+    // let num_blocks_in_future = this.calculateNumOfBlocks();
     let validator_set_id = 1;
+    
+    // let validator_set_id = current_validator_set_id + Math.floor(num_blocks_in_future/sessionLength);
     // let setId = this.api.query.beefy.validatorSetId().then((id) => {
     //   return id + 1;
     // })
@@ -175,9 +194,40 @@ export class Etf {
     });
   }
 
-  decrypt(ciphertext, blockNumber) {
-    return this.getPulse(blockNumber).then(pulse => {
-      return decrypt(ciphertext, pulse.signature);
+  /**
+   * 
+   * @param blockNumber: Number of the block you want returned
+   * @returns: Pulse of randomness
+   */
+  async getPulse(blockNumber): Promise<Pulse>{
+    return this.api.query.randomnessBeacon.pulses(blockNumber).then(pulse => {
+      return new Pulse(pulse.toHuman());
     });
   }
+
+  /**
+   * 
+   * @param ciphertext: Ciphertext to be decrypted
+   * @param blockNumber: Block number that has the signature for decryption
+   * @returns: Plaintext of encrypted message
+   */
+  async decrypt(ciphertext, blockNumber) {
+    return this.getPulse(blockNumber).then(pulse => {
+      let sig = [pulse.signature];
+      return decrypt(ciphertext, sig);
+    });
+  }
+
+  async earlyDecrypt(ciphertext, seed) {
+
+    let t = new TextEncoder();
+    let masterSecret = t.encode(seed);
+    return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
+      let pt = aes_decrypt(ciphertext, derivedKey);
+      return pt;
+    });
+
+  }
+
+
 }
