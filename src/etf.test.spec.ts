@@ -46,7 +46,7 @@ describe('Etf', () => {
 
     await etf.init();
 
-    etf.subscribeJustifications(mockCallback);
+    etf.subscribeBeacon(mockCallback);
 
     // Fast-forward 3 seconds
     jest.advanceTimersByTime(3000);

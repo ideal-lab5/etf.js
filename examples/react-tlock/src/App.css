@@ -40,7 +40,8 @@ td {
 }
 
 .data-display {
-  float: left;
+  /* float: left; */
+  display: grid;
   padding: 10px;
 }
 

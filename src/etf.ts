@@ -24,25 +24,25 @@ export class Pulse {
   }
 }
 
-export class BeaconConfig {
-  public_key: any
-  period: any
-  genesis_time: any
-  hash: any
-  group_hash: any
-  scheme_id: any
-  metadata: any
+// export class BeaconConfig {
+//   public_key: any
+//   period: any
+//   genesis_time: any
+//   hash: any
+//   group_hash: any
+//   scheme_id: any
+//   metadata: any
 
-  constructor(config: any) {
-    this.public_key = config.public_key
-    this.period = config.period
-    this.genesis_time = config.genesis_time
-    this.hash = config.hash
-    this.group_hash = config.group_hash
-    this.scheme_id = config.scheme_id
-    this.metadata = config.metadata
-  }
-}
+//   constructor(config: any) {
+//     this.public_key = config.public_key
+//     this.period = config.period
+//     this.genesis_time = config.genesis_time
+//     this.hash = config.hash
+//     this.group_hash = config.group_hash
+//     this.scheme_id = config.scheme_id
+//     this.metadata = config.metadata
+//   }
+// }
 
 /**
  * Represents a 'justification' from the Ideal network
@@ -75,7 +75,6 @@ export class Etf {
   public ibePubkey: any
   public isProd: boolean
   public api!: ApiPromise
-  public config: BeaconConfig
   private providerMultiAddr: string
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
@@ -117,21 +116,14 @@ export class Etf {
     this.api = await ApiPromise.create({
       provider,
       types: {
-        ...extraTypes, BeaconConfig, Pulse
+        ...extraTypes, Pulse
       }
     })
     await init();
     await this.api.isReady
-    this.config = await this.getBeaconConfig();
-    this.ibePubkey = this.config.public_key;
-    console.log('api is ready')
-  }
 
-  async getBeaconConfig() {
-    return this.api.query.drand.beaconConfig().then(config => {
-      let beaconConfig = new BeaconConfig(config.toHuman);
-      return beaconConfig;
-    });
+    this.ibePubkey = await this.api.query.etf.roundPublic()
+    console.log('api is ready')
   }
 
   /**
@@ -145,30 +137,31 @@ export class Etf {
    * listens for incoming justifications and invokes the callback when new ones are streamed
    * @param callback: a callback to handle the new justifications
    */
-  subscribeJustifications(callback: any): void {
+  subscribeBeacon(callback: any): void {
     this.api.rpc.beefy.subscribeJustifications((sig) => {
       callback(new Justfication(sig.toHuman()["V1"]))
     })
   }
 
   async getPulse(when?: number): Promise<Pulse> {
-    return this.api.query.drand.pulses(when).then(provided_pulse => {
+    return this.api.query.randomnessBeacon.pulses(when).then(provided_pulse => {
       let pulse = new Pulse(provided_pulse.toHuman());
       return pulse;
     })
   }
 
   encrypt(message: string, blockNumber: number, seed: string): Promise<String> {
-    // TODO: we need to calculate the future validator set id using
-    // the diff between current block number and target block number divided by session length
-    let validator_set_id = 1;
-    // let setId = this.api.query.beefy.validatorSetId().then((id) => {
-    //   return id + 1;
-    // })
+    // TODO: fine for now but should ultimately query the BABE pallet config instead
+    let epochLength = 200;
+    let validatorSetId = blockNumber % epochLength;
+    // let validator_set_id = this.api.query.beefy.validatorSetId().then((id) => {
+    //   return id.toNumber() + 200;
+    // });
+    
     let t = new TextEncoder();
     let masterSecret = t.encode(seed);
     return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
-      let commitment = build_encoded_commitment(blockNumber, validator_set_id);
+      let commitment = build_encoded_commitment(blockNumber, validatorSetId);
       let encodedCommitment = t.encode(commitment);
       let ct = encrypt(encodedCommitment, t.encode(message), derivedKey, this.ibePubkey)
       return ct;

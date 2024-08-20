@@ -25,7 +25,7 @@ function App() {
       setEtf(etf)
 
       // stream incoming justifications and use the signature
-      etf.subscribeJustifications((justification) => {
+      etf.subscribeBeacon((justification) => {
         setLatestBlock(justification.commitment.blockNumber)
         setLatestSignature(justification.signaturesCompact)
       });
@@ -82,9 +82,46 @@ function App() {
       <div className="header">
         ETF.js Timelock Encryption Example
       </div>
-      <div>
+      {/* <div className='data-display'>
         <span>Latest Block { JSON.stringify(latestBlock) } </span>
         <span>Latest Signature { JSON.stringify(latestSignature) } </span>
+      </div> */}
+      <div className="ciphertext-display">
+        Your encrypted messages
+        {ciphertexts && ciphertexts.map((info, idx) => {
+          return (
+            <div key={idx} className="encrypted-message-data-display">
+              <span>deadline: { info.deadline }</span>
+              <button onClick={() => decrypt(info)}>Decrypt</button>
+            </div>
+          )
+        })}
+        <div>{decrypted}</div>
+      </div>
+      <div className="encrypt-body">
+        <span>Write a message</span>
+        <textarea
+          id="inputMessage"
+          name="secret-message"
+          cols="40"
+          rows="5"
+        ></textarea>
+        <form className="form">
+          <label htmlFor="distance">Distance</label>
+          <input
+            id="distance"
+            type="number"
+            onChange={(e) => setDistance(e.target.value)}
+            value={distance}
+            placeholder=""
+          />
+          <input
+            className="button"
+            type="submit"
+            onClick={encrypt}
+            value="Encrypt"
+          />
+        </form>
       </div>
     </div>
   )
