@@ -26,7 +26,7 @@ function App() {
 
       // stream incoming justifications and use the signature
       etf.subscribeBeacon((justification) => {
-        setLatestBlock(justification.commitment.blockNumber)
+        setLatestBlock(parseInt(justification.commitment.blockNumber))
         setLatestSignature(justification.signaturesCompact)
       });
     }
@@ -44,16 +44,17 @@ function App() {
     const inputElement = document.getElementById('inputMessage')
     const inputMessage = inputElement.value
     inputElement.value = ''
-    let deadline = latestBlock + parseInt(blockNumber);
+    let deadline = blockNumber;
     try {
-      let out = etf.encrypt(t.encode(inputMessage), deadline, "testSeed")
-      let o = {
-        ciphertext: out.aes_ct.ciphertext,
-        nonce: out.aes_ct.nonce,
-        capsule: out.etf_ct,
-        deadline: deadline,
-      };
-      setCiphertexts([...ciphertexts, o]);
+      let out = await etf.encrypt(t.encode(inputMessage), deadline, "testSeed")
+      console.log(out);
+      // let o = {
+      //   ciphertext: out.aes_ct.ciphertext,
+      //   nonce: out.aes_ct.nonce,
+      //   capsule: out.etf_ct,
+      //   deadline: deadline,
+      // };
+      // setCiphertexts([...ciphertexts, o]);
     } catch (e) {
       console.log(e)
     }

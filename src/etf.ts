@@ -170,7 +170,7 @@ export class Etf {
     return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
       let commitment = build_encoded_commitment(blockNumber, validatorSetId);
       let encodedCommitment = t.encode(commitment);
-      let ct = encrypt(encodedCommitment, t.encode(message), derivedKey, this.ibePubkey)
+      let ct = encrypt(encodedCommitment, t.encode(message), derivedKey.key, this.ibePubkey)
       return ct;
     });
   }
