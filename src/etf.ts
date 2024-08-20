@@ -7,7 +7,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@substrate/connect'
 import { BN, BN_ONE } from "@polkadot/util";
-import { build_encoded_commitment, encrypt, decrypt } from '@ideallabs/etf-sdk'
+import { build_encoded_commitment, encrypt, decrypt, aes_decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
 
@@ -143,21 +143,28 @@ export class Etf {
     })
   }
 
-  async getPulse(when?: number): Promise<Pulse> {
-    return this.api.query.randomnessBeacon.pulses(when).then(provided_pulse => {
-      let pulse = new Pulse(provided_pulse.toHuman());
-      return pulse;
-    })
+  /**
+   * Query a pulse from runtime storage, could be empty
+   * @param blockNumber: The block number of the pulse you want returned
+   * @returns: Pulse of randomness
+   */
+  async getPulse(blockNumber): Promise<Pulse>{
+    return this.api.query.randomnessBeacon.pulses(blockNumber).then(pulse => {
+      return new Pulse(pulse.toHuman());
+    });
   }
 
-  encrypt(message: string, blockNumber: number, seed: string): Promise<String> {
+  /**
+   * Timelock Encryption: Encrypt the message for the given block
+   * @param message: The message to encrypt
+   * @param blockNumber: The block number when the message unlocks
+   * @param seed: A seed to derive crypto keys
+   * @returns the ciphertext
+   */
+  tle(message: string, blockNumber: number, seed: string): Promise<String> {
     // TODO: fine for now but should ultimately query the BABE pallet config instead
     let epochLength = 200;
     let validatorSetId = blockNumber % epochLength;
-    // let validator_set_id = this.api.query.beefy.validatorSetId().then((id) => {
-    //   return id.toNumber() + 200;
-    // });
-    
     let t = new TextEncoder();
     let masterSecret = t.encode(seed);
     return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
@@ -168,9 +175,29 @@ export class Etf {
     });
   }
 
-  decrypt(ciphertext, blockNumber) {
+
+  /**
+   * Timelock decryption: Decrypt the ciphertext using a pulse from the beacon produced at the given block
+   * @param ciphertext: Ciphertext to be decrypted
+   * @param blockNumber: Block number that has the signature for decryption
+   * @returns: Plaintext of encrypted message
+   */
+  async decrypt(ciphertext, blockNumber) {
     return this.getPulse(blockNumber).then(pulse => {
-      return decrypt(ciphertext, pulse.signature);
+      let sig = [pulse.signature];
+      return decrypt(ciphertext, sig);
     });
   }
+
+  async earlyDecrypt(ciphertext, seed) {
+    let t = new TextEncoder();
+    let masterSecret = t.encode(seed);
+    return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
+      let pt = aes_decrypt(ciphertext, derivedKey);
+      return pt;
+    });
+
+  }
+
+
 }

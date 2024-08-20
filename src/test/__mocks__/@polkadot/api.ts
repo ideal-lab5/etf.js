@@ -43,12 +43,18 @@ export class ApiPromise {
       system: {
         blockHash: async () => '0xBlockHash'
       },
-      drand: {
-          pulses: jest.fn((when) => {return new Promise((resolve, reject) => {resolve(new MockPulse(when)); reject(new Error())})}),
-          beaconConfig: jest.fn(() => {
+      // drand: {
+      //     pulses: jest.fn((when) => {return new Promise((resolve, reject) => {resolve(new MockPulse(when)); reject(new Error())})}),
+      //     beaconConfig: jest.fn(() => {
+      //       return new Promise((resolve, reject) => {resolve(new MockBeaconConfig()); reject(new Error())})
+      //     })
+      //   },
+      randomnessBeacon: {
+        pulses: jest.fn((when) => {return new Promise((resolve, reject) => {resolve(new MockPulse(when)); reject(new Error())})}),
+        beaconConfig: jest.fn(() => {
             return new Promise((resolve, reject) => {resolve(new MockBeaconConfig()); reject(new Error())})
           })
-        },
+      }
     }
 
     this.registry = {
