@@ -24,6 +24,13 @@ export function decrypt(ciphertext, justification) {
     sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
   }
 }
+
+export function aes_decrypt(ciphertext, derivedKey) {
+  return {
+    message: 'mocked-decrypted',
+    sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
+  }
+}
  
 // Mocked implementation of etf-sdk build_encoded_commitment function
 export function build_encoded_commitment(blockNumber, validator_set_id) {

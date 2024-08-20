@@ -107,8 +107,20 @@ describe('Etf', () => {
     const etf = new Etf()
     await etf.init(JSON.stringify(chainSpec), false)
     const blockNumber = 1;
-    const message = 'Hello, world!'
-    const result = await etf.decrypt(message, blockNumber);
+    const ciphertext = 'ciphertext'
+    const result = await etf.decrypt(ciphertext, blockNumber);
+    expect(result).toEqual({
+      message: 'mocked-decrypted',
+      sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+    })
+  })
+
+  it('should decrypt a message early', async () => {
+    const etf = new Etf()
+    await etf.init(JSON.stringify(chainSpec), false)
+    const secret = "shhh, it's a secret";
+    const ciphertext = 'ciphertext'
+    const result = await etf.earlyDecrypt(ciphertext, secret);
     expect(result).toEqual({
       message: 'mocked-decrypted',
       sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
