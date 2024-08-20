@@ -38,7 +38,8 @@ export class ApiPromise {
 
     this.query = {
       etf: {
-        ibeParams: async () => ['param1', 'param2']
+        ibeParams: async () => ['param1', 'param2'],
+        roundPublic: jest.fn(() => {return 'public key'})
       },
       system: {
         blockHash: async () => '0xBlockHash'

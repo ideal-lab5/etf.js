@@ -161,7 +161,7 @@ export class Etf {
    * @param seed: A seed to derive crypto keys
    * @returns the ciphertext
    */
-  encrypt(message: string, blockNumber: number, seed: string): Promise<String> {
+  tle(message: string, blockNumber: number, seed: string): Promise<String> {
     // TODO: fine for now but should ultimately query the BABE pallet config instead
     let epochLength = 200;
     let validatorSetId = blockNumber % epochLength;
@@ -182,14 +182,14 @@ export class Etf {
    * @param blockNumber: Block number that has the signature for decryption
    * @returns: Plaintext of encrypted message
    */
-  async decrypt(ciphertext, blockNumber) {
+  async tld(ciphertext, blockNumber) {
     return this.getPulse(blockNumber).then(pulse => {
       let sig = [pulse.signature];
       return decrypt(ciphertext, sig);
     });
   }
 
-  async earlyDecrypt(ciphertext, seed) {
+  async decrypt(ciphertext, seed) {
     let t = new TextEncoder();
     let masterSecret = t.encode(seed);
     return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
