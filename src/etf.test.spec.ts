@@ -87,7 +87,7 @@ describe('Etf', () => {
     const seed = 'seed';
     const latestBlockNumber = 123;
     const message = 'Hello, world!'
-    await etf.tle(message, latestBlockNumber, seed).then((result) => {
+    await etf.timelockEncrypt(message, latestBlockNumber, seed).then((result) => {
       let result_string = JSON.stringify(result);
       let expected_string = JSON.stringify({
         aes_ct: { ciphertext: [ 0 ], nonce: [ 1 ] },
@@ -108,7 +108,7 @@ describe('Etf', () => {
     await etf.init(JSON.stringify(chainSpec), false)
     const blockNumber = 1;
     const ciphertext = 'ciphertext'
-    const result = await etf.tld(ciphertext, blockNumber);
+    const result = await etf.timelockDecrypt(ciphertext, blockNumber);
     expect(result).toEqual({
       message: 'mocked-decrypted',
       sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]

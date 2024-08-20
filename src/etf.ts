@@ -7,10 +7,10 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@substrate/connect'
 import { BN, BN_ONE, hexToString, hexToU8a } from "@polkadot/util";
-import { build_encoded_commitment, encrypt, decrypt, aes_decrypt } from '@ideallabs/etf-sdk'
+import { build_encoded_commitment, tle, tld, aes_decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
-import {Pulse, Justfication} from './types'
+import {Pulse, Justfication} from './types.js'
 
 /**
  * Encryption to the Future
@@ -110,7 +110,7 @@ export class Etf {
    * @param seed: A seed to derive crypto keys
    * @returns the ciphertext
    */
-  tle(message: string, blockNumber: number, seed: string): Promise<String> {
+  timelockEncrypt(message: string, blockNumber: number, seed: string): Promise<String> {
     // TODO: fine for now but should ultimately query the BABE pallet config instead
     // let epochLength = 200;
     // let validatorSetId = blockNumber % epochLength;
@@ -118,12 +118,11 @@ export class Etf {
     let masterSecret = t.encode(seed);
     return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
       let commitment = build_encoded_commitment(blockNumber, 0);
-      let encodedCommitment = t.encode(commitment);
-      let ct = encrypt(encodedCommitment, t.encode(message), derivedKey.key, this.ibePubkey)
+      let encodedMessage = t.encode(message);
+      let ct = tle(commitment, encodedMessage, derivedKey.key, this.ibePubkey)
       return ct;
     });
   }
-
 
   /**
    * Timelock decryption: Decrypt the ciphertext using a pulse from the beacon produced at the given block
@@ -131,13 +130,19 @@ export class Etf {
    * @param blockNumber: Block number that has the signature for decryption
    * @returns: Plaintext of encrypted message
    */
-  async tld(ciphertext, blockNumber) {
+  timelockDecrypt(ciphertext, blockNumber) {
     return this.getPulse(blockNumber).then(pulse => {
       let sig: Uint8Array = hexToU8a(pulse.signature);
-      return decrypt(ciphertext, sig);
+      return tld(ciphertext, sig);
     });
   }
 
+  /**
+   * Decrypt a ciphertext early if you know the seed
+   * @param ciphertext The ciphertext to decrypt
+   * @param seed The ciphertext seed
+   * @returns The plaintext
+   */
   async decrypt(ciphertext, seed) {
     let t = new TextEncoder();
     let masterSecret = t.encode(seed);

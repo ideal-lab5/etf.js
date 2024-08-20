@@ -19,14 +19,13 @@ function App() {
 
   useEffect(() => {
     const setup = async () => {
-      // let etf = new Etf("wss://etf1.idealabs.network:443")
       let etf = new Etf("ws://127.0.0.1:9944")
       await etf.init(chainSpec)
       setEtf(etf)
 
       // stream incoming justifications and use the signature
       etf.subscribeBeacon((justification) => {
-        setLatestBlock(parseInt(justification.commitment.blockNumber))
+        setLatestBlock(parseInt(justification.commitment.blockNumber.replace(",", "")))
         setLatestSignature(justification.signaturesCompact)
       });
     }
@@ -39,14 +38,15 @@ function App() {
    */
   async function encrypt(e) {
     e.preventDefault();
-    let t = new TextEncoder()
     // we do not want to bind the message to the state
     const inputElement = document.getElementById('inputMessage')
     const inputMessage = inputElement.value
     inputElement.value = ''
+
     let deadline = parseInt(blockNumber);
+
     try {
-      let out = await etf.tle(t.encode(inputMessage), deadline, "testSeed")
+      let out = await etf.timelockEncrypt(inputMessage, deadline, "testSeed")
       setCiphertexts([...ciphertexts, { ct: out, deadline }]);
     } catch (e) {
       console.log(e)
@@ -58,10 +58,8 @@ function App() {
    */
   async function decrypt(ciphertext, when) {
     try {
-      console.log('ciphertext')
-      console.log(ciphertext)
-      let res = await etf.tld(ciphertext, when)
-      let message = String.fromCharCode(...res.message)
+      let res = await etf.timelockDecrypt(ciphertext, when)
+      let message = String.fromCharCode(...res)
       setDecrypted(message)
     } catch (e) {
       console.error(e)
