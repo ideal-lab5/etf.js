@@ -161,7 +161,7 @@ export class Etf {
    * @param seed: A seed to derive crypto keys
    * @returns the ciphertext
    */
-  tle(message: string, blockNumber: number, seed: string): Promise<String> {
+  encrypt(message: string, blockNumber: number, seed: string): Promise<String> {
     // TODO: fine for now but should ultimately query the BABE pallet config instead
     let epochLength = 200;
     let validatorSetId = blockNumber % epochLength;

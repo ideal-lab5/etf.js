@@ -11,7 +11,7 @@ function App() {
 
   const [latestSlot, setLatestSlot] = useState(null)
   const [latestBlock, setLatestBlock] = useState(null)
-  const [distance, setDistance] = useState(5)
+  const [blockNumber, setBlockNumber] = useState(5)
 
   const [ciphertexts, setCiphertexts] = useState([]);
 
@@ -44,7 +44,7 @@ function App() {
     const inputElement = document.getElementById('inputMessage')
     const inputMessage = inputElement.value
     inputElement.value = ''
-    let deadline = latestBlock + parseInt(distance);
+    let deadline = latestBlock + parseInt(blockNumber);
     try {
       let out = etf.encrypt(t.encode(inputMessage), deadline, "testSeed")
       let o = {
@@ -108,12 +108,12 @@ function App() {
             rows="5"
           ></textarea>
           <form className="form">
-            <label htmlFor="distance">Distance</label>
+            <label htmlFor="blocknumber">Block Number</label>
             <input
-              id="distance"
+              id="block_number"
               type="number"
-              onChange={(e) => setDistance(e.target.value)}
-              value={distance}
+              onChange={(e) => setBlockNumber(e.target.value)}
+              value={blockNumber}
               placeholder=""
             />
             <input
@@ -130,59 +130,3 @@ function App() {
 }
 
 export default App
-
-
-{/* <div className="App">
-<div className="header">
-  EtF Js Timelock Encryption Example
-  <div>
-    Latest Block:{' '}
-    {latestBlock === null || latestBlock === undefined
-      ? 'Loading...'
-      : latestBlock}
-  </div>
-  <div>
-    Latest Slot:{' '}
-    {latestSlot === null || latestSlot === undefined
-      ? 'Loading...'
-      : latestSlot.slot}
-  </div>
-</div>
-<div className="data-display">
-  Your encrypted messages
-  {ciphertexts && ciphertexts.map((info, idx) => {
-    return (
-      <div key={idx} className="encrypted-message-data-display">
-        <span>deadline: { info.deadline }</span>
-        <button onClick={() => decrypt(info)}>Decrypt</button>
-      </div>
-    )
-  })}
-  <div>{decrypted}</div>
-</div>
-<div className="encrypt-body">
-  <span>Write a message</span>
-  <textarea
-    id="inputMessage"
-    name="secret-message"
-    cols="40"
-    rows="5"
-  ></textarea>
-  <form className="form">
-    <label htmlFor="distance">Distance</label>
-    <input
-      id="distance"
-      type="number"
-      onChange={(e) => setDistance(e.target.value)}
-      value={distance}
-      placeholder=""
-    />
-    <input
-      className="button"
-      type="submit"
-      onClick={encrypt}
-      value="Encrypt"
-    />
-  </form>
-</div>
-</div> */}
