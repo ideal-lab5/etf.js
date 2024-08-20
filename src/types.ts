@@ -21,20 +21,20 @@ export class Justfication {
   
   }
 
-  export class Pulse {
-    round: any
-    randomness: any
-    signature: any
-  
-    constructor(pulse: any) {
-      this.round = pulse.round;
-      this.randomness = pulse.randomness;
-      this.signature = pulse.signature;
-  
-    }
-  }
+export class Pulse {
+  round: any
+  randomness: any
+  signature: any
 
-  // export class BeaconConfig {
+  constructor(pulse: any) {
+    this.round = pulse.round;
+    this.randomness = pulse.randomness;
+    this.signature = pulse.signature;
+
+  }
+}
+
+// export class BeaconConfig {
 //   public_key: any
 //   period: any
 //   genesis_time: any
