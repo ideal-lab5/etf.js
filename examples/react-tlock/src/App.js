@@ -44,17 +44,10 @@ function App() {
     const inputElement = document.getElementById('inputMessage')
     const inputMessage = inputElement.value
     inputElement.value = ''
-    let deadline = blockNumber;
+    let deadline = parseInt(blockNumber);
     try {
-      let out = await etf.encrypt(t.encode(inputMessage), deadline, "testSeed")
-      console.log(out);
-      // let o = {
-      //   ciphertext: out.aes_ct.ciphertext,
-      //   nonce: out.aes_ct.nonce,
-      //   capsule: out.etf_ct,
-      //   deadline: deadline,
-      // };
-      // setCiphertexts([...ciphertexts, o]);
+      let out = await etf.tle(t.encode(inputMessage), deadline, "testSeed")
+      setCiphertexts([...ciphertexts, { ct: out, deadline }]);
     } catch (e) {
       console.log(e)
     }
@@ -63,14 +56,11 @@ function App() {
   /**
    * Attempt to decrypt something
    */
-  async function decrypt(ciphertext) {
+  async function decrypt(ciphertext, when) {
     try {
-      let res = await etf.decrypt(
-        ciphertext.ciphertext,
-        ciphertext.nonce,
-        ciphertext.capsule,
-        [ciphertext.deadline],
-      )
+      console.log('ciphertext')
+      console.log(ciphertext)
+      let res = await etf.tld(ciphertext, when)
       let message = String.fromCharCode(...res.message)
       setDecrypted(message)
     } catch (e) {
@@ -94,7 +84,7 @@ function App() {
             return (
               <div key={idx} className="encrypted-message-data-display">
                 <span>deadline: { info.deadline }</span>
-                <button onClick={() => decrypt(info)}>Decrypt</button>
+                <button onClick={() => decrypt(info.ct, info.deadline)}>Decrypt</button>
               </div>
             )
           })}

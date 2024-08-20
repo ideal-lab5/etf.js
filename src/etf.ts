@@ -6,7 +6,7 @@ import '@polkadot/api-augment'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { ScProvider } from '@polkadot/rpc-provider'
 import * as Sc from '@substrate/connect'
-import { BN, BN_ONE } from "@polkadot/util";
+import { BN, BN_ONE, hexToString, hexToU8a } from "@polkadot/util";
 import { build_encoded_commitment, encrypt, decrypt, aes_decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
@@ -95,7 +95,11 @@ export class Etf {
    */
   async getPulse(blockNumber): Promise<Pulse>{
     return this.api.query.randomnessBeacon.pulses(blockNumber).then(pulse => {
-      return new Pulse(pulse.toHuman());
+      return new Pulse(
+        blockNumber, 
+        pulse.toHuman()['body'].randomness, 
+        pulse.toHuman()['body'].signature
+      );
     });
   }
 
@@ -108,12 +112,12 @@ export class Etf {
    */
   tle(message: string, blockNumber: number, seed: string): Promise<String> {
     // TODO: fine for now but should ultimately query the BABE pallet config instead
-    let epochLength = 200;
-    let validatorSetId = blockNumber % epochLength;
+    // let epochLength = 200;
+    // let validatorSetId = blockNumber % epochLength;
     let t = new TextEncoder();
     let masterSecret = t.encode(seed);
     return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
-      let commitment = build_encoded_commitment(blockNumber, validatorSetId);
+      let commitment = build_encoded_commitment(blockNumber, 0);
       let encodedCommitment = t.encode(commitment);
       let ct = encrypt(encodedCommitment, t.encode(message), derivedKey.key, this.ibePubkey)
       return ct;
@@ -129,7 +133,7 @@ export class Etf {
    */
   async tld(ciphertext, blockNumber) {
     return this.getPulse(blockNumber).then(pulse => {
-      let sig = [pulse.signature];
+      let sig: Uint8Array = hexToU8a(pulse.signature);
       return decrypt(ciphertext, sig);
     });
   }
@@ -141,8 +145,6 @@ export class Etf {
       let pt = aes_decrypt(ciphertext, derivedKey);
       return pt;
     });
-
   }
-
 
 }

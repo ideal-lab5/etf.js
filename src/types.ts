@@ -26,30 +26,9 @@ export class Pulse {
   randomness: any
   signature: any
 
-  constructor(pulse: any) {
-    this.round = pulse.round;
-    this.randomness = pulse.randomness;
-    this.signature = pulse.signature;
-
+  constructor(round: number, randomness: string, signature: string) {
+    this.round = round;
+    this.randomness = randomness;
+    this.signature = signature;
   }
 }
-
-// export class BeaconConfig {
-//   public_key: any
-//   period: any
-//   genesis_time: any
-//   hash: any
-//   group_hash: any
-//   scheme_id: any
-//   metadata: any
-
-//   constructor(config: any) {
-//     this.public_key = config.public_key
-//     this.period = config.period
-//     this.genesis_time = config.genesis_time
-//     this.hash = config.hash
-//     this.group_hash = config.group_hash
-//     this.scheme_id = config.scheme_id
-//     this.metadata = config.metadata
-//   }
-// }
