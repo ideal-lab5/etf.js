@@ -6,7 +6,7 @@ export default async function init() {
 }
 
 // Mocked implementation of etf-sdk encrypt function
-export function encrypt(message_bytes, slot_id_bytes, t) {
+export function tle(message_bytes, slot_id_bytes, t) {
   return {
     aes_ct: {
       ciphertext: [0],
@@ -18,7 +18,15 @@ export function encrypt(message_bytes, slot_id_bytes, t) {
 }
 
 // Mocked implementation of etf-sdk decrypt function
-export function decrypt(ciphertext, justification) {
+export function tld(ciphertext, justification) {
+  return {
+    message: 'mocked-decrypted',
+    sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
+  }
+}
+
+// Mocked implementation of etf-sdk decrypt function
+export function decrypt(ciphertext, secretKey) {
   return {
     message: 'mocked-decrypted',
     sk: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
