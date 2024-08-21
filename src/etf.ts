@@ -110,7 +110,7 @@ export class Etf {
    * @param seed: A seed to derive crypto keys
    * @returns the ciphertext
    */
-  timelockEncrypt(message: string, blockNumber: number, seed: string): Promise<String> {
+  timelockEncrypt(message: string, blockNumber: number, seed: string): Promise<any> {
     // TODO: fine for now but should ultimately query the BABE pallet config instead
     // let epochLength = 200;
     // let validatorSetId = blockNumber % epochLength;
@@ -130,7 +130,7 @@ export class Etf {
    * @param blockNumber: Block number that has the signature for decryption
    * @returns: Plaintext of encrypted message
    */
-  timelockDecrypt(ciphertext, blockNumber) {
+  timelockDecrypt(ciphertext, blockNumber): Promise<any> {
     return this.getPulse(blockNumber).then(pulse => {
       let sig: Uint8Array = hexToU8a(pulse.signature);
       return tld(ciphertext, sig);
@@ -143,7 +143,7 @@ export class Etf {
    * @param seed The ciphertext seed
    * @returns The plaintext
    */
-  async decrypt(ciphertext, seed) {
+  async decrypt(ciphertext, seed): Promise<any> {
     let t = new TextEncoder();
     let masterSecret = t.encode(seed);
     return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
@@ -166,11 +166,11 @@ export class Etf {
    * @param blockNumber: The block for which the call should be executed
    * @returns (call, sk, block) where the call is a call to schedule the delayed transaction
    */
-      async delay(rawCall, priority, blockNumber) {
+      async delay(rawCall, priority, blockNumber): Promise<any> {
         try {
           let call = this.createType('Call', rawCall);
           let out = (await this.timelockEncrypt(call.toU8a(), blockNumber, new Date().toString())).toString();
-          let ct = new TLECipherText(JSON.parse(out));
+          let ct = new TLECipherText(out);
           let o = {
             ciphertext: ct.aes_ct.ciphertext,
             nonce: ct.aes_ct.nonce,
