@@ -169,17 +169,16 @@ export class Etf {
       async delay(rawCall, priority, blockNumber): Promise<any> {
         try {
           let call = this.createType('Call', rawCall);
-          let out = (await this.timelockEncrypt(call.toU8a(), blockNumber, new Date().toString())).toString();
-          let ct = new TLECipherText(out);
+          let out = await this.timelockEncrypt(call.toU8a(), blockNumber, new Date().toString())
           let o = {
-            ciphertext: ct.aes_ct.ciphertext,
-            nonce: ct.aes_ct.nonce,
-            capsule: ct.etf_ct[0],
+            ciphertext: out.aes_ct.ciphertext,
+            nonce: out.aes_ct.nonce,
+            capsule: out.etf_ct[0],
           };
     
           return ({
             call: this.api.tx.scheduler.scheduleSealed(blockNumber, priority, o),
-            sk: ct.aes_ct.key,
+            sk: out.aes_ct.key,
           });
         } catch (e) {
           throw e;
