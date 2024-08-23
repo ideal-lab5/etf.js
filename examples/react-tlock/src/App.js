@@ -8,8 +8,6 @@ function App() {
   const [etf, setEtf] = useState(null)
 
   const [latestSignature, setLatestSignature] = useState('');
-
-  const [latestSlot, setLatestSlot] = useState(null)
   const [latestBlock, setLatestBlock] = useState(null)
   const [blockNumber, setBlockNumber] = useState(5)
 

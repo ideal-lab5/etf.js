@@ -13,8 +13,9 @@ import { hexToU8a } from '@polkadot/util'
 function App() {
   const [etf, setEtf] = useState(null)
   const [alice, setAlice] = useState(null)
-  const [threshold, setThreshold] = useState(2)
-  const [latestSlot, setLatestSlot] = useState(null)
+  
+  const [latestSignature, setLatestSignature] = useState('');
+  const [latestBlock, setLatestBlock] = useState(null)
 
   const [when, setWhen] = useState(0);
 
@@ -31,10 +32,11 @@ function App() {
       const keyring = new Keyring()
       const alice = keyring.addFromUri('//Bob', { name: 'Bob' }, 'sr25519')
       setAlice(alice)
-
-      etf.eventEmitter.on('blockHeader', () => {
-        setLatestSlot(etf.latestSlot)
-      })
+      // stream incoming justifications and use the signature
+      etf.subscribeBeacon((justification) => {
+        setLatestBlock(parseInt(justification.commitment.blockNumber.replace(",", "")))
+        setLatestSignature(justification.signaturesCompact)
+      });
     }
     setup()
   }, [])
@@ -47,16 +49,17 @@ function App() {
     // the call to delay
     let innerCall = etf.api.tx.balances
       .transferKeepAlive('5CMHXGNmDzSpQotcBUUPXyR8jRqfKttXuU87QraJrydrMdcz', 1000);
-    let deadline = etf.latestBlockNumber + 2;
+    let deadline = latestBlock + 10;
     // prepare delayed call
-    let outerCall = etf.delay(innerCall, 127, deadline);
-    await outerCall.call.signAndSend(alice, result => {
-      if (result.status.isInBlock) {
-        setWhen(outerCall.block)
-        console.log(outerCall.block)
-        console.log('in block')
-      }
+    etf.delay(innerCall, 127, deadline, "testSeed").then(async outerCall => {
+      await outerCall.signAndSend(alice, result => {
+        if (result.status.isInBlock) {
+          setWhen(outerCall.block)
+          console.log('in block')
+        }
+      });
     });
+    
   }
 
   return (
@@ -64,7 +67,7 @@ function App() {
       <div className="header">
         Delayed Transactions Balance Transfer
         <div>
-          Latest Block : {latestSlot === null ? 'Loading...' : latestSlot.slot}
+          Latest Block : { latestBlock }
         </div>
       </div>
       <div className="encrypt-body">
@@ -76,7 +79,7 @@ function App() {
           >Encrypt</button>
       </div>
       <div>
-        { etf == null ? '' : when > etf.latestBlockNumber ? 
+        { etf == null ? '' : when > latestBlock ? 
         <span>
           Balance transfer scheduled for block { when }
         </span> : <span></span> }

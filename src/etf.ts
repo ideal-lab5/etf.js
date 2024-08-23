@@ -10,7 +10,7 @@ import { BN, BN_ONE, hexToString, hexToU8a } from "@polkadot/util";
 import { build_encoded_commitment, tle, tld, aes_decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
-import {Pulse, Justfication} from './types.js'
+import { Pulse, Justfication } from './types.js'
 
 /**
  * Encryption to the Future
@@ -25,7 +25,7 @@ export class Etf {
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
   private readonly HASH = 'SHA-256';
-  private readonly HASHLENGTH = 32; 
+  private readonly HASHLENGTH = 32;
 
   /**
    * Constructor for the etf api
@@ -46,7 +46,7 @@ export class Etf {
    * @param chainSpec The ETF Network (raw) chain spec
    */
   async init(
-    chainSpec?: string, 
+    chainSpec?: string,
     extraTypes?: any
   ): Promise<void> {
     let provider
@@ -93,11 +93,11 @@ export class Etf {
    * @param blockNumber: The block number of the pulse you want returned
    * @returns: Pulse of randomness
    */
-  async getPulse(blockNumber): Promise<Pulse>{
+  async getPulse(blockNumber): Promise<Pulse> {
     return this.api.query.randomnessBeacon.pulses(blockNumber).then(pulse => {
       return new Pulse(
-        blockNumber, 
-        pulse.toHuman()['body'].randomness, 
+        blockNumber,
+        pulse.toHuman()['body'].randomness,
         pulse.toHuman()['body'].signature
       );
     });
@@ -152,7 +152,7 @@ export class Etf {
     });
   }
 
-      /**
+  /**
    * Prepare a secure delayed transaction for a given deadline.
    * 
    * ex:
@@ -166,24 +166,15 @@ export class Etf {
    * @param blockNumber: The block for which the call should be executed
    * @returns (call, sk, block) where the call is a call to schedule the delayed transaction
    */
-      async delay(rawCall, priority, blockNumber): Promise<any> {
-        try {
-          let call = this.createType('Call', rawCall);
-          let out = await this.timelockEncrypt(call.toU8a(), blockNumber, new Date().toString())
-          let o = {
-            ciphertext: out.aes_ct.ciphertext,
-            nonce: out.aes_ct.nonce,
-            capsule: out.etf_ct[0],
-          };
-    
-          return ({
-            call: this.api.tx.scheduler.scheduleSealed(blockNumber, priority, o),
-            sk: out.aes_ct.key,
-          });
-        } catch (e) {
-          throw e;
-        }
-      }
-    
+  async delay(rawCall, priority, blockNumber, seed): Promise<any> {
+    try {
+      let call = this.createType('Call', rawCall);
+      let out = await this.timelockEncrypt(call.toU8a(), blockNumber, seed);
+      return this.api.tx.scheduler.scheduleSealed(blockNumber, priority, out);
+    } catch (e) {
+      throw e;
+    }
+  }
+
 
 }
