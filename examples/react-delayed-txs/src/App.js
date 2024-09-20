@@ -48,8 +48,8 @@ function App() {
   async function delay() {
     // the call to delay
     let innerCall = etf.api.tx.balances
-      .transferKeepAlive('5CMHXGNmDzSpQotcBUUPXyR8jRqfKttXuU87QraJrydrMdcz', 1000);
-    let deadline = latestBlock + 10;
+      .transferKeepAlive('5CMHXGNmDzSpQotcBUUPXyR8jRqfKttXuU87QraJrydrMdcz', 100);
+    let deadline = latestBlock + 4;
     // prepare delayed call
     etf.delay(innerCall, 127, deadline, "testSeed").then(async outerCall => {
       await outerCall.signAndSend(alice, result => {
