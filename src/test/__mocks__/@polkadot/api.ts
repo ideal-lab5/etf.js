@@ -94,14 +94,15 @@ export class WsProvider {
 }
 
 export class MockPulse {
-  round: any
-  randomness: any
-  signature: any
+  body: {
+    round: any
+    randomness: any
+    signature: any
+  }
+  
 
   constructor(when: any) {
-    this.round = when;
-    this.randomness = '0x1001001100100110011010101';
-    this.signature = 'coleman <3 UwO';
+    this.body = {round: when, randomness: '0x1001001100100110011010101', signature: 'coleman <3 UwO' }
   }
 
   public toHuman() {

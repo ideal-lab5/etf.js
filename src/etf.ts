@@ -10,7 +10,7 @@ import { BN, BN_ONE, hexToString, hexToU8a } from "@polkadot/util";
 import { build_encoded_commitment, tle, tld, aes_decrypt } from '@ideallabs/etf-sdk'
 import init from '@ideallabs/etf-sdk'
 import hkdf from 'js-crypto-hkdf'; // for npm
-import { Pulse, Justfication } from './types.js'
+import { Pulse, Justfication } from './types'
 
 /**
  * Encryption to the Future
