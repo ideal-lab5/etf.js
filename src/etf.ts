@@ -4,28 +4,28 @@
 // see: https://polkadot.js.org/docs/api/FAQ/#since-upgrading-to-the-7x-series-typescript-augmentation-is-missing
 import '@polkadot/api-augment'
 import { ApiPromise, WsProvider } from '@polkadot/api'
-import { Metadata, TypeRegistry } from '@polkadot/types'
-import { hexToU8a } from '@polkadot/util'
 import { ScProvider } from '@polkadot/rpc-provider'
-import * as Sc from '@ideallabs/connect'
-import init, { EtfApiWrapper } from '@ideallabs/etf-sdk'
-import { EventEmitter } from 'events'
+import * as Sc from '@substrate/connect'
+import { BN, BN_ONE, hexToString, hexToU8a } from "@polkadot/util";
+import { build_encoded_commitment, tle, tld, aes_decrypt } from '@ideallabs/etf-sdk'
+import init from '@ideallabs/etf-sdk'
+import hkdf from 'js-crypto-hkdf'; // for npm
+import { Pulse, Justfication } from './types'
 
 /**
  * Encryption to the Future
  * This class initializes the ETF.js SDK
- * It assumes a time-based SlotScheduler
  */
 export class Etf {
-  public latestSlot: any
-  public latestBlockNumber: number
-  public ibePubkey: number
+  public ibePubkey: any
   public isProd: boolean
   public api!: ApiPromise
   private providerMultiAddr: string
-  private registry!: TypeRegistry
-  private etfApi!: EtfApiWrapper
-  public eventEmitter!: EventEmitter
+  private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
+  private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
+  private readonly PROOFSIZE = new BN(1_000_000_000);
+  private readonly HASH = 'SHA-256';
+  private readonly HASHLENGTH = 32;
 
   /**
    * Constructor for the etf api
@@ -33,17 +33,22 @@ export class Etf {
    * e.g. insecure local node:    ws://localhost:9944 
    *      secure websocket (rpc): wss://etf1.idealabs.network:443
    */
-  constructor(providerMultiAddr?: string, isProd?: boolean) {
+  constructor(
+    providerMultiAddr?: string,
+    isProd?: boolean,
+  ) {
     this.providerMultiAddr = providerMultiAddr
     this.isProd = isProd
-    this.eventEmitter = new EventEmitter()
   }
 
   /**
    * Connect to the chain and start etf api wrapper
    * @param chainSpec The ETF Network (raw) chain spec
    */
-  async init(chainSpec?: string, extraTypes?: any): Promise<void> {
+  async init(
+    chainSpec?: string,
+    extraTypes?: any
+  ): Promise<void> {
     let provider
     if (this.providerMultiAddr == undefined) {
       let spec = JSON.stringify(chainSpec)
@@ -56,36 +61,14 @@ export class Etf {
     this.api = await ApiPromise.create({
       provider,
       types: {
-        ...extraTypes
+        ...extraTypes, Pulse
       }
     })
+    await init();
     await this.api.isReady
+
+    this.ibePubkey = await this.api.query.etf.roundPublic()
     console.log('api is ready')
-    this.registry = new TypeRegistry()
-
-    // load metadata and predigest
-    const data = await this.api.rpc.state.getMetadata()
-    this.registry.register({
-      PreDigest: {
-        slot: 'u64',
-        secret: '[u8;48]',
-        proof: '[u8;224]',
-      },
-    })
-
-    const metadata = new Metadata(this.registry, data.toHex())
-    this.registry.setMetadata(metadata)
-    this.listenForSecrets(this.eventEmitter)
-
-    await init()
-    console.log('wasm initialized successfully')
-    const pps = await this.api.query.etf.ibeParams()
-    this.ibePubkey = pps[1]
-    this.etfApi = new EtfApiWrapper(pps[1], pps[2])
-    console.log('etf api initialized')
-
-    const version = String.fromCharCode(...this.etfApi.version())
-    console.log('version ' + version)
   }
 
   /**
@@ -96,76 +79,78 @@ export class Etf {
   }
 
   /**
-   * Attempt to fetch secrets from each slot, if it
-   * @param slots the slots
+   * listens for incoming justifications and invokes the callback when new ones are streamed
+   * @param callback: a callback to handle the new justifications
    */
-  async secrets(blockNumbers: number[]) {
-    let sks = []
-    for (const blockNumber of blockNumbers) {
-      let blockHash = await this.api.query.system.blockHash(blockNumber)
-      let blockHeader = await this.api.rpc.chain.getHeader(blockHash)
-      let encodedPreDigest =
-        blockHeader.digest.logs[0].toHuman()['PreRuntime'][1]
-      const predigest = this.registry.createType('PreDigest', encodedPreDigest)
-      let sk: Uint8Array = hexToU8a(predigest.toJSON()['secret'].toString())
-      sks.push(sk)
-    }
-    return sks
+  subscribeBeacon(callback: any): void {
+    this.api.rpc.beefy.subscribeJustifications((sig) => {
+      callback(new Justfication(sig.toHuman()["V1"]))
+    })
   }
 
   /**
-   * Encrypt a message
-   * @param message The message to encrypt
-   * @param n The number of slots to encrypt for
-   * @param schedulerInput The schedulerInput for the slot scheduler
-   * @returns the ciphertext and slot schedule
+   * Query a pulse from runtime storage, could be empty
+   * @param blockNumber: The block number of the pulse you want returned
+   * @returns: Pulse of randomness
    */
-  encrypt(
-    messageBytes: Uint8Array,
-    threshold: number,
-    blockNumbers: number[],
-    seed: string
-  ) {
-
-    if (blockNumbers === undefined || blockNumbers === null) {
-      throw new Error("block numbers must not be empty");
-    }
-
-    if (Math.min(...blockNumbers) < this.latestBlockNumber) {
-      throw new Error("block numbers must be in the future");
-    }
-
-    let t = new TextEncoder()
-    let ids = []
-
-    let latestSlot = this.getLatestSlot();
-
-    for (const blockNumber of blockNumbers) {
-      // convert to a slot number
-      let diff = blockNumber - this.latestBlockNumber;
-      if (this.isProd) diff *= 2;
-      let slot = latestSlot + diff;
-      ids.push(t.encode(slot.toString()))
-    }
-    return this.etfApi.encrypt(messageBytes, ids, threshold, t.encode(seed))
+  async getPulse(blockNumber): Promise<Pulse> {
+    return this.api.query.randomnessBeacon.pulses(blockNumber).then(pulse => {
+      return new Pulse(
+        blockNumber,
+        pulse.toHuman()['body'].randomness,
+        pulse.toHuman()['body'].signature
+      );
+    });
   }
 
   /**
-   * Decrypt a timelocked ciphertext
-   * @param ct: the ciphertext (AES-GCM ciphertext)
-   * @param nonce: the nonce (AES-GCM)
-   * @param capsule: the capsule (IBE ciphertexts)
-   * @param blockNumbers: the blocks whose secrets we should use
-   * @returns the original message if successful, else the empty string
+   * Timelock Encryption: Encrypt the message for the given block
+   * @param message: The message to encrypt
+   * @param blockNumber: The block number when the message unlocks
+   * @param seed: A seed to derive crypto keys
+   * @returns the ciphertext
    */
-  async decrypt(
-    ct: Uint8Array,
-    nonce: Uint8Array,
-    capsule: Uint8Array,
-    blockNumbers: number[],
-  ) {
-    let sks = await this.secrets(blockNumbers)
-    return this.etfApi.decrypt(ct, nonce, capsule, sks)
+  timelockEncrypt(encodedMessage: Uint8Array, blockNumber: number, seed: string): Promise<any> {
+    // TODO: fine for now but should ultimately query the BABE pallet config instead
+    // let epochLength = 200;
+    // let validatorSetId = blockNumber % epochLength;
+    let t = new TextEncoder();
+    let masterSecret = t.encode(seed);
+    return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
+      let commitment = build_encoded_commitment(blockNumber, 0);
+      // let encodedMessage = t.encode(message);
+      // let encodedMessage = message;
+      let ct = tle(commitment, encodedMessage, derivedKey.key, this.ibePubkey)
+      return ct;
+    });
+  }
+
+  /**
+   * Timelock decryption: Decrypt the ciphertext using a pulse from the beacon produced at the given block
+   * @param ciphertext: Ciphertext to be decrypted
+   * @param blockNumber: Block number that has the signature for decryption
+   * @returns: Plaintext of encrypted message
+   */
+  timelockDecrypt(ciphertext, blockNumber): Promise<any> {
+    return this.getPulse(blockNumber).then(pulse => {
+      let sig: Uint8Array = hexToU8a(pulse.signature);
+      return tld(ciphertext, sig);
+    });
+  }
+
+  /**
+   * Decrypt a ciphertext early if you know the seed
+   * @param ciphertext The ciphertext to decrypt
+   * @param seed The ciphertext seed
+   * @returns The plaintext
+   */
+  async decrypt(ciphertext, seed): Promise<any> {
+    let t = new TextEncoder();
+    let masterSecret = t.encode(seed);
+    return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
+      let pt = aes_decrypt(ciphertext, derivedKey);
+      return pt;
+    });
   }
 
   /**
@@ -179,49 +164,16 @@ export class Etf {
    * 
    * @param rawCall: The call to delay
    * @param priority: The call priority
-   * @param deadline: The deadline (when the call should be executed)
+   * @param blockNumber: The block for which the call should be executed
    * @returns (call, sk, block) where the call is a call to schedule the delayed transaction
    */
-  delay(rawCall, priority, deadline) {
+  async delay(rawCall, priority, blockNumber, seed): Promise<any> {
     try {
       let call = this.createType('Call', rawCall);
-      let out = this.encrypt(call.toU8a(), 1, [deadline], new Date().toString());
-      let o = {
-        ciphertext: out.aes_ct.ciphertext,
-        nonce: out.aes_ct.nonce,
-        capsule: out.etf_ct[0],
-      };
-
-      return ({
-        call: this.api.tx.scheduler.scheduleSealed(deadline, priority, o),
-        sk: out.aes_ct.key,
-      });
+      let out = await this.timelockEncrypt(call.toU8a(), blockNumber, seed);
+      return this.api.tx.scheduler.scheduleSealed(blockNumber, priority, out);
     } catch (e) {
       throw e;
     }
-  }
-
-  /**
-   * listen for incoming block headers and emit an event  when new headers are encountered
-   * @param eventEmitter: an event emitter from which to emit events
-   */
-  listenForSecrets(eventEmitter: EventEmitter): void {
-    this.api.rpc.chain.subscribeNewHeads((header) => {
-      // read the predigest from each block
-      const encodedPreDigest = header.digest.logs[0].toHuman()['PreRuntime'][1]
-      const predigest = this.registry.createType('PreDigest', encodedPreDigest)
-      let latest = predigest.toHuman()
-      this.latestSlot = latest
-      this.latestBlockNumber = header['number'].toNumber()
-      eventEmitter.emit('blockHeader', latest)
-    })
-  }
-
-  /**
-   * Fetch the latest slot 
-   * @returns the latest known slot as an int
-   */
-  public getLatestSlot() {
-    return Number.parseInt(this.latestSlot.slot.replaceAll(',', ''))
   }
 }

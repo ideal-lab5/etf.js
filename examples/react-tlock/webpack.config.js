@@ -9,6 +9,10 @@ module.exports = ({ mode } = { mode: 'production' }) => {
     entry: './src/index.js',
     resolve: {
       fullySpecified: false,
+      fallback: {
+        crypto: require("crypto-browserify")
+      }
+
     },
     test: /\.m?js/, // fix:issue: https://github.com/webpack/webpack/issues/11467
     output: {
