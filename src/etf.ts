@@ -110,7 +110,7 @@ export class Etf {
    * @param seed: A seed to derive crypto keys
    * @returns the ciphertext
    */
-  timelockEncrypt(message: string, blockNumber: number, seed: string): Promise<any> {
+  timelockEncrypt(encodedMessage: Uint8Array, blockNumber: number, seed: string): Promise<any> {
     // TODO: fine for now but should ultimately query the BABE pallet config instead
     // let epochLength = 200;
     // let validatorSetId = blockNumber % epochLength;
@@ -118,7 +118,8 @@ export class Etf {
     let masterSecret = t.encode(seed);
     return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
       let commitment = build_encoded_commitment(blockNumber, 0);
-      let encodedMessage = t.encode(message);
+      // let encodedMessage = t.encode(message);
+      // let encodedMessage = message;
       let ct = tle(commitment, encodedMessage, derivedKey.key, this.ibePubkey)
       return ct;
     });
@@ -175,6 +176,4 @@ export class Etf {
       throw e;
     }
   }
-
-
 }

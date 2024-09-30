@@ -87,7 +87,7 @@ describe('Etf', () => {
     const seed = 'seed';
     const latestBlockNumber = 123;
     const message = 'Hello, world!'
-    await etf.timelockEncrypt(message, latestBlockNumber, seed).then((result) => {
+    await etf.timelockEncrypt(new TextEncoder().encode(message), latestBlockNumber, seed).then((result) => {
       let result_string = JSON.stringify(result);
       let expected_string = JSON.stringify({
         aes_ct: { ciphertext: [ 0 ], nonce: [ 1 ] },
