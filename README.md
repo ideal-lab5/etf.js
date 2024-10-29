@@ -17,8 +17,8 @@ Or, you can build the code with:
 ```bash
 git clone git@github.com:ideal-lab5/etf.js.git
 cd etf.js
-# ensure typsecript is installed
-npm i -g typsecript
+# ensure typescript is installed
+npm i -g typescript
 # install dependencies
 npm i
 # build
