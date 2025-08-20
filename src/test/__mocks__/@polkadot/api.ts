@@ -158,7 +158,7 @@ export class MockCall {
   }
 
   toU8a() {
-    return [];
+    return new Uint8Array([]);
   }
 
 }

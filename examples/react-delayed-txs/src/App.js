@@ -30,7 +30,7 @@ function App() {
       setEtf(etf)
 
       const keyring = new Keyring()
-      const alice = keyring.addFromUri('//Bob', { name: 'Bob' }, 'sr25519')
+      const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519')
       setAlice(alice)
       // stream incoming justifications and use the signature
       etf.subscribeBeacon((justification) => {
@@ -47,8 +47,9 @@ function App() {
   async function delay() {
     // the call to delay
     let innerCall = etf.api.tx.balances
-      .transferKeepAlive('5ETohe6skHTgZV97b5eZBfs48V6YzEGUhv9eeH6a3Ua7UNAc', 1000000);
-    let deadline = latestBlock + 5;
+      .transferKeepAlive('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY', 100);
+    let deadline = latestBlock + 15;
+    console.log('deadline: ' + deadline)
     // prepare delayed call
     etf.delay(innerCall, 127, deadline, "testSeed").then(async outerCall => {
       await outerCall.signAndSend(alice, result => {
@@ -58,7 +59,6 @@ function App() {
         }
       });
     });
-    
   }
 
   return (
