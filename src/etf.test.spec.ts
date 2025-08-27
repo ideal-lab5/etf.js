@@ -50,7 +50,7 @@ describe('Etf', () => {
 
     const hkdfSpy = jest.spyOn(hkdf, 'compute')
     const encryptSpy = jest.spyOn(etf.tlock, 'encrypt')
-    const actual = await etf.timelockEncrypt(message, when, seed)
+    const actual = await etf.timelockEncrypt(new TextEncoder().encode(message), when, seed)
     expect(actual).toStrictEqual(expected)
     expect(hkdfSpy).toHaveBeenCalledWith(new TextEncoder().encode(seed), 'SHA-256', 32, '');
 
@@ -75,52 +75,19 @@ describe('Etf', () => {
   })
 
   it('should produce transaction material to delay an inner transaction', async () => {
-    // const tlockSpy = jest.spyOn(Timelock, 'build')
     const api = await ApiPromise.create()
     const ibePubkey = 0
     const etf = new Etf(api, ibePubkey)
     await etf.build()
 
     let call = [1]
-    let priority = 2
     let when = 3
     let seed = 'seed'
 
     const createTypeSpy = jest.spyOn(etf.api.registry, 'createType')
     const txSpy = jest.spyOn(etf.api.tx.scheduler, 'scheduleSealed')
-    // let expected = new MockCall("mock-schedule-sealed-call")
-    let actual = await etf.delay(call, priority, when, seed)
-    // expect(actual).toBe(expected)
+    await etf.delay(call, when, seed)
     expect(createTypeSpy).toHaveBeenCalledWith('Call', call)
-    expect(txSpy).toHaveBeenCalledWith(when, priority, new Uint8Array([1,2,3,4,5]))
-
-
-    // expect(tlockSpy).toHaveBeenCalledWith(SupportedCurve.BLS12_381)
-    // tlockSpy.mockRestore()
-  }) 
-
-  // it('should timelock decrypt a message', async () => {
-  //   const etf = new Etf()
-  //   await etf.init(JSON.stringify(chainSpec), false)
-  //   const blockNumber = 1;
-  //   const ciphertext = 'ciphertext'
-  //   const result = await etf.timelockDecrypt(ciphertext, blockNumber);
-  //   expect(result).toEqual({
-  //     message: 'mocked-decrypted',
-  //     sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
-  //   })
-  // })
-
-  // it('should decrypt a message on demand if the user knows the secret', async () => {
-  //   const etf = new Etf()
-  //   await etf.init(JSON.stringify(chainSpec), false)
-  //   const secret = "shhh, it's a secret";
-  //   const ciphertext = 'ciphertext'
-  //   const result = await etf.decrypt(ciphertext, secret);
-  //   expect(result).toEqual({
-  //     message: 'mocked-decrypted',
-  //     sk: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
-  //   })
-  // })
-
+    expect(txSpy).toHaveBeenCalledWith(when, new Uint8Array([1,2,3,4,5]))
+  })
 })

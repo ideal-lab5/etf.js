@@ -15,7 +15,7 @@ import { DrandIdentityBuilder, SupportedCurve, Timelock } from '@ideallabs/timel
 export class Etf {
 
   // a @polkadot/api:ApiPromise
-  public api!: ApiPromise 
+  public api!: ApiPromise
   // the public key of the IBE scheme
   public pubkey: any
   // a timelock instance
@@ -54,6 +54,23 @@ export class Etf {
     return this.api.registry.createType(typeName, typeData);
   }
 
+  async getDrandRoundNumber() {
+    try {
+      const response = await fetch('https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971/public/latest');
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.round;
+    } catch (error) {
+      console.error('Error fetching drand data:', error);
+      throw error;
+    }
+  }
+
+
   /**
    * Timelock Encryption: Encrypt the message for the given block
    * @param message: The message to encrypt
@@ -61,10 +78,10 @@ export class Etf {
    * @param seed: A seed to derive crypto keys
    * @returns the ciphertext
    */
-  async timelockEncrypt(message: string, when: number, seed: string): Promise<any> {
-    let t = new TextEncoder();
-    let encodedMessage = t.encode(message)
-    let masterSecret = t.encode(seed);
+  async timelockEncrypt(encodedMessage:  Uint8Array, when: number, seed: string): Promise<any> {
+    let t = new TextEncoder()
+    // let encodedMessage = t.encode(message)
+    let masterSecret = t.encode(seed)
     // compute an ephemeral secret from the seed material
     const esk = await hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '')
     const key = Array.from(esk.key)
@@ -94,41 +111,18 @@ export class Etf {
    * @param when: The round for which the call should be executed
    * @returns (call, sk, block) where the call is a call to schedule the delayed transaction
    */
-  async delay(call, priority, when, seed): Promise<any> {
+  async delay(call, when, seed): Promise<any> {
     try {
-      let innerCall = this.createType('Call', call);
-      let out = await this.timelockEncrypt(innerCall.toU8a(), when, seed);
-      return this.api.tx.scheduler.scheduleSealed(when, priority, out);
+      let innerCall = this.createType('Call', call)
+      let ciphertext = await this.timelockEncrypt(innerCall.toU8a(), when, seed);
+      return this.api.tx.timelock.scheduleSealed(
+        when,
+        127,
+        [...ciphertext]
+      );
     } catch (e) {
-      throw e;
+      console.error("An error occurred. Are you connected to the right network? " + e)
+      throw e
     }
   }
-
-  //   /**
-  //    * Timelock decryption: Decrypt the ciphertext using a pulse from the beacon produced at the given block
-  //    * @param ciphertext: Ciphertext to be decrypted
-  //    * @param blockNumber: Block number that has the signature for decryption
-  //    * @returns: Plaintext of encrypted message
-  //    */
-  //   timelockDecrypt(ciphertext, signature): Promise<any> {
-  //     let sig: Uint8Array = hexToU8a(signature);
-  //     return tld(ciphertext, sig);
-  //   });
-  // }
-
-  //   /**
-  //    * Decrypt a ciphertext early if you know the seed
-  //    * @param ciphertext The ciphertext to decrypt
-  //    * @param seed The ciphertext seed
-  //    * @returns The plaintext
-  //    */
-  //   async decrypt(ciphertext, seed): Promise < any > {
-  //   let t = new TextEncoder();
-  //   let masterSecret = t.encode(seed);
-  //   return hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '').then((derivedKey) => {
-  //     let pt = aes_decrypt(ciphertext, derivedKey);
-  //     return pt;
-  //   });
-  // }
-
 }
