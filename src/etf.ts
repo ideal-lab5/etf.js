@@ -156,7 +156,7 @@ export class Etf {
    * ex:
    * etf.delay(
    *  api.tx.balances
-   *    .transferKeepAlive(BOB, 100), 477382, 'my-secret-seed')
+   *    .transferKeepAlive(BOB, 100), 477382, new TextEncoder().encode('my-secret-seed'))
    *    .signAndSend(alice, result => {...})
    *
    * @param call: The call to delay

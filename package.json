@@ -13,6 +13,7 @@
     "@polkadot/types": "^10.9.1",
     "@polkadot/util": "^12.0.1",
     "@polkadot/util-crypto": "^12.6.2",
+    "@substrate/connect": "^0.8.11",
     "@substrate/txwrapper-substrate": "^7.0.1",
     "events": "^3.3.0",
     "js-crypto-hkdf": "^1.0.7"

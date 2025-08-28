@@ -119,6 +119,7 @@ describe('Etf', () => {
       Array.from(new Uint8Array([1, 2, 3, 4, 5]))
     )
   })
+  
 })
 
 describe('timelockEncrypt', () => {
