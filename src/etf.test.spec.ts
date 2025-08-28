@@ -1,20 +1,38 @@
+/*
+ * Copyright 2025 by Ideal Labs, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { describe, expect } from '@jest/globals'
 import { Etf } from './etf'
 import { ApiPromise } from '@polkadot/api'
-import { DrandIdentityBuilder, SupportedCurve, Timelock } from '@ideallabs/timelock.js'
-import hkdf from 'js-crypto-hkdf';
-import { MockCall } from './test/__mocks__/@polkadot/api';
-import { assert } from '@polkadot/util';
+import {
+  DrandIdentityBuilder,
+  SupportedCurve,
+  Timelock,
+} from '@ideallabs/timelock.js'
+import hkdf from 'js-crypto-hkdf'
 
 describe('Etf', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    jest.clearAllMocks()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    jest.clearAllTimers();
-  });
+    jest.clearAllTimers()
+  })
 
   it('should construct', async () => {
     const api = await ApiPromise.create()
@@ -39,27 +57,34 @@ describe('Etf', () => {
     const api = await ApiPromise.create()
     const ibePubkey = 0
     const etf = new Etf(api, ibePubkey)
-    // const tlockSpy = jest.spyOn(etf.tlock, 'encrypt')
     await etf.build()
 
-    const seed = 'seed';
-    const when = 123;
+    const seed = 'seed'
+    const when = 123
     const message = 'Hello, world!'
 
     const expected = new Uint8Array([1, 2, 3, 4, 5])
 
     const hkdfSpy = jest.spyOn(hkdf, 'compute')
     const encryptSpy = jest.spyOn(etf.tlock, 'encrypt')
-    const actual = await etf.timelockEncrypt(new TextEncoder().encode(message), when, seed)
+    const actual = await etf.timelockEncrypt(
+      new TextEncoder().encode(message),
+      when,
+      seed
+    )
     expect(actual).toStrictEqual(expected)
-    expect(hkdfSpy).toHaveBeenCalledWith(new TextEncoder().encode(seed), 'SHA-256', 32, '');
+    expect(hkdfSpy).toHaveBeenCalledWith(
+      new TextEncoder().encode(seed),
+      'SHA-256',
+      32,
+      ''
+    )
 
     // compute an ephemeral secret from the seed material
     const esk = new Uint8Array([
-      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-      0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
-      0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-      0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20
+      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c,
+      0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+      0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
     ])
     const key = Array.from(esk)
       .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -85,9 +110,14 @@ describe('Etf', () => {
     let seed = 'seed'
 
     const createTypeSpy = jest.spyOn(etf.api.registry, 'createType')
-    const txSpy = jest.spyOn(etf.api.tx.scheduler, 'scheduleSealed')
+    const txSpy = jest.spyOn(etf.api.tx.timelock, 'scheduleSealed')
     await etf.delay(call, when, seed)
     expect(createTypeSpy).toHaveBeenCalledWith('Call', call)
-    expect(txSpy).toHaveBeenCalledWith(when, new Uint8Array([1,2,3,4,5]))
+    console.log(txSpy.mock.calls[0][0])
+    expect(txSpy.mock.calls[0][0]).toEqual(when)
+    expect(txSpy.mock.calls[0][1]).toEqual(0)
+    expect(Array.from(txSpy.mock.calls[0][2])).toEqual(
+      Array.from(new Uint8Array([1, 2, 3, 4, 5]))
+    )
   })
 })

@@ -1,24 +1,24 @@
 # ETF.JS SDK
 
-##### "Encryption to the Future"
+## "Encryption to the Future"
 
-This is an SDK for use within js/ts application to interact with the [Ideal Network](https://github.com/ideal-lab5/ideal-network).
+This is an SDK for JavaScript/TypeScript applications to interact with timelock encryption using the Ideal Network and Drand randomness beacon. It is specifically intended to make timelocked transactions on the Ideal Network easy and safe to implement.
 
 ## Installation
 
-To use the library in your code, the latest published version can be installed from NPM with:
+To use the library in your code, install the latest published version from NPM:
 
 ```bash
 npm i @ideallabs/etf.js
 ```
 
-Or, you can build the code with:
+Or build from source:
 
 ```bash
 git clone git@github.com:ideal-lab5/etf.js.git
 cd etf.js
-# ensure typsecript is installed
-npm i -g typsecript
+# ensure TypeScript is installed
+npm i -g typescript
 # install dependencies
 npm i
 # build
@@ -27,173 +27,94 @@ tsc
 
 ## Usage
 
-The etf.js library can be run either with a full node or with a light client (in browser).
+The ETF.js library provides timelock encryption capabilities, allowing you to encrypt data that can only be decrypted after a specific time (defined by Drand rounds). The library assumes you have already implemented a way to establish a connection with the Ideal Network, either by using:
 
-### Connecting to a node
+- [@polkadotjs/api](https://github.com/polkadot-js/api)
+- [smoldot](https://github.com/smol-dot/smoldot) light client.
 
-``` javascript
+### Setup
+
+```javascript
 import { Etf } from '@ideallabs/etf.js'
+import { ApiPromise, WsProvider } from '@polkadot/api'
 ```
 
-#### Full node
+### Basic Example - Delayed Transactions
 
-To connect to a full node, pass the address of the node's rpc to the init function.
+###### With @polkadotjs/api
 
 ```javascript
-let ws = 'ws://localhost:9944';
-let etf = new Etf(ws)
-await etf.init()
-```
+// the Drand quicknet public key
+const pubkey = '...'
+// Connect to a node
+const ws = 'ws://localhost:9944'
+const provider = new WsProvider(ws)
+const api = await ApiPromise.create({ provider })
+// Initialize ETF with the API and Drand pubkey public key
+const etf = new Etf(api, pubkey)
+await etf.build()
 
-Note: You can connect to the test network by specifying `ws = 'wss://etf1.idealabs.network:443'`
+// Create the transaction you want to delay
+const innerCall = api.tx.balances.transferKeepAlive(
+  '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
+  100
+)
 
-#### Smoldot
+// Get future Drand round for execution
+const currentRound = await etf.getDrandRoundNumber()
+const executionRound = currentRound + 50
 
-To run with an in-browser light client (smoldot), the library is initalized with:
+// Create delayed transaction
+const delayedTx = await etf.delay(innerCall, executionRound, 'my-secret-seed')
 
-```javascript
-let etf = new Etf()
-await etf.init(chainSpec)
-```
-
-where you must first fetch the chainspec:
-
-``` bash
-wget https://raw.githubusercontent.com/ideal-lab5/etf/main/etfDevSpecRaw.json
-```
-
-and import into your codebase:
-
-``` javascript
-import chainSpec from './resources/etfTestSpecRaw.json'
-```
-
-This will start a smoldot light client in the browser, which will automatically start syncing with the network. With the current setup, this can take a significant amount of time to complete and we will address that soon.
-
-> Warning: smoldot version is currently incompatible with smart contracts.
-
-#### Types
-
-The API has an optional `types` parameter, which is a proxy to the polkadotjs types registry, allowing you to register custom types if desired.
-
-``` javascript
-// create custom types
-const CustomTypes = {
-    TlockMessage: {
-      ciphertext: 'Vec<u8>',
-      nonce: 'Vec<u8>',
-      capsule: 'Vec<u8>',
-      commitment: 'Vec<u8>',
-    },
-  };
-await api.init(chainSpec, CustomTypes)
-```
-
-### Timelock Encryption
-
-See the [react-tlock](./examples/react-tlock/) example.
-
-**Encryption**
-
-Messages can be encrypted by passing a number of shares, threshold, and a list of future block numbers. In the default EtfClient, encryption uses AES-GCM alongside ETF. It uses TSS to generate key shares, which are encrypted for blocks.
-
-```javascript
-let message = "encrypt me!"
-let threshold = 2
-let blocks = [151, 152, 159]
-let seed = "random-seed"
-let out = etf.encrypt(message, threshold, slotSchedule, seed)
-```
-
-The output contains: `aes_out = (AES ciphertext, AES nonce, AES secret key), capsule = (encrypted key shares), slot_schedule`. The `capsule` contains the IBE encrypted key shares and the slot schedule are the slots for which they're encrypted. It assumes the two lists are the same size and follow the same order.
-
-**Decryption**
-
-```javascript
-let m = await etf.decrypt(ciphertext, nonce, capsule, blockNumbers)
-let message = String.fromCharCode(...m)
-```
-
-### Delayed Transactions
-
-Delayed transactions can be submitted by  using the `etf.delay` API.
-
-See the [react-delayed-txs](./examples/react-delayed-txs//) example.
-
-``` javascript
-// the call to delay
-let innerCall = etf.api.tx.balances
-  .transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
-// calculate a deadline (block)
-let deadline = etf.latestBlockNumber + 2;
-// prepare delayed call  (call, msk)
-let outerCall = etf.delay(innerCall, 127, deadline);
-await outerCall.call.signAndSend(alice, result => {
+// Sign and send the delayed transaction
+await delayedTx.signAndSend(alice, (result) => {
   if (result.status.isInBlock) {
-    console.log('in block')
+    console.log('Delayed transaction submitted and in block')
   }
-});
-```
-
-### Events
-
-The Etf client subscribes to new block headers and emits a "blockHeader" event each time a new header is seen. To hook into this, setup an even listener and fetch the latest known slot secret:
-
-```javascript
-// listen for blockHeader events
-document.addEventListener('blockHeader', () => {
-  console.log(etf.latestBlockNumber)
-  console.log(etf.latestSlot.slot)
 })
 ```
 
-# API Reference
+### Drand Public Key
 
-## `Etf` Class
+The Drand quicknet public key is `83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a`. Query a drand node to verify: https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971/info.
 
-### `constructor(providerMultiAddr?: string, isProd?: boolean)`
+### Timelock Encryption
 
-Initializes an instance of the ETF class.
+Encrypt data that can only be decrypted after a specific Drand round.
 
-### `init(chainSpec?: string, extraTypes?: any): Promise<void>`
+> Note: the library does not currently support timelock decryption, but you can directly use the [@ideallabs/timelock.js library](www.npmjs.com/package/@ideallabs/timelock.js).
 
-Connects to the chain and initializes the ETF API wrapper.
+```javascript
+// Encode your message
+const message = 'This message will unlock in the future!'
+const encodedMessage = new TextEncoder().encode(message)
 
-### `createType(typeName: string, typeData: any): any`
+// Get current or future Drand round
+const currentRound = await etf.getDrandRoundNumber()
+const futureRound = currentRound + 10 // Unlock 10 rounds (1 minute) in the future
 
-A proxy to the polkadotjs API type registry creation.
+// Encrypt the message
+const seed = 'my-secret-seed'
+const ciphertext = await etf.timelockEncrypt(encodedMessage, futureRound, seed)
+```
 
-### `secrets(blockNumbers: number[]): Promise<Uint8Array[]>`
+<!-- ## Network Endpoints
 
-Fetches secrets from specified blocks.
+- **Local Development**: `ws://localhost:9944`
+- **Test Network**: `wss://idn0.idealabs.network:443`, `wss://idn1.idealabs.network:443`, `wss://idn3.idealabs.network:443`
 
-### `encrypt(messageBytes: Uint8Array, threshold: number, blockNumbers: number[], seed: string): { ciphertext: string, sk: string }`
+## Example Use Cases
 
-Encrypts a message for future blocks.
+- **Scheduled Payments**: Set up payments that execute automatically at future dates
+- **Sealed Bid Auctions**: Encrypt bids that reveal automatically after auction ends
+- **Time-Released Information**: Encrypt data that becomes available at predetermined times
+- **Delayed Governance**: Submit governance proposals that activate at future blocks -->
 
-### `decrypt(ct: Uint8Array, nonce: Uint8Array, capsule: Uint8Array, blockNumbers: number[]): Promise<string>`
+## License
 
-Decrypts a timelocked ciphertext.
+This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
 
-### `delay(rawCall: any, priority: number, deadline: number): { call: any, sk: string, block: number } | Error`
+---
 
-Prepares a secure delayed transaction for a given deadline.
-
-### `listenForSecrets(eventEmitter: EventEmitter): void`
-
-Listens for incoming block headers and emits an event when new headers are encountered.
-
-### `getLatestSlot(): number`
-
-Fetches the latest known slot.
-
-### Fields
-
-#### `public latestBlockNumber: number`
-
-The latest known block number
-
-
-# License
-
-This project is licensed under the Apache2 License - see the LICENSE file for details.
+_Copyright 2025 by Ideal Labs, LLC_

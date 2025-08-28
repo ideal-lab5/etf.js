@@ -1,11 +1,11 @@
-const CopyPlugin = require("copy-webpack-plugin");
-const path = require("path");
+const CopyPlugin = require('copy-webpack-plugin')
+const path = require('path')
 
 module.exports = {
-  entry: "./src/index.js",
+  entry: './src/index.js',
   output: {
-    path: path.resolve(__dirname, "dist"),
-    filename: "index.js",
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'index.js',
   },
   module: {
     rules: [
@@ -13,21 +13,21 @@ module.exports = {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
-          loader: "babel-loader",
+          loader: 'babel-loader',
           options: {
-            presets: ["@babel/preset-env", "@babel/preset-react"],
-          }
+            presets: ['@babel/preset-env', '@babel/preset-react'],
+          },
         },
       },
     ],
   },
-  mode: "development",
+  mode: 'development',
   experiments: {
     asyncWebAssembly: true,
   },
   plugins: [
     new CopyPlugin({
-      patterns: [{ from: "./src/index.html" }],
+      patterns: [{ from: './src/index.html' }],
     }),
   ],
-};
+}
