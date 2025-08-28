@@ -1,10 +1,11 @@
 ## ETF.js SDK: "Encryption to the Future"
 
 This is an SDK for JavaScript/TypeScript applications to build timelock encrypted transactions that can be submitted on the Ideal Network. It encapsulates both a secure hashed key derivation function (HKDF) and timelock encryption to produce ciphertexts that can be decrypted only when:
-1) The randomness beacon (Drand quicknet) outputs a signature in a specific round (for which the call data is encrypted)
-2) Anyone knowing the seed can decrypt it at any time by recomputing the key and passing it to AES-GCM.
 
-> Note: This library has not yet received a security audit. Use at your own risk.
+1) The randomness beacon (Drand quicknet) outputs a signature in a specific round (for which the call data is encrypted)
+2) Anyone knowing the seed can decrypt it at any time by recomputing the key and decrypt with [timelock.js](https://www.npmjs.com/package/@ideallabs/timelock.js).
+
+> ⚠️ This library has not yet received a security audit. Use at your own risk.
 
 -----
 
