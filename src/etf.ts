@@ -28,6 +28,30 @@ import {
 } from '@ideallabs/timelock.js'
 
 /**
+ * Errors that can be encountered
+ */
+export enum Errors {
+  EncryptionError = 'Encryption failed',
+  InvalidCallError = 'Call parameter is required',
+  InvalidRoundError = '`when` must be a positive integer',
+  InvalidSeedError = 'Seed parameter must be a non-empty Uint8Array',
+  TimelockTxError = 'An error occurred while building the timelocked transaction.',
+  TransitiveRuntimeError = 'Either the timelock pallet is unavailable, the pallet name has changed, \
+                            or the chain is not properly configured. Upgrade to the latest etf.js version \
+                            , verify your websocket is properly configured, and try again.',
+  Unknown = 'An unknown error occurred!'
+}
+
+const identify = (e: Error) => {
+  for (let err in Errors) {
+    if (e.message === Errors[err]) {
+      return e
+    }
+  }
+  return null
+}
+
+/**
  * Encryption to the Future
  * This class initializes the ETF.js SDK
  */
@@ -100,23 +124,30 @@ export class Etf {
   async timelockEncrypt(
     encodedMessage: Uint8Array,
     when: number,
-    seed: string
+    seed: Uint8Array
   ): Promise<any> {
-    let t = new TextEncoder()
-    let masterSecret = t.encode(seed)
-    // compute an ephemeral secret from the seed material
-    const esk = await hkdf.compute(masterSecret, this.HASH, this.HASHLENGTH, '')
-    const key = Array.from(esk.key)
-      .map((byte) => byte.toString(16).padStart(2, '0'))
-      .join('')
+    let esk: { key: Uint8Array | null } = { key: null }
 
-    return await this.tlock.encrypt(
-      encodedMessage,
-      when,
-      DrandIdentityBuilder,
-      this.pubkey,
-      key
-    )
+    try {
+      // compute an ephemeral secret from the seed material
+      esk = await hkdf.compute(seed, this.HASH, this.HASHLENGTH, '')
+      let key = Buffer.from(esk.key).toString('hex')
+      const result = await this.tlock.encrypt(
+        encodedMessage,
+        when,
+        DrandIdentityBuilder,
+        this.pubkey,
+        key
+      )
+      return result
+    } catch (e) {
+      throw new Error(Errors.EncryptionError + `: ${e instanceof Error ? e.message : 'Unknown error'}`)
+    } finally {
+      // cleanup sensitive data
+      if (esk.key && esk.key.fill) {
+        esk.key.fill(0)
+      }
+    }
   }
 
   /**
@@ -129,21 +160,35 @@ export class Etf {
    *    .signAndSend(alice, result => {...})
    *
    * @param call: The call to delay
-   * @param when: The round for which the call should be executed
+   * @param when: The round for which the call should be executed (a positive integer)
    * @param seed: A seed to input to the timelock encryption function,
    *              used to produced a determistic seed with an HKDF
    * @returns A call to lock the transactions until the deadline
    */
-  async delay(call, when, seed): Promise<any> {
+  async delay(call, when, seed: Uint8Array): Promise<any> {
+    let encodedCall: Uint8Array | null = null
     try {
-      let innerCall = this.createType('Call', call)
-      let ciphertext = await this.timelockEncrypt(innerCall.toU8a(), when, seed)
+      // input validations 
+      if (!call) throw new Error(Errors.InvalidCallError)
+      if (!Number.isInteger(when) || when <= 0) throw new Error(Errors.InvalidRoundError)
+      if (!seed || seed.length === 0) throw new Error(Errors.InvalidSeedError)
+
+      const innerCall = this.createType('Call', call)
+      encodedCall = innerCall.toU8a()
+      let ciphertext = await this.timelockEncrypt(encodedCall, when, seed)
       return this.api.tx.timelock.scheduleSealed(when, 0, [...ciphertext])
     } catch (e) {
-      console.error(
-        'An error occurred. Are you connected to the right network? ' + e
-      )
-      throw e
+
+      if (e instanceof Error) {
+        if (identify(e)) throw e
+        else throw new Error(Errors.TransitiveRuntimeError)
+      }
+
+      throw new Error(Errors.Unknown + ' ' + e)
+
+    } finally {
+      // cleanup
+      if (encodedCall) encodedCall.fill(0)
     }
   }
 }
