@@ -5,8 +5,8 @@
     "esModuleInterop": true,
     "outDir": "./dist",
     "declaration": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
-  "include": ["./src/**/*"],
+  "include": ["./src/**/*", "jest.config.js"],
   "exclude": ["node_modules"]
 }

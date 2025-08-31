@@ -1,43 +1,31 @@
-import { Etf, DistanceBasedSlotScheduler } from '@ideallabs/etf.js'
+import { Etf } from '@ideallabs/etf.js'
 import './App.css'
 import React, { useEffect, useState } from 'react'
-import { CID, create } from 'ipfs-http-client'
-import { concat } from 'uint8arrays'
-import { Keyring } from '@polkadot/api';
-
-
-import chainSpec from './resources/etfTestSpecRaw.json';
+import { ApiPromise, Keyring, WsProvider } from '@polkadot/api'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
-import { hexToU8a } from '@polkadot/util'
 
 function App() {
   const [etf, setEtf] = useState(null)
   const [alice, setAlice] = useState(null)
-  
-  const [latestSignature, setLatestSignature] = useState('');
-  const [latestBlock, setLatestBlock] = useState(null)
 
-  const [when, setWhen] = useState(0);
-
+  const PUBKEY =
+    '83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a'
 
   useEffect(() => {
     const setup = async () => {
-      
-      await cryptoWaitReady();
-      let etf = new Etf("ws://127.0.0.1:9944", false)
-      // let etf = new Etf("wss://etf1.idealabs.network:443")
-      await etf.init()
+      await cryptoWaitReady()
+
+      let wsProvider = new WsProvider('ws://127.0.0.1:9933')
+      let api = await ApiPromise.create({ provider: wsProvider })
+      let etf = new Etf(api, PUBKEY)
+      await etf.build()
       setEtf(etf)
 
       const keyring = new Keyring()
-      const alice = keyring.addFromUri('//Bob', { name: 'Bob' }, 'sr25519')
+      const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519')
       setAlice(alice)
-      // stream incoming justifications and use the signature
-      etf.subscribeBeacon((justification) => {
-        setLatestBlock(parseInt(justification.commitment.blockNumber.replace(",", "")))
-        setLatestSignature(justification.signaturesCompact)
-      });
     }
+
     setup()
   }, [])
 
@@ -46,46 +34,42 @@ function App() {
    */
   async function delay() {
     // the call to delay
-    let innerCall = etf.api.tx.balances
-      .transferKeepAlive('5ETohe6skHTgZV97b5eZBfs48V6YzEGUhv9eeH6a3Ua7UNAc', 1000000);
-    let deadline = latestBlock + 5;
+    let balanceTransfer = etf.api.tx.balances.transferKeepAlive(
+      '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
+      1_000_000_000
+    )
+    let deadline = await etf.getDrandRoundNumber()
+    // 60 seconds
+    deadline += 4
+    console.log('deadline: ' + deadline)
     // prepare delayed call
-    etf.delay(innerCall, 127, deadline, "testSeed").then(async outerCall => {
-      await outerCall.signAndSend(alice, result => {
+    etf.delay(balanceTransfer, deadline, 'testSeed').then(async (outerCall) => {
+      console.log(
+        'delayed call created: ' + JSON.stringify(outerCall.toHuman())
+      )
+      await outerCall.signAndSend(alice, (result) => {
         if (result.status.isInBlock) {
-          setWhen(outerCall.block)
           console.log('in block')
         }
-      });
-    });
-    
+      })
+    })
   }
 
   return (
     <div className="App">
-      <div className="header">
-        Delayed Transactions Balance Transfer
-        <div>
-          Latest Block : { latestBlock }
-        </div>
-      </div>
+      <div className="header">Delayed Transactions Balance Transfer</div>
       <div className="encrypt-body">
         <button
-            className="button"
-            type="submit"
-            onClick={delay}
-            value="Encrypt"
-          >Encrypt</button>
-      </div>
-      <div>
-        { etf == null ? '' : when > latestBlock ? 
-        <span>
-          Balance transfer scheduled for block { when }
-        </span> : <span></span> }
+          className="button"
+          type="submit"
+          onClick={delay}
+          value="Encrypt"
+        >
+          Encrypt
+        </button>
       </div>
     </div>
   )
 }
 
 export default App
-

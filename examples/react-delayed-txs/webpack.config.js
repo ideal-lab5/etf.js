@@ -1,25 +1,33 @@
+const CopyPlugin = require('copy-webpack-plugin')
 const path = require('path')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
 
-module.exports = ({ mode } = { mode: 'production' }) => {
-  console.log(`mode is: ${mode}`)
-
-  return {
-    mode,
-    entry: './src/index.js',
-    resolve: {
-      fullySpecified: false,
-    },
-    test: /\.m?js/, // fix:issue: https://github.com/webpack/webpack/issues/11467
-    output: {
-      publicPath: '/',
-      path: path.resolve(__dirname, 'build'),
-      filename: 'bundled.js',
-    },
-    plugins: [
-      new HtmlWebpackPlugin({
-        template: './public/index.html',
-      }),
+module.exports = {
+  entry: './src/index.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'index.js',
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-react'],
+          },
+        },
+      },
     ],
-  }
+  },
+  mode: 'development',
+  experiments: {
+    asyncWebAssembly: true,
+  },
+  plugins: [
+    new CopyPlugin({
+      patterns: [{ from: './src/index.html' }],
+    }),
+  ],
 }

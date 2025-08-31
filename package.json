@@ -1,17 +1,15 @@
 {
   "name": "@ideallabs/etf.js",
-  "version": "0.1.12-dev",
-  "description": "a typescript sdk for encryption/decryption with the etf network",
+  "version": "0.3.0-dev",
+  "description": "a typescript sdk for timelock encryption and timelocked transactions on the Ideal Network",
   "license": "GPL-3.0",
   "repository": "https://github.com/ideal-lab5/etf.js",
   "main": "dist/index.js",
   "type": "module",
   "dependencies": {
-    "@ideallabs/etf-sdk": "^0.1.10-dev",
+    "@ideallabs/timelock.js": "^0.2.0-dev",
     "@polkadot/api": "^10.9.1",
     "@polkadot/api-augment": "^10.9.1",
-    "@polkadot/extension-dapp": "^0.46.3",
-    "@polkadot/rpc-provider": "^10.9.1",
     "@polkadot/types": "^10.9.1",
     "@polkadot/util": "^12.0.1",
     "@polkadot/util-crypto": "^12.6.2",
@@ -33,8 +31,8 @@
       "dist"
     ],
     "moduleNameMapper": {
-      "@ideallabs/etf-sdk": "<rootDir>/test/__mocks__/@ideallabs/etf-sdk.ts",
-      "@polkadot/rpc-provider": "<rootDir>/test/__mocks__/@polkadot/rpc-provider.ts",
+      "@ideallabs/timelock.js": "<rootDir>/test/__mocks__/@ideallabs/timelock.js.ts",
+      "js-crypto-hkdf": "<rootDir>/test/__mocks__/js-crypto-hkdf.ts",
       "@polkadot/api": "<rootDir>/test/__mocks__/@polkadot/api.ts",
       "@polkadot/api-augment": "<rootDir>/test/__mocks__/@polkadot/api-augment.ts",
       "@polkadot/types": "<rootDir>/test/__mocks__/@polkadot/types.ts"
