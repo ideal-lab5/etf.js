@@ -1,20 +1,21 @@
-# Timelock Encryption Example
+# React Timelock Example
 
-This is an application that allows you to encryption messages for future slots. It is intended as a demonstration on using the etf.js SDK.
+This is a basic example to demonstrate usage of the `@ideallabs/timelock.js` library. It can be used to get started with building applications using timelock encryption.
 
-## Prerequisites
+## Build
 
-The example expects an IPFS node to be reachable at localhost:5001. Install [kubo](https://docs.ipfs.tech/install/command-line/#install-official-binary-distributions) to get started.
+This application is built with `react-app rewired` to handle polyfills for crypto modules.
 
-
-## Installation
-
-From this directory, run:
-
-```bash
-npm i && npm run start
+```shell
+npm run build
 ```
 
-## TODOs
+## Run
 
-- [ ] Properly generate source map [see here](https://stackoverflow.com/questions/63195843/webpack-module-warning-failed-to-parse-source-map-from-data-url)
+```shell
+npm run start
+```
+
+```shell
+cargo contract instantiate ./contract/vault/target/ink/vault.contract --constructor default --suri //Alice --url ws://127.0.0.1:9944 -x
+```

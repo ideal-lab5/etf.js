@@ -1,5 +1,3 @@
-import { BeaconSim } from '../../beacon-sim';
-
 // __mocks__/@polkadot/api.js
 export class ApiPromise {
   public isReady: any
@@ -16,40 +14,19 @@ export class ApiPromise {
 
   constructor() {
     this.isReady = Promise.resolve()
-    const beaconSim = new BeaconSim('mockChainId', {sk:  '00000000000000000000000000000001' }, 0);
 
     this.rpc = {
-      beefy: {
-        subscribeJustifications: jest.fn((callback) => {
-          // Simulate new justifications every 30 seconds
-          setInterval(() => {
-            const pulse = beaconSim.nextPulse();
-            const mockJustification = new MockJustification(pulse.commitment, pulse.signaturesFrom, pulse.validatorSetLen, pulse.signaturesCompact);
-            callback(mockJustification);
-          }, 3000);
-        }),
-      },
       state: {
         getMetadata: async () => ({
           toHex: () => 'mockMetadataHex',
         }),
       },
-     }
+    }
 
     this.query = {
-      etf: {
-        ibeParams: async () => ['param1', 'param2'],
-        roundPublic: jest.fn(() => {return 'public key'})
-      },
       system: {
-        blockHash: async () => '0xBlockHash'
+        blockHash: async () => '0xBlockHash',
       },
-      // drand: {
-      //     pulses: jest.fn((when) => {return new Promise((resolve, reject) => {resolve(new MockPulse(when)); reject(new Error())})}),
-      //     beaconConfig: jest.fn(() => {
-      //       return new Promise((resolve, reject) => {resolve(new MockBeaconConfig()); reject(new Error())})
-      //     })
-      //   },
       randomnessBeacon: {
         pulses: jest.fn((when) => {return new Promise((resolve, reject) => {resolve(new MockPulse(when)); reject(new Error())})}),
         beaconConfig: jest.fn(() => {
@@ -60,25 +37,25 @@ export class ApiPromise {
 
     this.registry = {
       createType: (typeName, typeData) => {
-        if (typeData == "") {
-          throw new Error("invalid call data")
+        if (typeData == '') {
+          throw new Error('invalid call data')
         }
-        if (typeName == "Call") {
-          return new MockCall("mock-created-type");
+        if (typeName == 'Call') {
+          return new MockCall('mock-created-type')
         }
-        return "";
+        return ''
       },
     }
 
     this.tx = {
       balances: {
-        transferKeepAlive: (address, amount) => 
-          new MockCall("mock-balance-transfer")
+        transferKeepAlive: (address, amount) =>
+          new MockCall('mock-balance-transfer'),
       },
-      scheduler: {
-        scheduleSealed: (target, priority, ciphertext) => 
-          new MockCall("mock-schedule-sealed-call")
-      }
+      timelock: {
+        scheduleSealed: (target, priority, ciphertext) =>
+          new MockCall('mock-schedule-sealed-call'),
+      },
     }
   }
 }
@@ -153,12 +130,9 @@ export class MockJustification {
 }
 
 export class MockCall {
-  constructor(call) {
-
-  }
+  constructor(call) {}
 
   toU8a() {
-    return [];
+    return new Uint8Array([])
   }
-
 }
