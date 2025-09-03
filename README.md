@@ -22,9 +22,9 @@ Alternatively, you can clone and build the SDK:
 ```bash
 git clone git@github.com:ideal-lab5/etf.js.git
 cd etf.js
-# install typescript
+# ensure typescript is installed
 npm i -g typescript
-# Install dependencies
+# install dependencies
 npm i
 # Build the TypeScript project
 tsc
@@ -121,6 +121,6 @@ console.log(ciphertext); // A Uint8Array containing the encrypted data.
 
 ### 📄 License
 
-This project is licensed under the Apache 2.0 License.
 
+This project is licensed under the Apache2 License - see the LICENSE file for details.
 **Copyright © 2025 by Ideal Labs, LLC**
