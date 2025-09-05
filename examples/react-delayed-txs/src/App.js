@@ -17,7 +17,10 @@ function App() {
 
       let wsProvider = new WsProvider('ws://127.0.0.1:9933')
       let api = await ApiPromise.create({ provider: wsProvider })
-      let etf = new Etf(api, PUBKEY)
+      const pubkey = Uint8Array.from(
+        PUBKEY.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
+      )
+      let etf = new Etf(api, pubkey)
       await etf.build()
       setEtf(etf)
 

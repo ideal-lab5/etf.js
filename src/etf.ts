@@ -32,9 +32,7 @@ export enum Errors {
   InvalidRoundError = '`when` must be a positive integer',
   InvalidSeedError = 'Seed parameter must be a non-empty Uint8Array',
   TimelockTxError = 'An error occurred while building the timelocked transaction.',
-  TransitiveRuntimeError = 'Either the timelock pallet is unavailable, the pallet name has changed, \
-                            or the chain is not properly configured. Upgrade to the latest etf.js version \
-                            , verify your websocket is properly configured, and try again.',
+  TransitiveRuntimeError = 'Either the timelock pallet is unavailable, the pallet name has changed, or the chain is not properly configured. Upgrade to the latest etf.js version, verify your websocket is properly configured, and try again.',
   Unknown = 'An unknown error occurred!'
 }
 
