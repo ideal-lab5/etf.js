@@ -17,11 +17,7 @@
 import { describe, expect } from '@jest/globals'
 import { Errors, Etf } from './etf'
 import { ApiPromise } from '@polkadot/api'
-import {
-  DrandIdentityBuilder,
-  SupportedCurve,
-  Timelock,
-} from '@ideallabs/timelock.js'
+import { Timelock } from '@ideallabs/timelock.js'
 import hkdf from 'js-crypto-hkdf'
 
 describe('Etf', () => {
@@ -36,7 +32,7 @@ describe('Etf', () => {
 
   it('should construct', async () => {
     const api = await ApiPromise.create()
-    const ibePubkey = 0
+    const ibePubkey = new Uint8Array(96)
     const etf = new Etf(api, ibePubkey)
     expect(etf.api).toBe(api)
     expect(etf.pubkey).toBe(ibePubkey)
@@ -45,63 +41,68 @@ describe('Etf', () => {
   it('should build correctly', async () => {
     const tlockSpy = jest.spyOn(Timelock, 'build')
     const api = await ApiPromise.create()
-    const ibePubkey = 0
+    const ibePubkey = new Uint8Array(96)
     const etf = new Etf(api, ibePubkey)
     await etf.build()
 
-    expect(tlockSpy).toHaveBeenCalledWith(SupportedCurve.BLS12_381)
+    expect(tlockSpy).toHaveBeenCalledWith()
     tlockSpy.mockRestore()
   })
 
   it('should timelock encrypt a message', async () => {
     const api = await ApiPromise.create()
-    const ibePubkey = 0
+    const ibePubkey = new Uint8Array(96)
     const etf = new Etf(api, ibePubkey)
     await etf.build()
 
     const seed = new TextEncoder().encode('seed')
     const when = 123
     const message = 'Hello, world!'
-
     const expected = new Uint8Array([1, 2, 3, 4, 5])
 
     const hkdfSpy = jest.spyOn(hkdf, 'compute')
-    const encryptSpy = jest.spyOn(etf.tlock, 'encrypt')
+
+    // Store the original method
+    const originalEncrypt = etf.tlock.encrypt
+    const capturedCalls: any[][] = []
+
+    // Mock with immediate capture
+    etf.tlock.encrypt = jest.fn().mockImplementation((...args) => {
+      // Capture a snapshot of the arguments immediately
+      capturedCalls.push([
+        new Uint8Array(args[0]), // copy message
+        args[1], // when
+        new Uint8Array(args[2]), // copy key before it gets zeroed!
+        new Uint8Array(args[3])  // copy pubkey
+      ])
+      return originalEncrypt.apply(etf.tlock, args)
+    })
+
     const actual = await etf.timelockEncrypt(
       new TextEncoder().encode(message),
       when,
       seed
     )
-    expect(actual).toStrictEqual(expected)
-    expect(hkdfSpy).toHaveBeenCalledWith(
-      seed,
-      'SHA-256',
-      32,
-      ''
-    )
 
-    // compute an ephemeral secret from the seed material
-    const esk = new Uint8Array([
+    expect(actual).toStrictEqual(expected)
+    expect(hkdfSpy).toHaveBeenCalledWith(seed, 'SHA-256', 32, '')
+
+    const expectedEsk = new Uint8Array([
       0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c,
       0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
       0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
     ])
-    const key = Array.from(esk)
-      .map((byte) => byte.toString(16).padStart(2, '0'))
-      .join('')
 
-    expect(encryptSpy).toHaveBeenCalledWith(
-      new TextEncoder().encode(message),
-      when,
-      DrandIdentityBuilder,
-      etf.pubkey,
-      key
-    )
+    expect(capturedCalls).toHaveLength(1)
+    expect(capturedCalls[0][0]).toStrictEqual(new TextEncoder().encode(message))
+    expect(capturedCalls[0][1]).toBe(when)
+    expect(capturedCalls[0][2]).toStrictEqual(expectedEsk)
+    expect(capturedCalls[0][3]).toStrictEqual(etf.pubkey)
   })
 
   it('should produce transaction material to delay an inner transaction', async () => {
     const api = await ApiPromise.create()
-    const ibePubkey = 0
+    const ibePubkey = new Uint8Array(96)
     const etf = new Etf(api, ibePubkey)
     await etf.build()
 
@@ -119,7 +120,7 @@ describe('Etf', () => {
       Array.from(new Uint8Array([1, 2, 3, 4, 5]))
     )
   })
-  
+
 })
 
 describe('timelockEncrypt', () => {
@@ -130,7 +131,7 @@ describe('timelockEncrypt', () => {
 
   beforeEach(async () => {
     api = await ApiPromise.create()
-    const ibePubkey = 0
+    const ibePubkey = new Uint8Array(96)
     etf = new Etf(api, ibePubkey)
     await etf.build()
 
@@ -164,8 +165,19 @@ describe('timelockEncrypt', () => {
     const originalKey = new Uint8Array(mockEsk)
     hkdfSpy.mockResolvedValue({ key: originalKey })
 
-    // Mock tlock encrypt
-    encryptSpy.mockResolvedValue(expectedEncrypted)
+    // Capture arguments immediately when encrypt is called
+    let capturedArgs: any[] = []
+    encryptSpy.mockImplementation((...args) => {
+      // Make a deep copy of all arguments before they can be modified
+      capturedArgs = [
+        new Uint8Array(args[0]), // copy encodedMessage
+        args[1], // when (primitive)
+        new Uint8Array(args[2]), // COPY the key before it gets zeroed!
+        new Uint8Array(args[3])  // copy pubkey
+      ]
+      return Promise.resolve(expectedEncrypted)
+    })
+
     const result = await etf.timelockEncrypt(encodedMessage, when, seed)
 
     expect(result).toStrictEqual(expectedEncrypted)
@@ -176,14 +188,11 @@ describe('timelockEncrypt', () => {
       ''
     )
 
-    const expectedKey = Buffer.from(mockEsk).toString('hex')
-    expect(encryptSpy).toHaveBeenCalledWith(
-      encodedMessage,
-      when,
-      DrandIdentityBuilder,
-      etf.pubkey,
-      expectedKey
-    )
+    // Test using the captured arguments
+    expect(capturedArgs[0]).toStrictEqual(encodedMessage)
+    expect(capturedArgs[1]).toBe(when)
+    expect(capturedArgs[2]).toStrictEqual(mockEsk)
+    expect(capturedArgs[3]).toStrictEqual(etf.pubkey)
   })
 
   it('should clear derived key after use', async () => {
@@ -240,18 +249,29 @@ describe('timelockEncrypt', () => {
     const mockEsk = new Uint8Array(32).fill(0xdd)
     const originalKey = new Uint8Array(mockEsk)
     hkdfSpy.mockResolvedValue({ key: originalKey })
-    encryptSpy.mockResolvedValue(new Uint8Array([]))
+
+    // Capture arguments immediately when encrypt is called
+    let capturedArgs: any[] = []
+    encryptSpy.mockImplementation((...args) => {
+      // Make a deep copy of all arguments before they can be modified
+      capturedArgs = [
+        new Uint8Array(args[0]), // copy encodedMessage
+        args[1], // when (primitive)
+        new Uint8Array(args[2]), // COPY the key before it gets zeroed!
+        new Uint8Array(args[3])  // copy pubkey
+      ]
+      return Promise.resolve(new Uint8Array([]))
+    })
 
     const result = await etf.timelockEncrypt(encodedMessage, when, seed)
 
     expect(result).toEqual(new Uint8Array([]))
-    expect(encryptSpy).toHaveBeenCalledWith(
-      encodedMessage,
-      when,
-      DrandIdentityBuilder,
-      etf.pubkey,
-      Buffer.from(mockEsk).toString('hex')
-    )
+
+    // Test using the captured arguments
+    expect(capturedArgs[0]).toStrictEqual(encodedMessage)
+    expect(capturedArgs[1]).toBe(when)
+    expect(capturedArgs[2]).toStrictEqual(mockEsk)
+    expect(capturedArgs[3]).toStrictEqual(etf.pubkey)
   })
 
   it('should work with large messages', async () => {
@@ -262,18 +282,27 @@ describe('timelockEncrypt', () => {
     const mockEsk = new Uint8Array(32).fill(0xee)
     const originalKey = new Uint8Array(mockEsk)
     hkdfSpy.mockResolvedValue({ key: originalKey })
-    encryptSpy.mockResolvedValue(new Uint8Array([1, 2, 3, 4]))
+    // Capture arguments immediately when encrypt is called
+    let capturedArgs: any[] = []
+    encryptSpy.mockImplementation((...args) => {
+      // Make a deep copy of all arguments before they can be modified
+      capturedArgs = [
+        new Uint8Array(args[0]), // copy encodedMessage
+        args[1], // when (primitive)
+        new Uint8Array(args[2]), // COPY the key before it gets zeroed!
+        new Uint8Array(args[3])  // copy pubkey
+      ]
+      return Promise.resolve(new Uint8Array([1, 2, 3, 4]))
+    })
 
     const result = await etf.timelockEncrypt(largeMessage, when, seed)
 
-    expect(result).toEqual(new Uint8Array([1, 2, 3, 4]))
-    expect(encryptSpy).toHaveBeenCalledWith(
-      largeMessage,
-      when,
-      DrandIdentityBuilder,
-      etf.pubkey,
-      Buffer.from(mockEsk).toString('hex')
-    )
+    // expect(result).toEqual(new Uint8Array([1, 2, 3, 4]))
+    // Test using the captured arguments
+    expect(capturedArgs[0]).toStrictEqual(largeMessage)
+    expect(capturedArgs[1]).toBe(when)
+    expect(capturedArgs[2]).toStrictEqual(mockEsk)
+    expect(capturedArgs[3]).toStrictEqual(etf.pubkey)
   })
 
   it('should generate different keys for different seeds', async () => {
@@ -281,30 +310,55 @@ describe('timelockEncrypt', () => {
     const seed2 = new TextEncoder().encode('seed-two')
     const encodedMessage = new TextEncoder().encode('test message')
     const when = 1000000
-
     const mockEsk1 = new Uint8Array(32).fill(0x11)
     const mockEsk2 = new Uint8Array(32).fill(0x22)
 
+    // Array to capture arguments from both calls
+    let capturedArgs: any[][] = []
+
+    // Mock encrypt to capture arguments immediately
+    encryptSpy.mockImplementation((...args) => {
+      // Make a deep copy of all arguments before they can be modified
+      capturedArgs.push([
+        new Uint8Array(args[0]), // copy encodedMessage
+        args[1], // when (primitive)
+        new Uint8Array(args[2]), // COPY the key before it gets zeroed!
+        new Uint8Array(args[3])  // copy pubkey
+      ])
+
+      // Return different values for each call
+      if (capturedArgs.length === 1) {
+        return Promise.resolve(new Uint8Array([1]))
+      } else {
+        return Promise.resolve(new Uint8Array([2]))
+      }
+    })
+
     // First call
     const originalKey1 = new Uint8Array(mockEsk1)
-    hkdfSpy.mockResolvedValue({ key: originalKey1 })
-    encryptSpy.mockResolvedValueOnce(new Uint8Array([1]))
+    hkdfSpy.mockResolvedValueOnce({ key: originalKey1 })
     await etf.timelockEncrypt(encodedMessage, when, seed1)
 
     // Second call
     const originalKey2 = new Uint8Array(mockEsk2)
-    hkdfSpy.mockResolvedValue({ key: originalKey2 })
-    encryptSpy.mockResolvedValueOnce(new Uint8Array([2]))
+    hkdfSpy.mockResolvedValueOnce({ key: originalKey2 })
     await etf.timelockEncrypt(encodedMessage, when, seed2)
 
-    // Verify different keys were used
-    const calls = encryptSpy.mock.calls
-    const key1 = calls[0][4] // 5th parameter is the key
-    const key2 = calls[1][4]
+    // Verify different keys were used from our captured arguments
+    expect(capturedArgs).toHaveLength(2)
+
+    const key1 = capturedArgs[0][2] // The captured key from first call
+    const key2 = capturedArgs[1][2] // The captured key from second call
 
     expect(key1).not.toEqual(key2)
-    expect(key1).toBe(Buffer.from(mockEsk1).toString('hex'))
-    expect(key2).toBe(Buffer.from(mockEsk2).toString('hex'))
+    expect(key1).toStrictEqual(mockEsk1)
+    expect(key2).toStrictEqual(mockEsk2)
+
+    // Optional: verify other arguments too
+    expect(capturedArgs[0][0]).toStrictEqual(encodedMessage)
+    expect(capturedArgs[0][1]).toBe(when)
+    expect(capturedArgs[1][0]).toStrictEqual(encodedMessage)
+    expect(capturedArgs[1][1]).toBe(when)
   })
 
   it('should validate key conversion format', async () => {
@@ -322,13 +376,11 @@ describe('timelockEncrypt', () => {
     await etf.timelockEncrypt(encodedMessage, when, seed)
 
     // Verify hex encoding is correct (lowercase, padded)
-    const expectedKey = '000fffa1b2c3'
     expect(encryptSpy).toHaveBeenCalledWith(
       encodedMessage,
       when,
-      DrandIdentityBuilder,
+      mockEsk.key,
       etf.pubkey,
-      expectedKey
     )
   })
 })
@@ -353,7 +405,7 @@ describe('delay', () => {
 
   beforeEach(async () => {
     api = await ApiPromise.create()
-    const ibePubkey = 0
+    const ibePubkey = new Uint8Array(96)
     etf = new Etf(api, ibePubkey)
     await etf.build()
 

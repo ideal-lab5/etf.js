@@ -21,11 +21,7 @@
 import '@polkadot/api-augment'
 import { ApiPromise } from '@polkadot/api'
 import hkdf from 'js-crypto-hkdf'
-import {
-  DrandIdentityBuilder,
-  SupportedCurve,
-  Timelock,
-} from '@ideallabs/timelock.js'
+import { Timelock } from '@ideallabs/timelock.js'
 
 /**
  * Errors that can be encountered
@@ -71,16 +67,16 @@ export class Etf {
   /**
    * constructor
    * @param api A @polkadot/api ApiPromise
-   * @param pubkey The public key used in the underlying IBE scheme (for now: assume BLS12-381)
+   * @param pubkey The public key used in the underlying IBE scheme (for now: assume BLS12-381).
    */
-  constructor(api: ApiPromise, pubkey: any) {
+  constructor(api: ApiPromise, pubkey: Uint8Array) {
     this.api = api
     this.pubkey = pubkey
   }
 
   async build() {
     // build the timelock instance over bls12-381
-    await Timelock.build(SupportedCurve.BLS12_381).then((tlock) => {
+    await Timelock.build().then((tlock) => {
       this.tlock = tlock
     })
   }
@@ -131,13 +127,11 @@ export class Etf {
     try {
       // compute an ephemeral secret from the seed material
       esk = await hkdf.compute(seed, this.HASH, this.HASHLENGTH, '')
-      let key = Buffer.from(esk.key).toString('hex')
       const result = await this.tlock.encrypt(
         encodedMessage,
         when,
-        DrandIdentityBuilder,
+        esk.key,
         this.pubkey,
-        key
       )
       return result
     } catch (e) {
