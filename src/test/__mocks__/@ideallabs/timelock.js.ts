@@ -1,10 +1,4 @@
 // test/__mocks__/@ideallabs/timelock.js.ts
-
-export const SupportedCurve = {
-  BLS12_381: 'BLS12_381',
-  // Add other curves if needed
-}
-
 export class Timelock {
   constructor() {}
 
@@ -40,6 +34,5 @@ export class DrandIdentityBuilder {
 // Default export (if the package uses it)
 export default {
   Timelock,
-  SupportedCurve,
   DrandIdentityBuilder,
 }

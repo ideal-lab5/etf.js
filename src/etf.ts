@@ -21,11 +21,7 @@
 import '@polkadot/api-augment'
 import { ApiPromise } from '@polkadot/api'
 import hkdf from 'js-crypto-hkdf'
-import {
-  DrandIdentityBuilder,
-  SupportedCurve,
-  Timelock,
-} from '@ideallabs/timelock.js'
+import { Timelock } from '@ideallabs/timelock.js'
 
 /**
  * Errors that can be encountered
@@ -36,10 +32,8 @@ export enum Errors {
   InvalidRoundError = '`when` must be a positive integer',
   InvalidSeedError = 'Seed parameter must be a non-empty Uint8Array',
   TimelockTxError = 'An error occurred while building the timelocked transaction.',
-  TransitiveRuntimeError = 'Either the timelock pallet is unavailable, the pallet name has changed, \
-                            or the chain is not properly configured. Upgrade to the latest etf.js version \
-                            , verify your websocket is properly configured, and try again.',
-  Unknown = 'An unknown error occurred!'
+  TransitiveRuntimeError = 'Either the timelock pallet is unavailable, the pallet name has changed, or the chain is not properly configured. Upgrade to the latest etf.js version, verify your websocket is properly configured, and try again.',
+  Unknown = 'An unknown error occurred!',
 }
 
 const identify = (e: Error) => {
@@ -71,16 +65,16 @@ export class Etf {
   /**
    * constructor
    * @param api A @polkadot/api ApiPromise
-   * @param pubkey The public key used in the underlying IBE scheme (for now: assume BLS12-381)
+   * @param pubkey The public key used in the underlying IBE scheme (for now: assume BLS12-381).
    */
-  constructor(api: ApiPromise, pubkey: any) {
+  constructor(api: ApiPromise, pubkey: Uint8Array) {
     this.api = api
     this.pubkey = pubkey
   }
 
   async build() {
     // build the timelock instance over bls12-381
-    await Timelock.build(SupportedCurve.BLS12_381).then((tlock) => {
+    await Timelock.build().then((tlock) => {
       this.tlock = tlock
     })
   }
@@ -131,17 +125,18 @@ export class Etf {
     try {
       // compute an ephemeral secret from the seed material
       esk = await hkdf.compute(seed, this.HASH, this.HASHLENGTH, '')
-      let key = Buffer.from(esk.key).toString('hex')
       const result = await this.tlock.encrypt(
         encodedMessage,
         when,
-        DrandIdentityBuilder,
-        this.pubkey,
-        key
+        esk.key,
+        this.pubkey
       )
       return result
     } catch (e) {
-      throw new Error(Errors.EncryptionError + `: ${e instanceof Error ? e.message : 'Unknown error'}`)
+      throw new Error(
+        Errors.EncryptionError +
+          `: ${e instanceof Error ? e.message : 'Unknown error'}`
+      )
     } finally {
       // cleanup sensitive data
       if (esk.key && esk.key.fill) {
@@ -168,24 +163,23 @@ export class Etf {
   async delay(call, when, seed: Uint8Array): Promise<any> {
     let encodedCall: Uint8Array | null = null
     try {
-      // input validations 
+      // input validations
       if (!call) throw new Error(Errors.InvalidCallError)
-      if (!Number.isInteger(when) || when <= 0) throw new Error(Errors.InvalidRoundError)
+      if (!Number.isInteger(when) || when <= 0)
+        throw new Error(Errors.InvalidRoundError)
       if (!seed || seed.length === 0) throw new Error(Errors.InvalidSeedError)
 
       const innerCall = this.createType('Call', call)
       encodedCall = innerCall.toU8a()
       let ciphertext = await this.timelockEncrypt(encodedCall, when, seed)
-      return this.api.tx.timelock.scheduleSealed(when, 0, [...ciphertext])
+      return this.api.tx.timelock.scheduleSealed(when, [...ciphertext])
     } catch (e) {
-
       if (e instanceof Error) {
         if (identify(e)) throw e
         else throw new Error(Errors.TransitiveRuntimeError)
       }
 
       throw new Error(Errors.Unknown + ' ' + e)
-
     } finally {
       // cleanup
       if (encodedCall) encodedCall.fill(0)

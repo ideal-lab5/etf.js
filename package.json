@@ -1,13 +1,13 @@
 {
   "name": "@ideallabs/etf.js",
-  "version": "0.3.0-dev",
+  "version": "0.2.0",
   "description": "a typescript sdk for timelock encryption and timelocked transactions on the Ideal Network",
   "license": "GPL-3.0",
   "repository": "https://github.com/ideal-lab5/etf.js",
   "main": "dist/index.js",
   "type": "module",
   "dependencies": {
-    "@ideallabs/timelock.js": "^0.2.0-dev",
+    "@ideallabs/timelock.js": "^0.3.0",
     "@polkadot/api": "^10.9.1",
     "@polkadot/api-augment": "^10.9.1",
     "@polkadot/types": "^10.9.1",
