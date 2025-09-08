@@ -42,7 +42,7 @@ function App() {
       1_000_000_000
     )
     let deadline = await etf.getDrandRoundNumber()
-    // 60 seconds
+    // 12 seconds = 2 blocks
     deadline += 4
     console.log('deadline: ' + deadline)
     // prepare delayed call

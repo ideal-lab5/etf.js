@@ -2,12 +2,12 @@
 
 This is an SDK for JavaScript/TypeScript applications to build timelock encrypted transactions that can be submitted on the Ideal Network. It encapsulates both a secure hashed key derivation function (HKDF) and timelock encryption to produce ciphertexts that can be decrypted only when:
 
-1) The randomness beacon (Drand quicknet) outputs a signature in a specific round (for which the call data is encrypted)
-2) Anyone knowing the seed can decrypt it at any time by recomputing the key and decrypt with [timelock.js](https://www.npmjs.com/package/@ideallabs/timelock.js).
+1. The randomness beacon (Drand quicknet) outputs a signature in a specific round (for which the call data is encrypted)
+2. Anyone knowing the seed can decrypt it at any time by recomputing the key and decrypt with [timelock.js](https://www.npmjs.com/package/@ideallabs/timelock.js).
 
 > ⚠️ This library has not yet received a security audit. Use at your own risk.
 
------
+---
 
 ### 🛠️ Installation
 
@@ -30,7 +30,7 @@ npm i
 tsc
 ```
 
------
+---
 
 ### 📖 Usage
 
@@ -45,20 +45,21 @@ See the [examples](./examples/) directory for demonstrations on using the librar
 First, import the necessary classes and connect to your desired Ideal Network endpoint.
 
 ```javascript
-import { Etf } from '@ideallabs/etf.js';
-import { ApiPromise, WsProvider } from '@polkadot/api';
+import { Etf } from '@ideallabs/etf.js'
+import { ApiPromise, WsProvider } from '@polkadot/api'
 
 // The DRand quicknet public key is a constant used for encryption.
 // For verification, query the DRand info endpoint: https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971/info
-const DRAND_PUBKEY = '83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a';
+const DRAND_PUBKEY =
+  '83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a'
 
 async function main() {
-  const provider = new WsProvider('ws://localhost:9944');
-  const api = await ApiPromise.create({ provider });
+  const provider = new WsProvider('ws://localhost:9944')
+  const api = await ApiPromise.create({ provider })
 
   // Initialize the Etf SDK with the API instance and the DRand public key.
-  const etf = new Etf(api, DRAND_PUBKEY);
-  await etf.build();
+  const etf = new Etf(api, DRAND_PUBKEY)
+  await etf.build()
 
   // You are now ready to create delayed transactions.
 }
@@ -88,9 +89,11 @@ secretSeed.fill(0)
 // Sign and submit the delayed transaction
 await delayedTx.signAndSend(alice, (result) => {
   if (result.status.isInBlock) {
-    console.log(`Delayed transaction submitted in block ${result.status.asInBlock}`);
+    console.log(
+      `Delayed transaction submitted in block ${result.status.asInBlock}`
+    )
   }
-});
+})
 ```
 
 > **Note:** The `seed` must be a `Uint8Array`. The library is not opinionated about encoding.
@@ -101,23 +104,27 @@ The SDK also provides a wrapper around the [timelock.js](https://www.npmjs.com/p
 
 ```javascript
 // The message to be timelock encrypted.
-const message = 'This message will unlock in the future!';
-const encodedMessage = new TextEncoder().encode(message);
+const message = 'This message will unlock in the future!'
+const encodedMessage = new TextEncoder().encode(message)
 
 // Determine the future Drand round for decryption.
-const currentRound = await etf.getDrandRoundNumber();
-const futureRound = currentRound + 10; // Unlock 10 rounds later (approx. 1 minute).
+const currentRound = await etf.getDrandRoundNumber()
+const futureRound = currentRound + 10 // Unlock 10 rounds later (approx. 1 minute).
 
 // Encrypt the message using a secret seed.
-const secretSeed = new TextEncoder().encode('my-secret-seed');
-const ciphertext = await etf.timelockEncrypt(encodedMessage, futureRound, secretSeed);
+const secretSeed = new TextEncoder().encode('my-secret-seed')
+const ciphertext = await etf.timelockEncrypt(
+  encodedMessage,
+  futureRound,
+  secretSeed
+)
 
-console.log(ciphertext); // A Uint8Array containing the encrypted data.
+console.log(ciphertext) // A Uint8Array containing the encrypted data.
 ```
 
 > **Note:** This SDK does **not** include decryption functionality. For decryption, you should use the **`@ideallabs/timelock.js`** library directly.
 
------
+---
 
 ### 📄 License
 

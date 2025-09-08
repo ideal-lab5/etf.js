@@ -33,7 +33,7 @@ export enum Errors {
   InvalidSeedError = 'Seed parameter must be a non-empty Uint8Array',
   TimelockTxError = 'An error occurred while building the timelocked transaction.',
   TransitiveRuntimeError = 'Either the timelock pallet is unavailable, the pallet name has changed, or the chain is not properly configured. Upgrade to the latest etf.js version, verify your websocket is properly configured, and try again.',
-  Unknown = 'An unknown error occurred!'
+  Unknown = 'An unknown error occurred!',
 }
 
 const identify = (e: Error) => {
@@ -129,11 +129,14 @@ export class Etf {
         encodedMessage,
         when,
         esk.key,
-        this.pubkey,
+        this.pubkey
       )
       return result
     } catch (e) {
-      throw new Error(Errors.EncryptionError + `: ${e instanceof Error ? e.message : 'Unknown error'}`)
+      throw new Error(
+        Errors.EncryptionError +
+          `: ${e instanceof Error ? e.message : 'Unknown error'}`
+      )
     } finally {
       // cleanup sensitive data
       if (esk.key && esk.key.fill) {
@@ -160,24 +163,23 @@ export class Etf {
   async delay(call, when, seed: Uint8Array): Promise<any> {
     let encodedCall: Uint8Array | null = null
     try {
-      // input validations 
+      // input validations
       if (!call) throw new Error(Errors.InvalidCallError)
-      if (!Number.isInteger(when) || when <= 0) throw new Error(Errors.InvalidRoundError)
+      if (!Number.isInteger(when) || when <= 0)
+        throw new Error(Errors.InvalidRoundError)
       if (!seed || seed.length === 0) throw new Error(Errors.InvalidSeedError)
 
       const innerCall = this.createType('Call', call)
       encodedCall = innerCall.toU8a()
       let ciphertext = await this.timelockEncrypt(encodedCall, when, seed)
-      return this.api.tx.timelock.scheduleSealed(when, 0, [...ciphertext])
+      return this.api.tx.timelock.scheduleSealed(when, [...ciphertext])
     } catch (e) {
-
       if (e instanceof Error) {
         if (identify(e)) throw e
         else throw new Error(Errors.TransitiveRuntimeError)
       }
 
       throw new Error(Errors.Unknown + ' ' + e)
-
     } finally {
       // cleanup
       if (encodedCall) encodedCall.fill(0)

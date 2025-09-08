@@ -73,7 +73,7 @@ describe('Etf', () => {
         new Uint8Array(args[0]), // copy message
         args[1], // when
         new Uint8Array(args[2]), // copy key before it gets zeroed!
-        new Uint8Array(args[3])  // copy pubkey
+        new Uint8Array(args[3]), // copy pubkey
       ])
       return originalEncrypt.apply(etf.tlock, args)
     })
@@ -115,12 +115,10 @@ describe('Etf', () => {
     await etf.delay(call, when, seed)
     expect(createTypeSpy).toHaveBeenCalledWith('Call', call)
     expect(txSpy.mock.calls[0][0]).toEqual(when)
-    expect(txSpy.mock.calls[0][1]).toEqual(0)
-    expect(Array.from(txSpy.mock.calls[0][2])).toEqual(
+    expect(Array.from(txSpy.mock.calls[0][1])).toEqual(
       Array.from(new Uint8Array([1, 2, 3, 4, 5]))
     )
   })
-
 })
 
 describe('timelockEncrypt', () => {
@@ -157,9 +155,8 @@ describe('timelockEncrypt', () => {
 
     // Mock HKDF computation
     const mockEsk = new Uint8Array([
-      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-      0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
-      0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c,
+      0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
       0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
     ])
     const originalKey = new Uint8Array(mockEsk)
@@ -173,7 +170,7 @@ describe('timelockEncrypt', () => {
         new Uint8Array(args[0]), // copy encodedMessage
         args[1], // when (primitive)
         new Uint8Array(args[2]), // COPY the key before it gets zeroed!
-        new Uint8Array(args[3])  // copy pubkey
+        new Uint8Array(args[3]), // copy pubkey
       ]
       return Promise.resolve(expectedEncrypted)
     })
@@ -258,7 +255,7 @@ describe('timelockEncrypt', () => {
         new Uint8Array(args[0]), // copy encodedMessage
         args[1], // when (primitive)
         new Uint8Array(args[2]), // COPY the key before it gets zeroed!
-        new Uint8Array(args[3])  // copy pubkey
+        new Uint8Array(args[3]), // copy pubkey
       ]
       return Promise.resolve(new Uint8Array([]))
     })
@@ -290,7 +287,7 @@ describe('timelockEncrypt', () => {
         new Uint8Array(args[0]), // copy encodedMessage
         args[1], // when (primitive)
         new Uint8Array(args[2]), // COPY the key before it gets zeroed!
-        new Uint8Array(args[3])  // copy pubkey
+        new Uint8Array(args[3]), // copy pubkey
       ]
       return Promise.resolve(new Uint8Array([1, 2, 3, 4]))
     })
@@ -323,7 +320,7 @@ describe('timelockEncrypt', () => {
         new Uint8Array(args[0]), // copy encodedMessage
         args[1], // when (primitive)
         new Uint8Array(args[2]), // COPY the key before it gets zeroed!
-        new Uint8Array(args[3])  // copy pubkey
+        new Uint8Array(args[3]), // copy pubkey
       ])
 
       // Return different values for each call
@@ -368,7 +365,7 @@ describe('timelockEncrypt', () => {
 
     // Test with specific byte pattern
     const mockEsk = {
-      key: new Uint8Array([0x00, 0x0f, 0xff, 0xa1, 0xb2, 0xc3])
+      key: new Uint8Array([0x00, 0x0f, 0xff, 0xa1, 0xb2, 0xc3]),
     }
     hkdfSpy.mockResolvedValue(mockEsk)
     encryptSpy.mockResolvedValue(new Uint8Array([1]))
@@ -380,7 +377,7 @@ describe('timelockEncrypt', () => {
       encodedMessage,
       when,
       mockEsk.key,
-      etf.pubkey,
+      etf.pubkey
     )
   })
 })
@@ -396,7 +393,7 @@ describe('delay', () => {
   const mockCall = {
     section: 'balances',
     method: 'transfer',
-    args: ['5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY', 1000000]
+    args: ['5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY', 1000000],
   }
 
   const mockEncodedCall = new Uint8Array([1, 2, 3, 4, 5])
@@ -415,7 +412,7 @@ describe('delay', () => {
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
 
     createTypeSpy.mockReturnValue({
-      toU8a: () => mockEncodedCall
+      toU8a: () => mockEncodedCall,
     })
     timelockEncryptSpy.mockResolvedValue(mockCiphertext)
     scheduleSeledSpy.mockReturnValue(mockTransaction)
@@ -434,20 +431,28 @@ describe('delay', () => {
     expect(result).toBe(mockTransaction)
     expect(createTypeSpy).toHaveBeenCalledWith('Call', mockCall)
     expect(timelockEncryptSpy).toHaveBeenCalledWith(mockEncodedCall, when, seed)
-    expect(scheduleSeledSpy).toHaveBeenCalledWith(when, 0, [...mockCiphertext])
+    expect(scheduleSeledSpy).toHaveBeenCalledWith(when, [...mockCiphertext])
   })
 
   it('should validate seed parameter correctly', async () => {
     const when = 1000000
 
     // Test null/undefined
-    await expect(etf.delay(mockCall, when, null)).rejects.toThrow(Errors.InvalidSeedError)
-    await expect(etf.delay(mockCall, when, undefined)).rejects.toThrow(Errors.InvalidSeedError)
+    await expect(etf.delay(mockCall, when, null)).rejects.toThrow(
+      Errors.InvalidSeedError
+    )
+    await expect(etf.delay(mockCall, when, undefined)).rejects.toThrow(
+      Errors.InvalidSeedError
+    )
     // Test empty Uint8Array
-    await expect(etf.delay(mockCall, when, new Uint8Array(0))).rejects.toThrow(Errors.InvalidSeedError)
+    await expect(etf.delay(mockCall, when, new Uint8Array(0))).rejects.toThrow(
+      Errors.InvalidSeedError
+    )
     // Test valid Uint8Array should work
     const validSeed = new TextEncoder().encode('valid-seed')
-    await expect(etf.delay(mockCall, when, validSeed)).resolves.toBe(mockTransaction)
+    await expect(etf.delay(mockCall, when, validSeed)).resolves.toBe(
+      mockTransaction
+    )
   })
 
   it('should validate call parameter', async () => {
@@ -465,9 +470,15 @@ describe('delay', () => {
 
   it('should validate when parameter', async () => {
     const seed = new TextEncoder().encode('test-seed')
-    await expect(etf.delay(mockCall, 0, seed)).rejects.toThrow(Errors.InvalidRoundError)
-    await expect(etf.delay(mockCall, -1, seed)).rejects.toThrow(Errors.InvalidRoundError)
-    await expect(etf.delay(mockCall, 1.5, seed)).rejects.toThrow(Errors.InvalidRoundError)
+    await expect(etf.delay(mockCall, 0, seed)).rejects.toThrow(
+      Errors.InvalidRoundError
+    )
+    await expect(etf.delay(mockCall, -1, seed)).rejects.toThrow(
+      Errors.InvalidRoundError
+    )
+    await expect(etf.delay(mockCall, 1.5, seed)).rejects.toThrow(
+      Errors.InvalidRoundError
+    )
   })
 
   it('should clear encoded call data after processing', async () => {
@@ -476,7 +487,7 @@ describe('delay', () => {
     const encodedData = new Uint8Array([1, 2, 3, 4, 5])
 
     createTypeSpy.mockReturnValue({
-      toU8a: () => encodedData
+      toU8a: () => encodedData,
     })
 
     await etf.delay(mockCall, when, seed)
@@ -491,7 +502,7 @@ describe('delay', () => {
     const encodedData = new Uint8Array([1, 2, 3, 4, 5])
 
     createTypeSpy.mockReturnValue({
-      toU8a: () => encodedData
+      toU8a: () => encodedData,
     })
     timelockEncryptSpy.mockRejectedValue(new Error('Encryption failed'))
 
@@ -512,6 +523,8 @@ describe('delay', () => {
     const seed = new TextEncoder().encode('test-seed')
 
     timelockEncryptSpy.mockRejectedValue(new Error(Errors.EncryptionError))
-    await expect(etf.delay(mockCall, when, seed)).rejects.toThrow(Errors.EncryptionError)
+    await expect(etf.delay(mockCall, when, seed)).rejects.toThrow(
+      Errors.EncryptionError
+    )
   })
 })
